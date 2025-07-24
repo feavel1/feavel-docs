@@ -4,18 +4,20 @@
 
 - [x] Initialize Bun project and install dependencies: SvelteKit, Tailwind CSS, Shadcn-Svelte, Paraglide.js, Supabase JS client.
 - [x] Set up SvelteKit project structure (`src/lib`, `src/routes`, `src/lib/components`, etc.).
-- [ ] Configure TypeScript with strict mode.
-- [ ] Set up Tailwind CSS with SvelteKit and configure Shadcn color conventions.
-- [ ] Integrate Shadcn-Svelte UI components.
-- [ ] Configure Paraglide.js for i18n (add language files, set up `t` function).
-- [ ] Set up environment variables for Supabase and other secrets.
+- [x] Configure TypeScript with strict mode.
+- [x] Set up Tailwind CSS with SvelteKit and configure Shadcn color conventions.
+- [x] Integrate Shadcn-Svelte UI components.
+- [x] Configure Paraglide.js for i18n (add language files, set up `m` function).
+- [x] Set up environment variables for Supabase and other secrets.
 
 ## 2. Authentication & User Management
 
 - [ ] Integrate Supabase Auth for user sign-up, login, and session management.
-- [ ] Implement user roles (normal, verified) using Supabase (row-level security or user metadata).
+- [ ] Use [slug] at /routes/
 - [ ] Create protected routes and role-based access control in SvelteKit.
 - [ ] Build authentication UI (login, register, profile) using Shadcn-Svelte components.
+- [ ] build a settings page for users to change stuff in
+- [ ] Create [slug] page for users which display their profile.
 
 ## 3. Blog Feature
 
@@ -27,6 +29,7 @@
 
 ## 4. Services Feature (for Verified Users)
 
+- [ ] Apply for "verified user"
 - [ ] Scaffold services routes: `/services`, `/services/new`, `/services/[id]`.
 - [ ] Create service upload form (title, description, price, etc.) for verified users.
 - [ ] Implement Supabase integration for storing and fetching services.
