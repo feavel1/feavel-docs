@@ -1,5 +1,3 @@
-export const prerender = true;
-
 // src/routes/+layout.ts
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
@@ -34,5 +32,9 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 		data: { session }
 	} = await supabase.auth.getSession();
 
-	return { supabase, session };
+	const {
+		data: { user }
+	} = await supabase.auth.getUser();
+
+	return { supabase, session, user };
 };

@@ -12,7 +12,10 @@
 
 ## 2. Authentication & User Management
 
-- [ ] Integrate Supabase Auth for user sign-up, login, and session management.
+- [x] Integrate Supabase Auth for user sign-up, login, and session management.
+- [x] Create login page at `/auth/login`.
+- [x] Create signup page at `/auth/signup`.
+- [x] Create member profile page at `/member/[slug]` to display user profile.
 - [ ] Use [slug] at /routes/
 - [ ] Create protected routes and role-based access control in SvelteKit.
 - [ ] Build authentication UI (login, register, profile) using Shadcn-Svelte components.
@@ -61,7 +64,7 @@
 
 - [ ] Create API routes in `src/routes/api/` for custom server logic (if needed).
 - [ ] Implement error handling and response formatting.
-- [ ] Use SvelteKit hooks for global middleware (e.g., auth checks).
+- [ ] Use SvelteKit's hooks for global middleware (e.g., auth checks).
 
 ## 9. Performance & SEO
 

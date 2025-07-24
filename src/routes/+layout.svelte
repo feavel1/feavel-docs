@@ -14,7 +14,7 @@
 				invalidate('supabase:auth');
 			}
 		});
-		return () => data.subscription.unsubscribe();
+		return () => authListener.subscription.unsubscribe();
 	});
 </script>
 
