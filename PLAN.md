@@ -16,7 +16,7 @@
 - [x] Create login page at `/auth/login`.
 - [x] Create signup page at `/auth/signup`.
 - [x] Create member profile page at `/member/[slug]` to display user profile.
-- [ ] Use [slug] at /routes/
+- [ ] Move to forms with shadcn-svelte and zod.
 - [ ] Create protected routes and role-based access control in SvelteKit.
 - [ ] Build authentication UI (login, register, profile) using Shadcn-Svelte components.
 - [ ] build a settings page for users to change stuff in
