@@ -1,0 +1,653 @@
+# Shadcn-Svelte UI Component Rules
+
+## Overview
+
+This project uses Shadcn-Svelte components for consistent, accessible UI. All components are available in `src/lib/components/ui/` and follow the Shadcn design system.
+
+## Core Principles
+
+- Use the `cn()` utility for class merging
+- Follow Shadcn color conventions
+- Implement proper accessibility attributes
+- Use TypeScript interfaces for component props
+- Maintain consistent spacing and sizing
+
+## Available Components
+
+### Layout Components
+
+#### Accordion
+
+```svelte
+<script>
+	import {
+		Accordion,
+		AccordionContent,
+		AccordionItem,
+		AccordionTrigger
+	} from '$lib/components/ui/accordion';
+</script>
+
+<Accordion type="single" collapsible>
+	<AccordionItem value="item-1">
+		<AccordionTrigger>Section 1</AccordionTrigger>
+		<AccordionContent>Content for section 1</AccordionContent>
+	</AccordionItem>
+</Accordion>
+```
+
+#### Card
+
+```svelte
+<script>
+	import {
+		Card,
+		CardContent,
+		CardDescription,
+		CardFooter,
+		CardHeader,
+		CardTitle
+	} from '$lib/components/ui/card';
+</script>
+
+<Card>
+	<CardHeader>
+		<CardTitle>Card Title</CardTitle>
+		<CardDescription>Card description</CardDescription>
+	</CardHeader>
+	<CardContent>Card content</CardContent>
+	<CardFooter>Card footer</CardFooter>
+</Card>
+```
+
+#### Dialog
+
+```svelte
+<script>
+	import {
+		Dialog,
+		DialogContent,
+		DialogDescription,
+		DialogFooter,
+		DialogHeader,
+		DialogTitle,
+		DialogTrigger
+	} from '$lib/components/ui/dialog';
+</script>
+
+<Dialog>
+	<DialogTrigger>Open Dialog</DialogTrigger>
+	<DialogContent>
+		<DialogHeader>
+			<DialogTitle>Dialog Title</DialogTitle>
+			<DialogDescription>Dialog description</DialogDescription>
+		</DialogHeader>
+		<DialogFooter>
+			<Button>Action</Button>
+		</DialogFooter>
+	</DialogContent>
+</Dialog>
+```
+
+#### Drawer
+
+```svelte
+<script>
+	import {
+		Drawer,
+		DrawerContent,
+		DrawerDescription,
+		DrawerFooter,
+		DrawerHeader,
+		DrawerTitle,
+		DrawerTrigger
+	} from '$lib/components/ui/drawer';
+</script>
+
+<Drawer>
+	<DrawerTrigger>Open Drawer</DrawerTrigger>
+	<DrawerContent>
+		<DrawerHeader>
+			<DrawerTitle>Drawer Title</DrawerTitle>
+			<DrawerDescription>Drawer description</DrawerDescription>
+		</DrawerHeader>
+		<DrawerFooter>
+			<Button>Action</Button>
+		</DrawerFooter>
+	</DrawerContent>
+</Drawer>
+```
+
+### Navigation Components
+
+#### Breadcrumb
+
+```svelte
+<script>
+	import {
+		Breadcrumb,
+		BreadcrumbItem,
+		BreadcrumbLink,
+		BreadcrumbList,
+		BreadcrumbPage,
+		BreadcrumbSeparator
+	} from '$lib/components/ui/breadcrumb';
+</script>
+
+<Breadcrumb>
+	<BreadcrumbList>
+		<BreadcrumbItem>
+			<BreadcrumbLink href="/">Home</BreadcrumbLink>
+		</BreadcrumbItem>
+		<BreadcrumbSeparator />
+		<BreadcrumbItem>
+			<BreadcrumbPage>Current Page</BreadcrumbPage>
+		</BreadcrumbItem>
+	</BreadcrumbList>
+</Breadcrumb>
+```
+
+#### Navigation Menu
+
+```svelte
+<script>
+	import {
+		NavigationMenu,
+		NavigationMenuContent,
+		NavigationMenuItem,
+		NavigationMenuLink,
+		NavigationMenuList,
+		NavigationMenuTrigger
+	} from '$lib/components/ui/navigation-menu';
+</script>
+
+<NavigationMenu>
+	<NavigationMenuList>
+		<NavigationMenuItem>
+			<NavigationMenuTrigger>Item</NavigationMenuTrigger>
+			<NavigationMenuContent>
+				<NavigationMenuLink>Link</NavigationMenuLink>
+			</NavigationMenuContent>
+		</NavigationMenuItem>
+	</NavigationMenuList>
+</NavigationMenu>
+```
+
+#### Command (Search)
+
+```svelte
+<script>
+	import {
+		Command,
+		CommandDialog,
+		CommandEmpty,
+		CommandGroup,
+		CommandInput,
+		CommandItem,
+		CommandList
+	} from '$lib/components/ui/command';
+</script>
+
+<Command>
+	<CommandInput placeholder="Search..." />
+	<CommandList>
+		<CommandEmpty>No results found.</CommandEmpty>
+		<CommandGroup heading="Suggestions">
+			<CommandItem>Item 1</CommandItem>
+			<CommandItem>Item 2</CommandItem>
+		</CommandGroup>
+	</CommandList>
+</Command>
+```
+
+### Form Components
+
+#### Form with Validation
+
+```svelte
+<script>
+	import {
+		Form,
+		FormField,
+		FormItem,
+		FormLabel,
+		FormControl,
+		FormDescription,
+		FormMessage
+	} from '$lib/components/ui/form';
+	import { Input } from '$lib/components/ui/input';
+	import { Button } from '$lib/components/ui/button';
+	import { superForm } from 'sveltekit-superforms/client';
+	import { form } from './schema.js';
+
+	const { form: formData, enhance, errors } = superForm(form);
+</script>
+
+<Form method="POST" use:enhance>
+	<FormField {errors} field={$formData.email}>
+		<FormItem>
+			<FormLabel>Email</FormLabel>
+			<FormControl>
+				<Input bind:value={$formData.email} type="email" />
+			</FormControl>
+			<FormDescription>Enter your email address</FormDescription>
+			<FormMessage />
+		</FormItem>
+	</FormField>
+
+	<Button type="submit">Submit</Button>
+</Form>
+```
+
+#### Input Components
+
+```svelte
+<script>
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { InputOTP, InputOTPGroup, InputOTPSlot } from '$lib/components/ui/input-otp';
+</script>
+
+<!-- Regular Input -->
+<Label for="email">Email</Label>
+<Input id="email" type="email" placeholder="Enter email" />
+
+<!-- OTP Input -->
+<InputOTP maxLength={6}>
+	<InputOTPGroup>
+		<InputOTPSlot index={0} />
+		<InputOTPSlot index={1} />
+		<InputOTPSlot index={2} />
+		<InputOTPSlot index={3} />
+		<InputOTPSlot index={4} />
+		<InputOTPSlot index={5} />
+	</InputOTPGroup>
+</InputOTP>
+```
+
+#### Radio Group
+
+```svelte
+<script>
+	import { RadioGroup, RadioGroupItem } from '$lib/components/ui/radio-group';
+	import { Label } from '$lib/components/ui/label';
+</script>
+
+<RadioGroup value="option-1">
+	<div class="flex items-center space-x-2">
+		<RadioGroupItem value="option-1" id="option-1" />
+		<Label for="option-1">Option 1</Label>
+	</div>
+	<div class="flex items-center space-x-2">
+		<RadioGroupItem value="option-2" id="option-2" />
+		<Label for="option-2">Option 2</Label>
+	</div>
+</RadioGroup>
+```
+
+### Data Display Components
+
+#### Table
+
+```svelte
+<script>
+	import {
+		Table,
+		TableBody,
+		TableCaption,
+		TableCell,
+		TableHead,
+		TableHeader,
+		TableRow
+	} from '$lib/components/ui/table';
+</script>
+
+<Table>
+	<TableCaption>A list of items</TableCaption>
+	<TableHeader>
+		<TableRow>
+			<TableHead>Name</TableHead>
+			<TableHead>Email</TableHead>
+			<TableHead>Status</TableHead>
+		</TableRow>
+	</TableHeader>
+	<TableBody>
+		<TableRow>
+			<TableCell>John Doe</TableCell>
+			<TableCell>john@example.com</TableCell>
+			<TableCell>Active</TableCell>
+		</TableRow>
+	</TableBody>
+</Table>
+```
+
+#### Data Table (Advanced)
+
+```svelte
+<script>
+	import { DataTable } from '$lib/components/ui/data-table';
+	import { columns } from './columns.js';
+
+	let data = $state([]);
+</script>
+
+<DataTable {columns} {data} />
+```
+
+#### Badge
+
+```svelte
+<script>
+	import { Badge } from '$lib/components/ui/badge';
+</script>
+
+<Badge variant="default">Default</Badge>
+<Badge variant="secondary">Secondary</Badge>
+<Badge variant="destructive">Destructive</Badge>
+<Badge variant="outline">Outline</Badge>
+```
+
+#### Avatar
+
+```svelte
+<script>
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+</script>
+
+<Avatar>
+	<AvatarImage src="/path/to/image.jpg" alt="User" />
+	<AvatarFallback>JD</AvatarFallback>
+</Avatar>
+```
+
+#### Progress
+
+```svelte
+<script>
+	import { Progress } from '$lib/components/ui/progress';
+
+	let progress = $state(50);
+</script>
+
+<Progress value={progress} />
+```
+
+### Feedback Components
+
+#### Alert Dialog
+
+```svelte
+<script>
+	import {
+		AlertDialog,
+		AlertDialogAction,
+		AlertDialogCancel,
+		AlertDialogContent,
+		AlertDialogDescription,
+		AlertDialogFooter,
+		AlertDialogHeader,
+		AlertDialogTitle,
+		AlertDialogTrigger
+	} from '$lib/components/ui/alert-dialog';
+	import { Button } from '$lib/components/ui/button';
+</script>
+
+<AlertDialog>
+	<AlertDialogTrigger asChild>
+		<Button variant="destructive">Delete</Button>
+	</AlertDialogTrigger>
+	<AlertDialogContent>
+		<AlertDialogHeader>
+			<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+			<AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel>Cancel</AlertDialogCancel>
+			<AlertDialogAction>Continue</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>
+```
+
+#### Dropdown Menu
+
+```svelte
+<script>
+	import {
+		DropdownMenu,
+		DropdownMenuContent,
+		DropdownMenuItem,
+		DropdownMenuLabel,
+		DropdownMenuSeparator,
+		DropdownMenuTrigger
+	} from '$lib/components/ui/dropdown-menu';
+	import { Button } from '$lib/components/ui/button';
+</script>
+
+<DropdownMenu>
+	<DropdownMenuTrigger asChild>
+		<Button variant="outline">Open Menu</Button>
+	</DropdownMenuTrigger>
+	<DropdownMenuContent>
+		<DropdownMenuLabel>My Account</DropdownMenuLabel>
+		<DropdownMenuSeparator />
+		<DropdownMenuItem>Profile</DropdownMenuItem>
+		<DropdownMenuItem>Settings</DropdownMenuItem>
+		<DropdownMenuItem>Logout</DropdownMenuItem>
+	</DropdownMenuContent>
+</DropdownMenu>
+```
+
+#### Context Menu
+
+```svelte
+<script>
+	import {
+		ContextMenu,
+		ContextMenuContent,
+		ContextMenuItem,
+		ContextMenuTrigger
+	} from '$lib/components/ui/context-menu';
+</script>
+
+<ContextMenu>
+	<ContextMenuTrigger>
+		<div>Right click me</div>
+	</ContextMenuTrigger>
+	<ContextMenuContent>
+		<ContextMenuItem>Copy</ContextMenuItem>
+		<ContextMenuItem>Paste</ContextMenuItem>
+	</ContextMenuContent>
+</ContextMenu>
+```
+
+#### Hover Card
+
+```svelte
+<script>
+	import { HoverCard, HoverCardContent, HoverCardTrigger } from '$lib/components/ui/hover-card';
+</script>
+
+<HoverCard>
+	<HoverCardTrigger>Hover me</HoverCardTrigger>
+	<HoverCardContent>Additional information appears here</HoverCardContent>
+</HoverCard>
+```
+
+### Pagination
+
+```svelte
+<script>
+	import {
+		Pagination,
+		PaginationContent,
+		PaginationEllipsis,
+		PaginationItem,
+		PaginationLink,
+		PaginationNext,
+		PaginationPrevious
+	} from '$lib/components/ui/pagination';
+</script>
+
+<Pagination>
+	<PaginationContent>
+		<PaginationItem>
+			<PaginationPrevious href="#" />
+		</PaginationItem>
+		<PaginationItem>
+			<PaginationLink href="#">1</PaginationLink>
+		</PaginationItem>
+		<PaginationItem>
+			<PaginationLink href="#" isActive>2</PaginationLink>
+		</PaginationItem>
+		<PaginationItem>
+			<PaginationLink href="#">3</PaginationLink>
+		</PaginationItem>
+		<PaginationItem>
+			<PaginationEllipsis />
+		</PaginationItem>
+		<PaginationItem>
+			<PaginationNext href="#" />
+		</PaginationItem>
+	</PaginationContent>
+</Pagination>
+```
+
+## Styling Guidelines
+
+### Using the `cn()` Utility
+
+```svelte
+<script>
+	import { cn } from '$lib/utils';
+	import { Button } from '$lib/components/ui/button';
+
+	let variant = $state('default');
+</script>
+
+<Button
+	class={cn('w-full', variant === 'destructive' && 'text-destructive-foreground bg-destructive')}
+>
+	Button
+</Button>
+```
+
+### Color System Usage
+
+```svelte
+<!-- Background colors -->
+<div class="bg-background">Main background</div>
+<div class="bg-card">Card background</div>
+<div class="bg-muted">Muted background</div>
+
+<!-- Text colors -->
+<div class="text-foreground">Main text</div>
+<div class="text-muted-foreground">Muted text</div>
+<div class="text-primary">Primary text</div>
+
+<!-- Border colors -->
+<div class="border border-border">Border</div>
+<div class="border border-input">Input border</div>
+```
+
+### Responsive Design
+
+```svelte
+<script>
+	import { Card, CardContent } from '$lib/components/ui/card';
+</script>
+
+<Card class="w-full md:w-1/2 lg:w-1/3">
+	<CardContent class="p-4 md:p-6">Content</CardContent>
+</Card>
+```
+
+## Accessibility Guidelines
+
+### ARIA Attributes
+
+- Use proper ARIA labels for interactive elements
+- Implement keyboard navigation
+- Ensure proper focus management
+- Use semantic HTML elements
+
+### Screen Reader Support
+
+```svelte
+<script>
+	import { Button } from '$lib/components/ui/button';
+</script>
+
+<Button aria-label="Close dialog" aria-describedby="dialog-description">×</Button>
+<div id="dialog-description" class="sr-only">Closes the current dialog</div>
+```
+
+## Component Composition Patterns
+
+### Reusable Form Fields
+
+```svelte
+<!-- FormField.svelte -->
+<script>
+	import {
+		FormField,
+		FormItem,
+		FormLabel,
+		FormControl,
+		FormMessage
+	} from '$lib/components/ui/form';
+	import { Input } from '$lib/components/ui/input';
+
+	let { errors, field, label, type = 'text', placeholder } = $props();
+</script>
+
+<FormField {errors} {field}>
+	<FormItem>
+		<FormLabel>{label}</FormLabel>
+		<FormControl>
+			<Input bind:value={$field} {type} {placeholder} />
+		</FormControl>
+		<FormMessage />
+	</FormItem>
+</FormField>
+```
+
+### Layout Components
+
+```svelte
+<!-- PageLayout.svelte -->
+<script>
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+
+	let { title, description } = $props();
+</script>
+
+<div class="container mx-auto p-4">
+	<Card>
+		<CardHeader>
+			<CardTitle>{title}</CardTitle>
+			{#if description}
+				<p class="text-muted-foreground">{description}</p>
+			{/if}
+		</CardHeader>
+		<CardContent>
+			<slot />
+		</CardContent>
+	</Card>
+</div>
+```
+
+## Best Practices
+
+1. **Consistency**: Use the same component patterns throughout the app
+2. **Accessibility**: Always include proper ARIA attributes and keyboard support
+3. **Performance**: Use `{#key}` blocks when rendering dynamic lists
+4. **TypeScript**: Define proper interfaces for component props
+5. **Styling**: Use Tailwind classes and the `cn()` utility for custom styling
+6. **Responsive**: Design for mobile-first with responsive utilities
+7. **Testing**: Test components with different screen sizes and assistive technologies
+   description:
+   globs:
+   alwaysApply: false
+
+---

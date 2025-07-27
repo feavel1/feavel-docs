@@ -1,8 +1,95 @@
----
-description: Supabase safty
-globs:
-alwaysApply: false
----
+# Supabase Integration Rules
+
+## Security First
+
+- **NEVER trust session data from `auth.getSession()`** - it comes from local storage and can be tampered with
+- **ALWAYS use `auth.getUser()`** for server-side operations to get verified user data
+- Use `event.locals.safeGetSession()` for auth checks in SvelteKit
+- Implement Row Level Security (RLS) policies for all tables
+
+## MCP Supabase Server Integration
+
+Use MCP Supabase server for database operations:
+
+### Database Operations
+
+- Use `mcp_supabase_execute_sql` for data queries and operations
+- Use `mcp_supabase_apply_migration` for schema changes and DDL operations
+- Use `mcp_supabase_list_tables` to explore database structure
+- Use `mcp_supabase_get_advisors` for security and performance checks
+
+### Branch Management
+
+- Use `mcp_supabase_create_branch` for development branches
+- Use `mcp_supabase_merge_branch` to merge changes to production
+- Use `mcp_supabase_list_branches` to see available branches
+
+### Type Generation
+
+- Use `mcp_supabase_generate_typescript_types` to generate TypeScript types
+- Keep types in sync with database schema
+
+## Project-Specific Patterns
+
+### Server-side Supabase Client
+
+```typescript
+// Always use event.locals.supabase in server-side code
+export const load = async ({ locals }) => {
+	const { data, error } = await locals.supabase.from('table_name').select('*');
+
+	if (error) throw error;
+	return { data };
+};
+```
+
+### Authentication Checks
+
+```typescript
+// Use safeGetSession for verified user data
+export const load = async ({ locals }) => {
+	const { session, user } = await locals.safeGetSession();
+
+	if (!session) {
+		throw redirect(303, '/auth/login');
+	}
+
+	return { user };
+};
+```
+
+### Client-side Supabase
+
+```typescript
+// Create client in $lib/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr';
+
+export const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+```
+
+## Database Schema Guidelines
+
+- Use UUIDs for primary keys
+- Implement proper foreign key relationships
+- Add created_at and updated_at timestamps
+- Use appropriate data types (text, integer, boolean, jsonb)
+- Implement RLS policies for all tables
+
+## Error Handling
+
+- Always check for errors in Supabase responses
+- Implement proper error boundaries
+- Log errors for debugging
+- Show user-friendly error messages
+
+## Performance
+
+- Use select() to limit returned columns
+- Implement pagination for large datasets
+- Use indexes for frequently queried columns
+- Consider using real-time subscriptions sparingly
 
 Note that auth.getSession reads the auth token and the unencoded session data from the local storage medium. It doesn't send a request back to the Supabase Auth server unless the local session is expired.
 You should never trust the unencoded session data if you're writing server code, since it could be tampered with by the sender. If you need verified, trustworthy user data, call auth.getUser instead, which always makes a request to the Auth server to fetch trusted data.
+
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
