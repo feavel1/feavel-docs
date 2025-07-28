@@ -19,7 +19,6 @@
 	let { children, data } = $props();
 	let { supabase, session, userProfile } = data;
 
-	// Get the avatar display URL
 	const avatarDisplayUrl = $derived(
 		getAvatarUrl(userProfile?.avatar_url, userProfile?.username, supabase)
 	);
@@ -38,13 +37,13 @@
 	}
 </script>
 
+<!-- Hidden locale links for SEO -->
 <div style="display:none">
 	{#each locales as locale}
 		<a href={localizeHref(page.url.pathname, { locale })}>{locale}</a>
 	{/each}
 </div>
 
-<!-- Navigation Header -->
 {#if session}
 	<header class="bg-white shadow">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -60,8 +59,8 @@
 						</a>
 					</nav>
 				</div>
-				<div class="flex items-center space-x-4">
-					{#if userProfile}
+				{#if userProfile}
+					<div class="flex items-center space-x-4">
 						<DropdownMenu>
 							<DropdownMenuTrigger>
 								<Button variant="ghost" class="relative h-8 w-8 rounded-full">
@@ -95,8 +94,8 @@
 								<DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</header>

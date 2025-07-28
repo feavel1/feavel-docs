@@ -19,9 +19,6 @@ export interface DownloadOptions {
 	bucket?: string;
 }
 
-/**
- * Upload a file to Supabase storage
- */
 export async function uploadFile(
 	supabase: SupabaseClient,
 	options: UploadOptions
@@ -52,9 +49,6 @@ export async function uploadFile(
 	}
 }
 
-/**
- * Download a file from Supabase storage
- */
 export async function downloadFile(
 	supabase: SupabaseClient,
 	options: DownloadOptions
@@ -76,9 +70,6 @@ export async function downloadFile(
 	}
 }
 
-/**
- * Delete a file from Supabase storage
- */
 export async function deleteFile(
 	supabase: SupabaseClient,
 	options: DownloadOptions
@@ -100,9 +91,6 @@ export async function deleteFile(
 	}
 }
 
-/**
- * Get a public URL for a file
- */
 export async function getFileUrl(
 	supabase: SupabaseClient,
 	options: DownloadOptions
@@ -111,7 +99,6 @@ export async function getFileUrl(
 
 	try {
 		const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-
 		return data.publicUrl;
 	} catch (error) {
 		console.error('Get URL failed:', error);
@@ -119,16 +106,11 @@ export async function getFileUrl(
 	}
 }
 
-/**
- * Upload an avatar file to Supabase storage
- * Generates a clean filename and stores in avatars folder
- */
 export async function uploadAvatar(
 	supabase: SupabaseClient,
 	file: File,
 	userId: string
 ): Promise<StorageFile | null> {
-	// Generate a clean filename with timestamp and random number
 	const timestamp = Date.now();
 	const random = Math.random();
 	const extension = file.name.split('.').pop() || 'jpeg';
@@ -136,7 +118,6 @@ export async function uploadAvatar(
 	const path = `avatars/${filename}`;
 
 	try {
-		// Upload the file
 		const result = await uploadFile(supabase, {
 			file,
 			path,
@@ -144,11 +125,8 @@ export async function uploadAvatar(
 			upsert: true
 		});
 
-		if (!result) {
-			return null;
-		}
+		if (!result) return null;
 
-		// Update the user's avatar_url in the database
 		const { error: updateError } = await supabase
 			.from('users')
 			.update({ avatar_url: filename })
@@ -156,7 +134,6 @@ export async function uploadAvatar(
 
 		if (updateError) {
 			console.error('Failed to update avatar_url:', updateError);
-			// Clean up the uploaded file if database update fails
 			await deleteFile(supabase, { path, bucket: 'storage' });
 			return null;
 		}
@@ -168,28 +145,19 @@ export async function uploadAvatar(
 	}
 }
 
-/**
- * Delete an avatar file from Supabase storage
- */
 export async function deleteAvatar(
 	supabase: SupabaseClient,
 	userId: string,
 	avatarFilename?: string
 ): Promise<boolean> {
-	if (!avatarFilename) {
-		return true; // Nothing to delete
-	}
+	if (!avatarFilename) return true;
 
 	const path = `avatars/${avatarFilename}`;
 	const success = await deleteFile(supabase, { path, bucket: 'storage' });
 
 	if (success) {
-		// Clear the avatar_url in the database
 		const { error } = await supabase.from('users').update({ avatar_url: null }).eq('id', userId);
-
-		if (error) {
-			console.error('Failed to clear avatar_url:', error);
-		}
+		if (error) console.error('Failed to clear avatar_url:', error);
 	}
 
 	return success;

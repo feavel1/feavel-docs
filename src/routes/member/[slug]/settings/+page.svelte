@@ -23,7 +23,6 @@
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
 			<div class="px-6 py-12 shadow sm:rounded-lg sm:px-12">
 				<div class="space-y-6">
-					<!-- Avatar Upload Section -->
 					<div>
 						<h3 class="mb-4 text-lg font-medium text-gray-900">Profile Picture</h3>
 						<AvatarUpload
@@ -37,7 +36,6 @@
 
 					<hr class="border-gray-200" />
 
-					<!-- Profile Information -->
 					<div class="space-y-4">
 						<h3 class="text-lg font-medium text-gray-900">Profile Information</h3>
 						<div>

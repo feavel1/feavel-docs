@@ -20,187 +20,19 @@ This project uses Shadcn-Svelte components for consistent, accessible UI. All co
 
 #### Accordion
 
-```svelte
-<script>
-	import {
-		Accordion,
-		AccordionContent,
-		AccordionItem,
-		AccordionTrigger
-	} from '$lib/components/ui/accordion';
-</script>
-
-<Accordion type="single" collapsible>
-	<AccordionItem value="item-1">
-		<AccordionTrigger>Section 1</AccordionTrigger>
-		<AccordionContent>Content for section 1</AccordionContent>
-	</AccordionItem>
-</Accordion>
-```
-
 #### Card
-
-```svelte
-<script>
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardFooter,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
-</script>
-
-<Card>
-	<CardHeader>
-		<CardTitle>Card Title</CardTitle>
-		<CardDescription>Card description</CardDescription>
-	</CardHeader>
-	<CardContent>Card content</CardContent>
-	<CardFooter>Card footer</CardFooter>
-</Card>
-```
 
 #### Dialog
 
-```svelte
-<script>
-	import {
-		Dialog,
-		DialogContent,
-		DialogDescription,
-		DialogFooter,
-		DialogHeader,
-		DialogTitle,
-		DialogTrigger
-	} from '$lib/components/ui/dialog';
-</script>
-
-<Dialog>
-	<DialogTrigger>Open Dialog</DialogTrigger>
-	<DialogContent>
-		<DialogHeader>
-			<DialogTitle>Dialog Title</DialogTitle>
-			<DialogDescription>Dialog description</DialogDescription>
-		</DialogHeader>
-		<DialogFooter>
-			<Button>Action</Button>
-		</DialogFooter>
-	</DialogContent>
-</Dialog>
-```
-
 #### Drawer
-
-```svelte
-<script>
-	import {
-		Drawer,
-		DrawerContent,
-		DrawerDescription,
-		DrawerFooter,
-		DrawerHeader,
-		DrawerTitle,
-		DrawerTrigger
-	} from '$lib/components/ui/drawer';
-</script>
-
-<Drawer>
-	<DrawerTrigger>Open Drawer</DrawerTrigger>
-	<DrawerContent>
-		<DrawerHeader>
-			<DrawerTitle>Drawer Title</DrawerTitle>
-			<DrawerDescription>Drawer description</DrawerDescription>
-		</DrawerHeader>
-		<DrawerFooter>
-			<Button>Action</Button>
-		</DrawerFooter>
-	</DrawerContent>
-</Drawer>
-```
 
 ### Navigation Components
 
 #### Breadcrumb
 
-```svelte
-<script>
-	import {
-		Breadcrumb,
-		BreadcrumbItem,
-		BreadcrumbLink,
-		BreadcrumbList,
-		BreadcrumbPage,
-		BreadcrumbSeparator
-	} from '$lib/components/ui/breadcrumb';
-</script>
-
-<Breadcrumb>
-	<BreadcrumbList>
-		<BreadcrumbItem>
-			<BreadcrumbLink href="/">Home</BreadcrumbLink>
-		</BreadcrumbItem>
-		<BreadcrumbSeparator />
-		<BreadcrumbItem>
-			<BreadcrumbPage>Current Page</BreadcrumbPage>
-		</BreadcrumbItem>
-	</BreadcrumbList>
-</Breadcrumb>
-```
-
 #### Navigation Menu
 
-```svelte
-<script>
-	import {
-		NavigationMenu,
-		NavigationMenuContent,
-		NavigationMenuItem,
-		NavigationMenuLink,
-		NavigationMenuList,
-		NavigationMenuTrigger
-	} from '$lib/components/ui/navigation-menu';
-</script>
-
-<NavigationMenu>
-	<NavigationMenuList>
-		<NavigationMenuItem>
-			<NavigationMenuTrigger>Item</NavigationMenuTrigger>
-			<NavigationMenuContent>
-				<NavigationMenuLink>Link</NavigationMenuLink>
-			</NavigationMenuContent>
-		</NavigationMenuItem>
-	</NavigationMenuList>
-</NavigationMenu>
-```
-
 #### Command (Search)
-
-```svelte
-<script>
-	import {
-		Command,
-		CommandDialog,
-		CommandEmpty,
-		CommandGroup,
-		CommandInput,
-		CommandItem,
-		CommandList
-	} from '$lib/components/ui/command';
-</script>
-
-<Command>
-	<CommandInput placeholder="Search..." />
-	<CommandList>
-		<CommandEmpty>No results found.</CommandEmpty>
-		<CommandGroup heading="Suggestions">
-			<CommandItem>Item 1</CommandItem>
-			<CommandItem>Item 2</CommandItem>
-		</CommandGroup>
-	</CommandList>
-</Command>
-```
 
 ### Form Components
 

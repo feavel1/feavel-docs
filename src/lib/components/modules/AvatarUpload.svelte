@@ -4,7 +4,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card, CardContent } from '$lib/components/ui/card';
-	import { Label } from '$lib/components/ui/label';
 	import { uploadAvatar, deleteAvatar } from '$lib/utils/supabase';
 	import { getAvatarUrl } from '$lib/utils/user';
 	import { toast } from 'svelte-sonner';
@@ -15,10 +14,8 @@
 	let fileInput: HTMLInputElement;
 	let currentAvatar = $state(currentAvatarUrl);
 
-	// Get the display URL for the current avatar
 	const avatarDisplayUrl = $derived(getAvatarUrl(currentAvatar, username, supabase));
 
-	// Compress image function
 	async function compressImage(
 		file: File,
 		maxWidth = 400,
@@ -31,7 +28,6 @@
 			const img = new Image();
 
 			img.onload = () => {
-				// Calculate new dimensions maintaining aspect ratio
 				let { width, height } = img;
 				if (width > height) {
 					if (width > maxWidth) {
@@ -47,8 +43,6 @@
 
 				canvas.width = width;
 				canvas.height = height;
-
-				// Draw and compress
 				ctx.drawImage(img, 0, 0, width, height);
 				canvas.toBlob(
 					(blob) => {
@@ -77,13 +71,11 @@
 
 		if (!file) return;
 
-		// Validate file type
 		if (!file.type.startsWith('image/')) {
 			toast.error('Please select an image file');
 			return;
 		}
 
-		// Validate file size (max 5MB)
 		if (file.size > 5 * 1024 * 1024) {
 			toast.error('File size must be less than 5MB');
 			return;
@@ -92,13 +84,11 @@
 		uploading = true;
 
 		try {
-			// Compress the image before upload
 			const compressedFile = await compressImage(file);
 			const result = await uploadAvatar(supabase, compressedFile, userId);
 
 			if (result) {
 				toast.success('Avatar uploaded successfully');
-				// Update the local state immediately for real-time feedback
 				currentAvatar = result.path;
 				dispatch('avatarUpdated', { avatarUrl: result.path });
 			} else {
@@ -109,10 +99,7 @@
 			toast.error('Failed to upload avatar');
 		} finally {
 			uploading = false;
-			// Reset file input
-			if (fileInput) {
-				fileInput.value = '';
-			}
+			if (fileInput) fileInput.value = '';
 		}
 	}
 
@@ -126,7 +113,6 @@
 
 			if (success) {
 				toast.success('Avatar removed successfully');
-				// Update the local state immediately for real-time feedback
 				currentAvatar = null;
 				dispatch('avatarUpdated', { avatarUrl: null });
 			} else {
@@ -148,7 +134,6 @@
 <Card class="w-full max-w-sm">
 	<CardContent class="p-6">
 		<div class="flex flex-col items-center space-y-4">
-			<!-- Avatar Display with better aspect ratio -->
 			<div class="relative">
 				<Avatar class="h-32 w-32 rounded-full ring-4 ring-gray-100">
 					<AvatarImage src={avatarDisplayUrl} alt="Profile picture" class="object-cover" />
@@ -165,7 +150,6 @@
 				{/if}
 			</div>
 
-			<!-- Upload Controls -->
 			<div class="flex w-full flex-col space-y-2">
 				<input
 					bind:this={fileInput}
@@ -192,7 +176,6 @@
 				{/if}
 			</div>
 
-			<!-- Help Text -->
 			<div class="text-center text-sm text-muted-foreground">
 				<p>Upload a profile picture (JPG, PNG, GIF)</p>
 				<p>Maximum file size: 5MB • Images will be compressed automatically</p>
