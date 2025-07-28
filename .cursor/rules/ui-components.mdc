@@ -2,6 +2,8 @@
 
 ## Overview
 
+https://www.shadcn-svelte.com/docs
+
 This project uses Shadcn-Svelte components for consistent, accessible UI. All components are available in `src/lib/components/ui/` and follow the Shadcn design system.
 
 ## Core Principles

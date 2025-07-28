@@ -23,7 +23,7 @@ export const actions: Actions = {
 		const { email, password } = form.data;
 		const { error } = await supabase.auth.signUp({ email, password });
 		if (error) {
-			form.errors = { email: error.message };
+			form.errors = { email: [error.message] };
 			return fail(400, { form });
 		}
 		// Optionally, redirect or show a message

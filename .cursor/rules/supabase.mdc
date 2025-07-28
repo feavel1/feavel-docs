@@ -58,15 +58,6 @@ export const load = async ({ locals }) => {
 };
 ```
 
-### Client-side Supabase
-
-```typescript
-// Create client in $lib/supabase/client.ts
-import { createBrowserClient } from '@supabase/ssr';
-
-export const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
-```
-
 ## Database Schema Guidelines
 
 - Use UUIDs for primary keys
