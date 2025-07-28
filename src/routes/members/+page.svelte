@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { getAvatarDisplayUrl } from '$lib/utils/user';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	const { data: propsData } = $props();
-	const { userProfiles, session } = propsData;
-	const { supabase } = $page.data;
+	const { userProfiles, session, supabase } = propsData;
 
 	function handleImageError(event: Event) {
 		const img = event.target as HTMLImageElement;
@@ -38,7 +36,7 @@
 										>
 											<img
 												class="h-12 w-12 rounded-full object-cover"
-												src={getAvatarDisplayUrl(userProfile.avatar_url, userProfile.username)}
+												src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
 												alt={userProfile.full_name || userProfile.username}
 												onerror={handleImageError}
 											/>

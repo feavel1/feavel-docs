@@ -1,63 +1,47 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { SupabaseClient } from '@supabase/supabase-js';
-	import { uploadUserAvatar } from '$lib/utils/supabase.js';
-	import { getAvatarDisplayUrl as getUserAvatarUrl } from '$lib/utils/user.js';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		AlertDialog,
-		AlertDialogAction,
-		AlertDialogCancel,
-		AlertDialogContent,
-		AlertDialogDescription,
-		AlertDialogFooter,
-		AlertDialogHeader,
-		AlertDialogTitle,
-		AlertDialogTrigger
-	} from '$lib/components/ui/alert-dialog';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { Card, CardContent } from '$lib/components/ui/card';
+	import { Label } from '$lib/components/ui/label';
+	import { uploadAvatar, deleteAvatar } from '$lib/utils/supabase';
+	import { getAvatarUrl } from '$lib/utils/user';
+	import { toast } from 'svelte-sonner';
 
-	export let supabase: SupabaseClient;
-	export let userId: string;
-	export let currentAvatarUrl: string | null = null;
-	export let username: string = '';
-
-	const dispatch = createEventDispatcher<{
-		upload: { success: boolean; url?: string; error?: string };
-	}>();
-
-	let isUploading = false;
-	let uploadError = '';
-	let uploadSuccess = false;
+	const { supabase, userId, username, currentAvatarUrl } = $props();
+	const dispatch = createEventDispatcher();
+	let uploading = $state(false);
 	let fileInput: HTMLInputElement;
-	let showConfirmDialog = false;
-	let selectedFile: File | null = null;
-	let previewUrl = '';
+	let currentAvatar = $state(currentAvatarUrl);
 
-	// Get display URL for current avatar
-	$: displayUrl = currentAvatarUrl || getUserAvatarUrl(null, username);
+	// Get the display URL for the current avatar
+	const avatarDisplayUrl = $derived(getAvatarUrl(currentAvatar, username, supabase));
 
-	// Compress image before upload
-	async function compressImage(file: File): Promise<File> {
+	// Compress image function
+	async function compressImage(
+		file: File,
+		maxWidth = 400,
+		maxHeight = 400,
+		quality = 0.8
+	): Promise<File> {
 		return new Promise((resolve) => {
 			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
+			const ctx = canvas.getContext('2d')!;
 			const img = new Image();
 
 			img.onload = () => {
-				// Set canvas size (max 400x400 for avatars)
-				const maxSize = 400;
+				// Calculate new dimensions maintaining aspect ratio
 				let { width, height } = img;
-
 				if (width > height) {
-					if (width > maxSize) {
-						height = (height * maxSize) / width;
-						width = maxSize;
+					if (width > maxWidth) {
+						height = (height * maxWidth) / width;
+						width = maxWidth;
 					}
 				} else {
-					if (height > maxSize) {
-						width = (width * maxSize) / height;
-						height = maxSize;
+					if (height > maxHeight) {
+						width = (width * maxHeight) / height;
+						height = maxHeight;
 					}
 				}
 
@@ -65,8 +49,7 @@
 				canvas.height = height;
 
 				// Draw and compress
-				ctx?.drawImage(img, 0, 0, width, height);
-
+				ctx.drawImage(img, 0, 0, width, height);
 				canvas.toBlob(
 					(blob) => {
 						if (blob) {
@@ -80,7 +63,7 @@
 						}
 					},
 					'image/jpeg',
-					0.8 // 80% quality
+					quality
 				);
 			};
 
@@ -96,140 +79,124 @@
 
 		// Validate file type
 		if (!file.type.startsWith('image/')) {
-			uploadError = 'Please select an image file';
+			toast.error('Please select an image file');
 			return;
 		}
 
-		// Validate file size (max 10MB before compression)
-		if (file.size > 10 * 1024 * 1024) {
-			uploadError = 'File size must be less than 10MB';
+		// Validate file size (max 5MB)
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error('File size must be less than 5MB');
 			return;
 		}
 
-		// Create preview
-		selectedFile = file;
-		previewUrl = URL.createObjectURL(file);
-		showConfirmDialog = true;
-		uploadError = '';
-	}
-
-	async function confirmUpload() {
-		if (!selectedFile) return;
-
-		isUploading = true;
-		uploadError = '';
-		uploadSuccess = false;
+		uploading = true;
 
 		try {
-			// Compress the image
-			const compressedFile = await compressImage(selectedFile);
-
-			// Upload the compressed file
-			const result = await uploadUserAvatar(supabase, compressedFile, userId);
+			// Compress the image before upload
+			const compressedFile = await compressImage(file);
+			const result = await uploadAvatar(supabase, compressedFile, userId);
 
 			if (result) {
-				uploadSuccess = true;
-				// Update the display URL immediately
-				currentAvatarUrl = result.url;
-				dispatch('upload', { success: true, url: result.url });
+				toast.success('Avatar uploaded successfully');
+				// Update the local state immediately for real-time feedback
+				currentAvatar = result.path;
+				dispatch('avatarUpdated', { avatarUrl: result.path });
 			} else {
-				uploadError = 'Failed to upload avatar';
-				dispatch('upload', { success: false, error: 'Upload failed' });
+				toast.error('Failed to upload avatar');
 			}
 		} catch (error) {
-			uploadError = 'Upload failed';
-			dispatch('upload', { success: false, error: 'Upload failed' });
+			console.error('Upload error:', error);
+			toast.error('Failed to upload avatar');
 		} finally {
-			isUploading = false;
-			showConfirmDialog = false;
-			selectedFile = null;
-			previewUrl = '';
+			uploading = false;
 			// Reset file input
 			if (fileInput) {
 				fileInput.value = '';
 			}
-			// Clear success message after 3 seconds
-			if (uploadSuccess) {
-				setTimeout(() => {
-					uploadSuccess = false;
-				}, 3000);
+		}
+	}
+
+	async function handleRemoveAvatar() {
+		if (!currentAvatar) return;
+
+		uploading = true;
+
+		try {
+			const success = await deleteAvatar(supabase, userId, currentAvatar);
+
+			if (success) {
+				toast.success('Avatar removed successfully');
+				// Update the local state immediately for real-time feedback
+				currentAvatar = null;
+				dispatch('avatarUpdated', { avatarUrl: null });
+			} else {
+				toast.error('Failed to remove avatar');
 			}
+		} catch (error) {
+			console.error('Remove error:', error);
+			toast.error('Failed to remove avatar');
+		} finally {
+			uploading = false;
 		}
 	}
 
-	function cancelUpload() {
-		showConfirmDialog = false;
-		selectedFile = null;
-		previewUrl = '';
-		uploadError = '';
-		if (fileInput) {
-			fileInput.value = '';
-		}
-	}
-
-	function triggerFileSelect() {
+	function handleClick() {
 		fileInput?.click();
 	}
 </script>
 
-<div class="flex flex-col items-center gap-4">
-	<Avatar class="h-24 w-24">
-		<AvatarImage src={displayUrl} alt="Avatar" class="object-cover" />
-		<AvatarFallback class="text-lg font-semibold">
-			{username?.charAt(0)?.toUpperCase() || 'U'}
-		</AvatarFallback>
-	</Avatar>
+<Card class="w-full max-w-sm">
+	<CardContent class="p-6">
+		<div class="flex flex-col items-center space-y-4">
+			<!-- Avatar Display with better aspect ratio -->
+			<div class="relative">
+				<Avatar class="h-32 w-32 rounded-full ring-4 ring-gray-100">
+					<AvatarImage src={avatarDisplayUrl} alt="Profile picture" class="object-cover" />
+					<AvatarFallback class="text-lg font-semibold">
+						{username ? username.charAt(0).toUpperCase() : 'U'}
+					</AvatarFallback>
+				</Avatar>
+				{#if uploading}
+					<div
+						class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-full bg-black"
+					>
+						<div class="h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
+					</div>
+				{/if}
+			</div>
 
-	<div class="flex flex-col gap-2">
-		<Button variant="outline" size="sm" onclick={triggerFileSelect} disabled={isUploading}>
-			{isUploading ? 'Uploading...' : 'Change Avatar'}
-		</Button>
+			<!-- Upload Controls -->
+			<div class="flex w-full flex-col space-y-2">
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept="image/*"
+					class="hidden"
+					onchange={handleFileSelect}
+				/>
 
-		{#if uploadSuccess}
-			<p class="text-sm font-medium text-green-600">✓ Avatar updated successfully!</p>
-		{/if}
+				<Button onclick={handleClick} disabled={uploading} variant="outline" class="w-full">
+					{uploading ? 'Uploading...' : 'Upload New Picture'}
+				</Button>
 
-		{#if uploadError}
-			<p class="text-sm text-red-500">{uploadError}</p>
-		{/if}
-	</div>
+				{#if currentAvatar}
+					<Button
+						onclick={handleRemoveAvatar}
+						disabled={uploading}
+						variant="destructive"
+						size="sm"
+						class="w-full"
+					>
+						{uploading ? 'Removing...' : 'Remove Picture'}
+					</Button>
+				{/if}
+			</div>
 
-	<input
-		bind:this={fileInput}
-		type="file"
-		accept="image/*"
-		class="hidden"
-		on:change={handleFileSelect}
-	/>
-
-	<!-- Confirmation Dialog -->
-	<AlertDialog bind:open={showConfirmDialog}>
-		<AlertDialogContent>
-			<AlertDialogHeader>
-				<AlertDialogTitle>Update Avatar</AlertDialogTitle>
-				<AlertDialogDescription>
-					Are you sure you want to update your avatar? This will replace your current profile
-					picture.
-				</AlertDialogDescription>
-			</AlertDialogHeader>
-
-			{#if previewUrl}
-				<div class="my-4 flex justify-center">
-					<Avatar class="h-16 w-16">
-						<AvatarImage src={previewUrl} alt="Preview" class="object-cover" />
-						<AvatarFallback class="text-sm font-semibold">
-							{username?.charAt(0)?.toUpperCase() || 'U'}
-						</AvatarFallback>
-					</Avatar>
-				</div>
-			{/if}
-
-			<AlertDialogFooter>
-				<AlertDialogCancel onclick={cancelUpload}>Cancel</AlertDialogCancel>
-				<AlertDialogAction onclick={confirmUpload} disabled={isUploading}>
-					{isUploading ? 'Uploading...' : 'Update Avatar'}
-				</AlertDialogAction>
-			</AlertDialogFooter>
-		</AlertDialogContent>
-	</AlertDialog>
-</div>
+			<!-- Help Text -->
+			<div class="text-center text-sm text-muted-foreground">
+				<p>Upload a profile picture (JPG, PNG, GIF)</p>
+				<p>Maximum file size: 5MB • Images will be compressed automatically</p>
+			</div>
+		</div>
+	</CardContent>
+</Card>

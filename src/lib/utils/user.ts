@@ -67,10 +67,26 @@ export async function isUsernameAvailable(
 
 /**
  * Get avatar URL for display
- * Returns the stored avatar_url if available, otherwise returns a default avatar
+ * Handles all avatar URL scenarios: full URLs, filenames, and default avatars
  */
-export function getAvatarDisplayUrl(avatarUrl?: string | null, username?: string): string {
+export function getAvatarUrl(
+	avatarUrl?: string | null,
+	username?: string,
+	supabase?: SupabaseClient
+): string {
 	if (avatarUrl) {
+		// If it's already a full URL, return it as is
+		if (avatarUrl.startsWith('http')) {
+			return avatarUrl;
+		}
+
+		// If it's a filename and we have supabase client, construct the storage URL
+		if (supabase) {
+			const { data } = supabase.storage.from('storage').getPublicUrl(`avatars/${avatarUrl}`);
+			return data.publicUrl;
+		}
+
+		// Fallback: return the filename as is if no supabase client
 		return avatarUrl;
 	}
 

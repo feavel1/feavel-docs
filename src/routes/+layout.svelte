@@ -13,10 +13,16 @@
 		DropdownMenuSeparator,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
-	import { getAvatarDisplayUrl } from '$lib/utils/user';
+	import { Toaster } from '$lib/components/ui/sonner';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	let { children, data } = $props();
 	let { supabase, session, userProfile } = data;
+
+	// Get the avatar display URL
+	const avatarDisplayUrl = $derived(
+		getAvatarUrl(userProfile?.avatar_url, userProfile?.username, supabase)
+	);
 
 	$effect(() => {
 		const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -61,7 +67,8 @@
 								<Button variant="ghost" class="relative h-8 w-8 rounded-full">
 									<Avatar class="h-8 w-8">
 										<AvatarImage
-											src={getAvatarDisplayUrl(userProfile.avatar_url, userProfile.username)}
+											class="object-cover"
+											src={avatarDisplayUrl}
 											alt={userProfile.full_name || userProfile.username}
 										/>
 										<AvatarFallback>{userProfile.username?.charAt(0).toUpperCase()}</AvatarFallback>
@@ -96,3 +103,5 @@
 {/if}
 
 {@render children()}
+
+<Toaster />

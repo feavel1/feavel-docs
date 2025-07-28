@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { getAvatarDisplayUrl } from '$lib/utils/user';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	const { data: propsData } = $props();
 	const { userProfile, isOwnProfile, session, supabase } = propsData;
-
-	let currentUser = session?.user;
 </script>
 
 <div class="h-full pt-24">
@@ -30,7 +28,8 @@
 							<div class="relative">
 								<Avatar class="h-24 w-24">
 									<AvatarImage
-										src={getAvatarDisplayUrl(userProfile.avatar_url, userProfile.username)}
+										class="object-cover"
+										src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
 										alt={userProfile.full_name || userProfile.username}
 									/>
 									<AvatarFallback>{userProfile.username.charAt(0).toUpperCase()}</AvatarFallback>

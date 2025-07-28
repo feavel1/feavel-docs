@@ -1,23 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { invalidate } from '$app/navigation';
-	import { AvatarUpload } from '$lib/components/modules';
+	import AvatarUpload from '$lib/components/modules/AvatarUpload.svelte';
 
 	const { data: propsData } = $props();
-	const { userProfile, session } = propsData;
-	const { supabase } = $page.data;
-
-	async function handleAvatarUpdated(event: CustomEvent) {
-		const { success, url, error } = event.detail;
-
-		if (success) {
-			console.log('Avatar updated successfully!');
-			// Invalidate the current page to refresh the data
-			await invalidate('supabase:auth');
-		} else {
-			console.error('Avatar update failed:', error);
-		}
-	}
+	const { userProfile, session, supabase } = propsData;
 </script>
 
 <div class="h-full pt-24">
@@ -43,9 +29,9 @@
 						<AvatarUpload
 							{supabase}
 							userId={session.user.id}
-							currentAvatarUrl={userProfile.avatar_url}
 							username={userProfile.username}
-							on:upload={handleAvatarUpdated}
+							currentAvatarUrl={userProfile.avatar_url}
+							on:avatarUpdated={() => invalidate('app:user')}
 						/>
 					</div>
 

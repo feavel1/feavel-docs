@@ -120,98 +120,77 @@ export async function getFileUrl(
 }
 
 /**
- * Upload user avatar
+ * Upload an avatar file to Supabase storage
+ * Generates a clean filename and stores in avatars folder
  */
 export async function uploadAvatar(
 	supabase: SupabaseClient,
 	file: File,
 	userId: string
 ): Promise<StorageFile | null> {
-	const fileExt = file.name.split('.').pop();
-	const fileName = `${userId}/avatar.${fileExt}`;
+	// Generate a clean filename with timestamp and random number
+	const timestamp = Date.now();
+	const random = Math.random();
+	const extension = file.name.split('.').pop() || 'jpeg';
+	const filename = `${timestamp}.${random}.${extension}`;
+	const path = `avatars/${filename}`;
 
-	const result = await uploadFile(supabase, {
-		file,
-		path: fileName,
-		bucket: 'storage',
-		upsert: true
-	});
-
-	return result;
-}
-
-/**
- * Delete user avatar
- */
-export async function deleteAvatar(supabase: SupabaseClient, userId: string): Promise<boolean> {
-	return await deleteFile(supabase, {
-		path: `${userId}/avatar`,
-		bucket: 'storage'
-	});
-}
-
-/**
- * Get avatar URL for a user
- */
-export async function getAvatarUrl(
-	supabase: SupabaseClient,
-	userId: string
-): Promise<string | null> {
-	return await getFileUrl(supabase, {
-		path: `${userId}/avatar`,
-		bucket: 'storage'
-	});
-}
-
-/**
- * Update user avatar URL in database
- */
-export async function updateUserAvatar(
-	supabase: SupabaseClient,
-	userId: string,
-	avatarUrl: string
-): Promise<boolean> {
 	try {
-		const { error } = await supabase
-			.from('users')
-			.update({ avatar_url: avatarUrl })
-			.eq('id', userId);
+		// Upload the file
+		const result = await uploadFile(supabase, {
+			file,
+			path,
+			bucket: 'storage',
+			upsert: true
+		});
 
-		if (error) {
-			console.error('Update avatar URL error:', error);
-			return false;
+		if (!result) {
+			return null;
 		}
 
-		return true;
+		// Update the user's avatar_url in the database
+		const { error: updateError } = await supabase
+			.from('users')
+			.update({ avatar_url: filename })
+			.eq('id', userId);
+
+		if (updateError) {
+			console.error('Failed to update avatar_url:', updateError);
+			// Clean up the uploaded file if database update fails
+			await deleteFile(supabase, { path, bucket: 'storage' });
+			return null;
+		}
+
+		return result;
 	} catch (error) {
-		console.error('Update avatar URL failed:', error);
-		return false;
+		console.error('Avatar upload failed:', error);
+		return null;
 	}
 }
 
 /**
- * Complete avatar upload process
+ * Delete an avatar file from Supabase storage
  */
-export async function uploadUserAvatar(
+export async function deleteAvatar(
 	supabase: SupabaseClient,
-	file: File,
-	userId: string
-): Promise<StorageFile | null> {
-	// Upload the file
-	const uploadResult = await uploadAvatar(supabase, file, userId);
-
-	if (!uploadResult) {
-		return null;
+	userId: string,
+	avatarFilename?: string
+): Promise<boolean> {
+	if (!avatarFilename) {
+		return true; // Nothing to delete
 	}
 
-	// Update the user's avatar_url in the database
-	const updateSuccess = await updateUserAvatar(supabase, userId, uploadResult.url);
+	const path = `avatars/${avatarFilename}`;
+	const success = await deleteFile(supabase, { path, bucket: 'storage' });
 
-	if (!updateSuccess) {
-		// If database update fails, delete the uploaded file
-		await deleteAvatar(supabase, userId);
-		return null;
+	if (success) {
+		// Clear the avatar_url in the database
+		const { error } = await supabase.from('users').update({ avatar_url: null }).eq('id', userId);
+
+		if (error) {
+			console.error('Failed to clear avatar_url:', error);
+		}
 	}
 
-	return uploadResult;
+	return success;
 }

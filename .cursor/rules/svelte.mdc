@@ -2,17 +2,17 @@
 
 ## Project Overview
 
-This is a SvelteKit-based SaaS documentation platform with Supabase backend, Shadcn-Svelte UI components, and Paraglide.js internationalization.
+This is a SvelteKit-based SaaS documentation platform with bun, Supabase backend, Shadcn-Svelte UI components, and Paraglide.js internationalization.
 
 ## Core Technologies
 
+- **Bun** as package manager and runtime
 - **SvelteKit 2.x** with Svelte 5 runes
 - **Supabase** for backend (auth, database, storage)
 - **Shadcn-Svelte** for UI components
 - **Tailwind CSS 4.x** for styling
 - **Paraglide.js** for internationalization
 - **TypeScript** with strict mode
-- **Bun** as package manager and runtime
 
 ## Svelte 5 Runes Usage
 
