@@ -4,9 +4,18 @@
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
+	import { page } from '$app/stores';
+
 	let { data }: { data: { form: SuperValidated<Infer<FormSchema>> } } = $props();
 	const form = superForm(data.form, { validators: zodClient(formSchema) });
 	const { form: formData, enhance } = form;
+
+	// Get success message from URL params
+	let successMessage = $state('');
+	$effect(() => {
+		const url = new URL($page.url);
+		successMessage = url.searchParams.get('message') || '';
+	});
 </script>
 
 <div class="h-full pt-24">
@@ -18,12 +27,17 @@
 		</div>
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
 			<div class="px-6 py-12 shadow sm:rounded-lg sm:px-12">
+				{#if successMessage}
+					<div class="mb-6 rounded-md border border-green-200 bg-green-50 p-4">
+						<p class="text-sm text-green-800">{successMessage}</p>
+					</div>
+				{/if}
 				<form method="POST" use:enhance class="space-y-6">
 					<Form.Field {form} name="email">
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Email address</Form.Label>
-								<Input {...props} bind:value={$formData.email} />
+								<Input {...props} bind:value={$formData.email} type="email" />
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />

@@ -5,6 +5,10 @@
 
 import { SupabaseClient, Session } from '@supabase/supabase-js';
 
+declare module '*.svelte' {
+	export { SvelteComponent as default } from 'svelte';
+}
+
 declare global {
 	namespace App {
 		interface Locals {
@@ -14,6 +18,14 @@ declare global {
 		interface PageData {
 			session: Session | null;
 			user: User | null;
+			userProfile?: {
+				id: string;
+				username: string;
+				full_name?: string;
+				avatar_url?: string;
+				birthday?: string;
+				description?: string;
+			} | null;
 		}
 		// interface Error {}
 		// interface Platform {}

@@ -26,10 +26,11 @@ export const actions: Actions = {
 			form.errors = { email: [error.message] };
 			return fail(400, { form });
 		}
-		const user = data?.user;
-		if (user) {
-			throw redirect(303, `/member/${user.id}`);
-		}
+		// const user = data?.user;
+
+		// if (user) {
+		// 	throw redirect(303, `/member/${user.username}`);
+		// }
 		return { form };
 	}
 };

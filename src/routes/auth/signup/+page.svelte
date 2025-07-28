@@ -19,11 +19,24 @@
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
 			<div class="px-6 py-12 shadow sm:rounded-lg sm:px-12">
 				<form method="POST" use:enhance class="space-y-6">
+					<Form.Field {form} name="username">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Username</Form.Label>
+								<Input
+									{...props}
+									bind:value={$formData.username}
+									placeholder="Choose a unique username"
+								/>
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
 					<Form.Field {form} name="email">
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Email address</Form.Label>
-								<Input {...props} bind:value={$formData.email} />
+								<Input {...props} bind:value={$formData.email} type="email" />
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />
