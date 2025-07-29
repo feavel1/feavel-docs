@@ -157,7 +157,7 @@ Use in components:
 	import { counter } from './counter.svelte.ts';
 </script>
 
-<button on:click={() => counter.increment()}>
+<button onclick={() => counter.increment()}>
 	Count: {counter.count}
 </button>
 ```
@@ -260,21 +260,6 @@ export const load = async ({ locals }) => {
     fetchData();
   });
 </script>
-```
-
-### Form with Superforms
-
-```svelte
-<script>
-	import { superForm } from 'sveltekit-superforms/client';
-	import { form } from './schema.js';
-
-	const { form: formData, enhance } = superForm(form);
-</script>
-
-<form method="POST" use:enhance>
-	<input bind:value={$formData.field} />
-</form>
 ```
 
 ## Accessibility
