@@ -11,7 +11,7 @@ This is a SvelteKit-based SaaS documentation platform using Svelte 5 runes, Shad
 - ❌ `export let data` (Svelte 4) → ✅ `let { data } = $props()` (Svelte 5)
 - ❌ `$: reactive` (Svelte 4) → ✅ `$derived()` or `$effect()` (Svelte 5)
 - ❌ `$page` (deprecated) → ✅ Use `$props()` to get page data
-- ❌ `on:click` → ✅ `onclick` (preferred in Svelte 5)
+- ❌ `on:click` → ✅ `onclick` (preferred in Svelte 5) and onkeydown etc.
 - ❌ `bind:value` → ✅ `bind:value` (still works, but consider `$bindable()` for complex cases)
 
 **Always use $props() for server data in +page.svelte files**

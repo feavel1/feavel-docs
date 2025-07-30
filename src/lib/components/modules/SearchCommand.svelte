@@ -67,7 +67,7 @@
 		type="text"
 		placeholder="Search posts..."
 		bind:value={searchQuery}
-		on:keydown={handleKeyDown}
+		onkeydown={handleKeyDown}
 		class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 	/>
 
@@ -84,7 +84,7 @@
 			{#each searchResults as post (post.id)}
 				<button
 					class="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-					on:click={() => handleSelect(post.title)}
+					onclick={() => handleSelect(post.title)}
 				>
 					<div class="flex items-center gap-2">
 						<span class="font-medium">{post.title}</span>
