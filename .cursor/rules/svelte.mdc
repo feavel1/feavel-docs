@@ -4,6 +4,18 @@
 
 This is a SvelteKit-based SaaS documentation platform using Svelte 5 runes, Shadcn-Svelte UI components, and Paraglide.js internationalization.
 
+## Common Svelte 5 Migration Mistakes
+
+**CRITICAL: Always use Svelte 5 syntax, not Svelte 4**
+
+- ❌ `export let data` (Svelte 4) → ✅ `let { data } = $props()` (Svelte 5)
+- ❌ `$: reactive` (Svelte 4) → ✅ `$derived()` or `$effect()` (Svelte 5)
+- ❌ `$page` (deprecated) → ✅ Use `$props()` to get page data
+- ❌ `on:click` → ✅ `onclick` (preferred in Svelte 5)
+- ❌ `bind:value` → ✅ `bind:value` (still works, but consider `$bindable()` for complex cases)
+
+**Always use $props() for server data in +page.svelte files**
+
 ## Core Technologies
 
 - **SvelteKit 2.x** with Svelte 5 runes

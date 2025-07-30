@@ -9,7 +9,7 @@
 	<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
 		<div class="sm:mx-auto sm:w-full sm:max-w-md">
 			<div class="mb-4">
-				<a href="/members" class="text-sm text-indigo-600 hover:text-indigo-500">
+				<a href="/member" class="text-sm text-indigo-600 hover:text-indigo-500">
 					← Back to Members
 				</a>
 			</div>

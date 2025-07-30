@@ -21,14 +21,22 @@ The blog feature provides a comprehensive content management system for users to
 - **Search Results**: Display search results with highlighted matches
 - **Search History**: Track recent searches for quick access
 
-### 3. Rich Content Editor
+### 3. Rich Content Editor (✅ Implemented)
 
-- **Block-Based Editor**: Drag-and-drop functionality for content blocks
+- **Block-Based Editor**: Modern Editor.js integration with comprehensive toolset
+- **Advanced Tools**: Header, List, Quote, Code, Inline Code, Delimiter, Table, Simple Image, Checklist, Marker, Embed, Warning, Attaches, Link
+- **Enhanced Features**:
+  - Drag & Drop support with `editorjs-drag-drop`
+  - Multi-block selection with `editorjs-multiblock-selection-plugin`
+  - Undo/Redo functionality with `editorjs-undo`
+  - Color picker for text styling with `editorjs-color-picker`
 - **Media Support**: Picture uploads with local storage caching
 - **Auto-Save**: Content saved to local storage during editing
 - **Publish Workflow**: Images uploaded to Supabase only when post is published
-- **Editor.js Integration**: Modern block-based editor with extensible plugins
-- **Content Types**: Support for text, images, code blocks, lists, quotes, etc.
+- **Content Types**: Support for text, images, code blocks, lists, quotes, tables, embeds, etc.
+- **Paste Handling**: Smart paste handling for HTML, files, and patterns
+- **Conversion Tools**: Convert between different block types
+- **Sanitization**: Automatic content sanitization for security
 
 ### 4. Global Post Component
 
@@ -81,11 +89,12 @@ The blog feature provides a comprehensive content management system for users to
 ### Creating a Post
 
 1. User navigates to `/blog/new`
-2. Editor loads with empty canvas
-3. User adds content blocks (text, images, etc.)
-4. User adds tags from existing list or creates new ones
-5. User saves draft (local storage) or publishes (Supabase)
-6. Images uploaded to storage only on publish
+2. Editor loads with empty canvas and full toolset
+3. User adds content blocks using toolbox or keyboard shortcuts
+4. User can drag & drop blocks for reordering
+5. User adds tags from existing list or creates new ones
+6. User saves draft (local storage) or publishes (Supabase)
+7. Images uploaded to storage only on publish
 
 ### Searching Posts
 
@@ -110,3 +119,32 @@ The blog feature provides a comprehensive content management system for users to
 - **Search Usage**: Search queries and result clicks
 - **Tag Adoption**: Tag usage patterns and discovery
 - **Performance**: Page load times and editor responsiveness
+
+## Editor.js Features
+
+### Available Tools
+
+- **Header**: Multiple heading levels (H1-H6)
+- **List**: Ordered and unordered lists
+- **Quote**: Blockquotes with attribution
+- **Code**: Syntax-highlighted code blocks
+- **Inline Code**: Inline code formatting
+- **Delimiter**: Visual separators
+- **Table**: Data tables with editing
+- **Simple Image**: Image blocks with captions
+- **Checklist**: Task lists with checkboxes
+- **Marker**: Text highlighting
+- **Embed**: External content embedding
+- **Warning**: Alert/notice blocks
+- **Attaches**: File attachments
+- **Link**: URL linking
+
+### Advanced Features
+
+- **Drag & Drop**: Reorder blocks with mouse
+- **Multi-block Selection**: Select multiple blocks at once
+- **Undo/Redo**: Full undo/redo history
+- **Color Picker**: Text color customization
+- **Paste Handling**: Smart paste from various sources
+- **Conversion**: Convert between block types
+- **Sanitization**: Automatic content cleaning

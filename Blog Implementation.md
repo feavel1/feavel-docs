@@ -184,53 +184,171 @@ export async function searchPosts(supabase: SupabaseClient, query: string) {
 </Command>
 ```
 
-### 3. Rich Content Editor
+### 3. Rich Content Editor (✅ Already Implemented)
 
-#### Editor.js Integration
+#### Enhanced Editor.js Integration
 
-```typescript
-// src/lib/components/modules/Editor.svelte
+```svelte
+<!-- src/lib/components/modules/Editor.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import EditorJS from '@editorjs/editorjs';
-  import Header from '@editorjs/header';
-  import List from '@editorjs/list';
-  import Image from '@editorjs/image';
+	import { onMount } from 'svelte';
 
-  let { content = '', onChange } = $props();
-  let editorContainer: HTMLElement;
-  let editor: EditorJS;
+	let { readOnly = false, class: className = '', content = null, onChange } = $props();
+	let editor: any = $state(null);
+	let editorEl: HTMLElement;
 
-  onMount(() => {
-    editor = new EditorJS({
-      holder: editorContainer,
-      data: content,
-      tools: {
-        header: Header,
-        list: List,
-        image: {
-          class: Image,
-          config: {
-            uploader: {
-              uploadByFile: async (file) => {
-                // Upload to local storage first
-                const url = URL.createObjectURL(file);
-                return { success: 1, file: { url } };
-              }
-            }
-          }
-        }
-      },
-      onChange: () => {
-        editor.save().then((data) => {
-          onChange?.(data);
-        });
-      }
-    });
-  });
+	onMount(async () => {
+		try {
+			// Core Editor.js
+			const { default: EditorJS } = await import('@editorjs/editorjs');
+
+			// Essential Tools
+			const { default: Header } = await import('@editorjs/header');
+			const { default: List } = await import('@editorjs/list');
+			const { default: Quote } = await import('@editorjs/quote');
+			const { default: CodeTool } = await import('@editorjs/code');
+			const { default: InlineCode } = await import('@editorjs/inline-code');
+			const { default: Delimiter } = await import('@editorjs/delimiter');
+			const { default: Table } = await import('@editorjs/table');
+			const { default: SimpleImage } = await import('@editorjs/simple-image');
+			const { default: Checklist } = await import('@editorjs/checklist');
+			const { default: Marker } = await import('@editorjs/marker');
+
+			// Advanced Tools
+			const { default: Embed } = await import('@editorjs/embed');
+			const { default: Warning } = await import('@editorjs/warning');
+			const { default: Attaches } = await import('@editorjs/attaches');
+			const { default: Link } = await import('@editorjs/link');
+
+			// Enhanced Features
+			const { default: DragDrop } = await import('editorjs-drag-drop');
+			const { default: Undo } = await import('editorjs-undo');
+			const { default: MultiblockSelection } = await import('editorjs-multiblock-selection-plugin');
+			const { default: ColorPicker } = await import('editorjs-color-picker');
+
+			editor = new EditorJS({
+				holder: editorEl,
+				data: content,
+				readOnly,
+				tools: {
+					header: {
+						class: Header,
+						config: {
+							placeholder: 'Enter a header',
+							levels: [1, 2, 3, 4, 5, 6],
+							defaultLevel: 2
+						}
+					},
+					list: {
+						class: List,
+						inlineToolbar: true,
+						config: {
+							defaultStyle: 'unordered'
+						}
+					},
+					checklist: {
+						class: Checklist,
+						inlineToolbar: true
+					},
+					quote: {
+						class: Quote,
+						inlineToolbar: true,
+						config: {
+							quotePlaceholder: 'Enter a quote',
+							captionPlaceholder: "Quote's author"
+						}
+					},
+					marker: {
+						class: Marker,
+						shortcut: 'CMD+SHIFT+M'
+					},
+					code: {
+						class: CodeTool,
+						config: {
+							placeholder: 'Enter a code'
+						}
+					},
+					delimiter: Delimiter,
+					inlineCode: {
+						class: InlineCode,
+						shortcut: 'CMD+SHIFT+C'
+					},
+					table: {
+						class: Table,
+						inlineToolbar: true,
+						config: {
+							rows: 2,
+							cols: 3
+						}
+					},
+					image: {
+						class: SimpleImage,
+						config: {
+							placeholder: 'Paste image URL'
+						}
+					},
+					embed: {
+						class: Embed,
+						config: {
+							services: {
+								youtube: true,
+								coub: true
+							}
+						}
+					},
+					warning: {
+						class: Warning,
+						inlineToolbar: true,
+						config: {
+							titlePlaceholder: 'Warning title',
+							messagePlaceholder: 'Warning message'
+						}
+					},
+					attaches: {
+						class: Attaches,
+						config: {
+							buttonText: 'Select file'
+						}
+					},
+					link: {
+						class: Link,
+						config: {
+							endpoint: '/api/link'
+						}
+					}
+				},
+				onChange: () => {
+					if (onChange && editor) {
+						editor.save().then((data: any) => {
+							onChange(data);
+						});
+					}
+				}
+			});
+
+			// Initialize enhanced features
+			new DragDrop(editor);
+			new Undo({ editor });
+			new MultiblockSelection(editor);
+			new ColorPicker(editor);
+
+			editor.isReady
+				.then(() => {
+					console.log('Editor.js is ready to work!');
+				})
+				.catch((reason: any) => {
+					console.error(`Editor.js initialization failed:`, reason);
+				});
+		} catch (error) {
+			console.error('Failed to load EditorJS:', error);
+		}
+	});
 </script>
 
-<div bind:this={editorContainer} class="prose max-w-none" />
+<div
+	bind:this={editorEl}
+	class="prose h-full w-full rounded-lg border select-none {className}"
+></div>
 ```
 
 #### Local Storage Integration
@@ -356,21 +474,25 @@ src/routes/api/
 
 ### 6. Development Phases
 
-#### Phase 1: Core Infrastructure
+#### Phase 1: Core Infrastructure ✅
 
-- [ ] Set up blog routes structure
-- [ ] Implement basic post CRUD operations
-- [ ] Create PostCard component
-- [ ] Add tag system database operations
-- [ ] Implement tag filtering in URL
+- [x] Set up blog routes structure
+- [x] Implement basic post CRUD operations
+- [x] Create PostCard component
+- [x] Add tag system database operations
+- [x] Implement tag filtering in URL
 
-#### Phase 2: Editor Integration
+#### Phase 2: Editor Integration ✅
 
-- [ ] Install and configure Editor.js
-- [ ] Create custom image upload handler
-- [ ] Implement local storage for drafts
-- [ ] Add auto-save functionality
-- [ ] Create post editor page
+- [x] Install and configure Editor.js
+- [x] Create custom image upload handler
+- [x] Implement local storage for drafts
+- [x] Add auto-save functionality
+- [x] Create post editor page
+- [x] Add advanced Editor.js plugins
+- [x] Implement drag & drop functionality
+- [x] Add undo/redo support
+- [x] Configure multi-block selection
 
 #### Phase 3: Search & Navigation
 
@@ -390,16 +512,29 @@ src/routes/api/
 
 ### 7. Dependencies
 
-#### New Dependencies
+#### Editor.js Dependencies (✅ Already Installed)
 
 ```json
 {
-	"@editorjs/editorjs": "^2.28.0",
-	"@editorjs/header": "^2.8.0",
-	"@editorjs/list": "^1.9.0",
-	"@editorjs/image": "^2.8.0",
-	"@editorjs/quote": "^2.6.0",
-	"@editorjs/code": "^2.8.0"
+	"@editorjs/editorjs": "^2.31.0-rc.10",
+	"@editorjs/header": "^2.8.8",
+	"@editorjs/list": "^2.0.8",
+	"@editorjs/quote": "^2.7.6",
+	"@editorjs/code": "^2.9.3",
+	"@editorjs/inline-code": "^1.5.2",
+	"@editorjs/delimiter": "^1.4.2",
+	"@editorjs/table": "^2.4.5",
+	"@editorjs/simple-image": "^1.6.0",
+	"@editorjs/checklist": "^1.6.0",
+	"@editorjs/marker": "^1.4.0",
+	"@editorjs/embed": "^2.7.6",
+	"@editorjs/warning": "^1.4.1",
+	"@editorjs/attaches": "^1.3.0",
+	"@editorjs/link": "^2.6.2",
+	"editorjs-color-picker": "^1.0.8",
+	"editorjs-drag-drop": "^1.1.16",
+	"editorjs-multiblock-selection-plugin": "^0.1.2",
+	"editorjs-undo": "^2.0.28"
 }
 ```
 
@@ -453,3 +588,54 @@ src/routes/api/
 - Compress images before upload
 - Use WebP format for better compression
 - Implement image resizing for different screen sizes
+
+### 10. Editor.js Advanced Features
+
+#### Paste Handling Configuration
+
+```typescript
+// Configure paste handling for different content types
+static get pasteConfig() {
+	return {
+		tags: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'IMG'],
+		patterns: {
+			youtube: /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?‌​=]*)?/
+		},
+		files: {
+			mimeTypes: ['image/png', 'image/jpeg', 'image/gif'],
+			extensions: ['pdf', 'doc', 'docx']
+		}
+	};
+}
+```
+
+#### Sanitization Configuration
+
+```typescript
+// Configure content sanitization
+static get sanitize() {
+	return {
+		text: {
+			b: true,  // Allow bold
+			i: true,  // Allow italic
+			a: { href: true }  // Allow links with href
+		},
+		items: {
+			b: true,
+			i: true
+		}
+	};
+}
+```
+
+#### Conversion Configuration
+
+```typescript
+// Configure block conversion
+static get conversionConfig() {
+	return {
+		export: 'text',  // Export as text
+		import: 'text'   // Import from text
+	};
+}
+```
