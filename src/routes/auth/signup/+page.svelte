@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AuthForm from '$lib/components/modules/AuthForm.svelte';
+	import { AuthForm } from '$lib/components/modules';
 	import { formSchema, type FormSchema } from './schema';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 

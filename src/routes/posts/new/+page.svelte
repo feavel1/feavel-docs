@@ -3,11 +3,12 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Switch } from '$lib/components/ui/switch';
-	import { ArrowLeft, Save, Eye, EyeOff, X } from '@lucide/svelte';
+	import { ArrowLeft, Save, Eye } from '@lucide/svelte';
+	import { Editor, MultiTagSelect } from '$lib/components/modules';
 	import { goto } from '$app/navigation';
-	import Editor from '$lib/components/modules/Editor.svelte';
 	import { enhance } from '$app/forms';
 
 	let { tags = [] } = $props<{ tags: string[] }>();
@@ -19,16 +20,15 @@
 	let isPublic = $state(false);
 	let isSubmitting = $state(false);
 
+	// Convert string tags to Tag objects for the MultiTagSelect component
+	let tagObjects = $state<{ id: number; tag_name: string }[]>([]);
+
+	$effect(() => {
+		tagObjects = tags.map((tag: string, index: number) => ({ id: index, tag_name: tag }));
+	});
+
 	function handleContentChange(data: any) {
 		editorContent = data;
-	}
-
-	function handleTagToggle(tagName: string) {
-		if (selectedTags.includes(tagName)) {
-			selectedTags = selectedTags.filter((tag: string) => tag !== tagName);
-		} else {
-			selectedTags = [...selectedTags, tagName];
-		}
 	}
 
 	function handleAddTag(event: KeyboardEvent) {
@@ -40,10 +40,6 @@
 			}
 			input.value = '';
 		}
-	}
-
-	function removeTag(tagName: string) {
-		selectedTags = selectedTags.filter((tag: string) => tag !== tagName);
 	}
 
 	function handleBack() {
@@ -166,44 +162,13 @@
 							/>
 						</div>
 
-						{#if selectedTags.length > 0}
-							<div>
-								<Label>Selected Tags</Label>
-								<div class="mt-2 flex flex-wrap gap-2">
-									{#each selectedTags as tag (tag)}
-										<Badge variant="secondary" class="flex items-center gap-1">
-											{tag}
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												class="h-auto p-0 hover:bg-transparent"
-												onclick={() => removeTag(tag)}
-											>
-												<X class="h-3 w-3" />
-											</Button>
-										</Badge>
-									{/each}
-								</div>
-							</div>
-						{/if}
-
-						{#if tags.length > 0}
-							<div>
-								<Label>Available Tags</Label>
-								<div class="mt-2 flex flex-wrap gap-2">
-									{#each tags as tag (tag)}
-										<Badge
-											variant={selectedTags.includes(tag) ? 'default' : 'outline'}
-											class="cursor-pointer"
-											onclick={() => handleTagToggle(tag)}
-										>
-											{tag}
-										</Badge>
-									{/each}
-								</div>
-							</div>
-						{/if}
+						<MultiTagSelect
+							tags={tagObjects}
+							bind:selectedTags
+							placeholder="Select tags..."
+							label="Available Tags"
+							showSearch={true}
+						/>
 
 						<input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
 					</CardContent>

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Badge } from '$lib/components/ui/badge';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { Edit, Eye, ArrowLeft, Calendar, User } from '@lucide/svelte';
+	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import Editor from '$lib/components/modules/Editor.svelte';
+	import { Editor } from '$lib/components/modules';
 
 	interface Post {
 		id: string;

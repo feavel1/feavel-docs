@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
-	import AvatarUpload from '$lib/components/modules/AvatarUpload.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { AvatarUpload } from '$lib/components/modules';
 
 	const { data: propsData } = $props();
 	const { userProfile, session, supabase } = propsData;

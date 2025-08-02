@@ -31,12 +31,11 @@
 			</CardHeader>
 			<CardContent>
 				<p class="mb-4 text-muted-foreground">
-					Discover stories, ideas, and insights from our community. Read and share knowledge through our rich content editor.
+					Discover stories, ideas, and insights from our community. Read and share knowledge through
+					our rich content editor.
 				</p>
 				<div class="flex gap-2">
-					<Button href="/posts" class="flex-1">
-						Browse Posts
-					</Button>
+					<Button href="/posts" class="flex-1">Browse Posts</Button>
 					<Button href="/posts/new" variant="outline" size="sm">
 						<Plus class="mr-2 h-4 w-4" />
 						New Post
@@ -58,9 +57,7 @@
 				<p class="mb-4 text-muted-foreground">
 					Access your profile, manage your account, and view your personal dashboard.
 				</p>
-				<Button href="/member" class="w-full">
-					Go to Member Area
-				</Button>
+				<Button href="/member" class="w-full">Go to Member Area</Button>
 			</CardContent>
 		</Card>
 
@@ -77,9 +74,7 @@
 				<p class="mb-4 text-muted-foreground">
 					Explore our comprehensive documentation and guides for using the platform.
 				</p>
-				<Button href="/docs" variant="outline" class="w-full">
-					View Documentation
-				</Button>
+				<Button href="/docs" variant="outline" class="w-full">View Documentation</Button>
 			</CardContent>
 		</Card>
 	</div>
@@ -91,29 +86,28 @@
 			<div class="space-y-4">
 				<h3 class="text-lg font-medium">Rich Content Editor</h3>
 				<p class="text-muted-foreground">
-					Create beautiful blog posts with our advanced Editor.js integration. 
-					Support for headers, lists, code blocks, images, tables, and more.
+					Create beautiful blog posts with our advanced Editor.js integration. Support for headers,
+					lists, code blocks, images, tables, and more.
 				</p>
 			</div>
 			<div class="space-y-4">
 				<h3 class="text-lg font-medium">Tag System</h3>
 				<p class="text-muted-foreground">
-					Organize your content with a flexible tagging system. 
-					Filter posts by tags and discover related content easily.
+					Organize your content with a flexible tagging system. Filter posts by tags and discover
+					related content easily.
 				</p>
 			</div>
 			<div class="space-y-4">
 				<h3 class="text-lg font-medium">Search & Discovery</h3>
 				<p class="text-muted-foreground">
-					Find the content you need with our powerful search functionality. 
-					Search through titles, content, and author names.
+					Find the content you need with our powerful search functionality. Search through titles,
+					content, and author names.
 				</p>
 			</div>
 			<div class="space-y-4">
 				<h3 class="text-lg font-medium">User Management</h3>
 				<p class="text-muted-foreground">
-					Secure authentication and user profiles. 
-					Manage your posts, drafts, and account settings.
+					Secure authentication and user profiles. Manage your posts, drafts, and account settings.
 				</p>
 			</div>
 		</div>

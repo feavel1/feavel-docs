@@ -3,8 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Edit, Eye, Plus, Search, Tag, X } from '@lucide/svelte';
-	import { goto } from '$app/navigation';
+	import { Edit, Eye, Plus, Search, X } from '@lucide/svelte';
+	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
 
 	interface Post {
 		id: string;
@@ -27,43 +27,42 @@
 		}>;
 	}
 
-	let {
-		posts = [],
-		currentTag = null,
-		session
-	} = $props<{
-		posts: Post[];
-		currentTag: string | null;
-		session?: any;
-	}>();
+	interface Tag {
+		id: number;
+		tag_name: string;
+	}
+
+	let { data } = $props<{ data: { session: any; posts: Post[]; tags: Tag[] } }>();
+	let { session, posts, tags } = data;
 
 	let searchQuery = $state('');
-	let filteredPosts = $derived(
-		searchQuery
-			? posts.filter(
-					(post: Post) =>
-						post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						post.users?.username?.toLowerCase().includes(searchQuery.toLowerCase())
-				)
-			: posts
-	);
+	let selectedTags = $state<string[]>([]);
+
+	let filteredPosts = $derived.by(() => {
+		let filtered = posts;
+
+		// Filter by tags
+		if (selectedTags.length > 0) {
+			filtered = filtered.filter((post: Post) =>
+				post.posts_tags_rel?.some((rel) => selectedTags.includes(rel.post_tags.tag_name))
+			);
+		}
+
+		// Filter by search query
+		if (searchQuery) {
+			filtered = filtered.filter(
+				(post: Post) =>
+					post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					post.users?.username?.toLowerCase().includes(searchQuery.toLowerCase())
+			);
+		}
+
+		return filtered;
+	});
 
 	function handleTagClick(tag: string) {
-		goto(`/posts?tag=${encodeURIComponent(tag)}`);
-	}
-
-	function clearTagFilter() {
-		goto('/posts');
-	}
-
-	function handleSearch() {
-		// Search functionality will be implemented with command palette
-		console.log('Search:', searchQuery);
-	}
-
-	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
-			handleSearch();
+		if (!selectedTags.includes(tag)) {
+			selectedTags = [...selectedTags, tag];
 		}
 	}
 </script>
@@ -90,30 +89,16 @@
 	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="relative max-w-md flex-1">
 			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-			<Input
-				placeholder="Search posts..."
-				bind:value={searchQuery}
-				class="pl-10"
-				onkeydown={handleKeyDown}
-			/>
+			<Input placeholder="Search posts..." bind:value={searchQuery} class="pl-10" />
 		</div>
 
-		{#if currentTag}
-			<div class="flex items-center gap-2">
-				<Tag class="h-4 w-4 text-muted-foreground" />
-				<Badge variant="secondary" class="flex items-center gap-1">
-					{currentTag}
-					<Button
-						variant="ghost"
-						size="sm"
-						class="h-auto p-0 hover:bg-transparent"
-						onclick={clearTagFilter}
-					>
-						<X class="h-3 w-3" />
-					</Button>
-				</Badge>
-			</div>
-		{/if}
+		<MultiTagSelect
+			{tags}
+			bind:selectedTags
+			placeholder="Filter by tags..."
+			label=""
+			showSearch={false}
+		/>
 	</div>
 
 	<!-- Posts Grid -->
@@ -181,13 +166,13 @@
 			<p class="text-muted-foreground">
 				{#if searchQuery}
 					No posts match your search criteria.
-				{:else if currentTag}
-					No posts found with the tag "{currentTag}".
+				{:else if selectedTags.length > 0}
+					No posts found with the selected tags.
 				{:else}
 					No posts have been published yet.
 				{/if}
 			</p>
-			{#if !searchQuery && !currentTag}
+			{#if !searchQuery && selectedTags.length === 0}
 				<Button href="/posts/new" class="mt-4">
 					<Plus class="mr-2 h-4 w-4" />
 					Create the first post

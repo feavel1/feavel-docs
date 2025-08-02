@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+Docs for the project can be found in `src/routes/docs`.
+
+When working with .svelte, reference `svelte.mdc` rules.
+
+When working with supabase, reference supabase rules and use MCP server to check database.
+
+When working with ui and ux, reference `shadcn-svelte.mdc`

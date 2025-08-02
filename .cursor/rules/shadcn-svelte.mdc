@@ -1,0 +1,12 @@
+---
+description: When using Shadcn
+alwaysApply: false
+---
+
+Use mcp ref to check https://www.shadcn-svelte.com/docs on how to use specific components that are located in `lib/components/ui`.
+
+For example, you plan to use `tooltip` and other components in the project.
+
+Then use exa search mcp to quikliy browse throug the official docs which explain how to use the component.
+
+Project components are located in `src/lib/components/ui`

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ProfileDisplay from '$lib/components/modules/ProfileDisplay.svelte';
+	import { ProfileDisplay } from '$lib/components/modules';
 
 	const { data: propsData } = $props();
 	const { userProfile, isOwnProfile, session, supabase } = propsData;

@@ -3,11 +3,12 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Switch } from '$lib/components/ui/switch';
 	import { ArrowLeft, Save, Eye, EyeOff, X, Trash2 } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import Editor from '$lib/components/modules/Editor.svelte';
+	import { Editor, MultiTagSelect } from '$lib/components/modules';
 	import { enhance } from '$app/forms';
 
 	interface Post {

@@ -1,9 +1,11 @@
 import type { PageServerLoad } from './$types';
+import type { PostsPageData } from '$lib/types/posts';
 
-export const load: PageServerLoad = async ({ url, locals }) => {
-	const tag = url.searchParams.get('tag');
+export const load: PageServerLoad = async ({ locals }): Promise<PostsPageData> => {
+	const { session } = await locals.safeGetSession();
 
-	let query = locals.supabase
+	// Fetch posts with related data
+	const { data: posts, error: postsError } = await locals.supabase
 		.from('posts')
 		.select(
 			`
@@ -17,22 +19,23 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		.eq('public_visibility', true)
 		.order('created_at', { ascending: false });
 
-	if (tag) {
-		query = query.eq('posts_tags_rel.post_tags.tag_name', tag);
+	// Fetch tags for filtering
+	const { data: tags, error: tagsError } = await locals.supabase
+		.from('post_tags')
+		.select('id, tag_name')
+		.order('tag_name');
+
+	if (postsError) {
+		console.error('Error fetching posts:', postsError);
 	}
 
-	const { data: posts, error } = await query;
-
-	if (error) {
-		console.error('Error fetching posts:', error);
-		return {
-			posts: [],
-			currentTag: tag
-		};
+	if (tagsError) {
+		console.error('Error fetching tags:', tagsError);
 	}
 
 	return {
+		session,
 		posts: posts || [],
-		currentTag: tag
+		tags: tags || []
 	};
-}; 
+};
