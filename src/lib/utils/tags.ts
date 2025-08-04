@@ -1,11 +1,45 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+/**
+ * Utility functions for tag handling
+ */
+
+export interface Tag {
+	id: number;
+	tag_name: string;
+}
+
+/**
+ * Convert string tags to Tag objects for MultiTagSelect component
+ */
+export function stringTagsToObjects(tags: string[]): Tag[] {
+	return tags.map((tag, index) => ({ id: index, tag_name: tag }));
+}
+
+/**
+ * Extract tag names from post relationships
+ */
+export function extractTagNamesFromRelations(relations: any[]): string[] {
+	return relations?.map((rel) => rel.post_tags.tag_name) || [];
+}
+
+/**
+ * Validate and clean tag names
+ */
+export function cleanTagName(tagName: string): string {
+	return tagName.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+/**
+ * Check if tag name is valid
+ */
+export function isValidTagName(tagName: string): boolean {
+	return tagName.trim().length > 0 && tagName.trim().length <= 50;
+}
+
 export async function getTags(supabase: SupabaseClient) {
-	const { data, error } = await supabase
-		.from('post_tags')
-		.select('id, tag_name')
-		.order('tag_name');
-	
+	const { data, error } = await supabase.from('post_tags').select('id, tag_name').order('tag_name');
+
 	return { data, error };
 }
 
@@ -19,7 +53,7 @@ export async function getPostTags(supabase: SupabaseClient, postId: number) {
 		`
 		)
 		.eq('post_id', postId);
-	
+
 	return { data, error };
 }
 
@@ -28,11 +62,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 		// First, ensure all tags exist in the post_tags table
 		for (const tagName of tagNames) {
 			// Try to insert the tag (will fail if it already exists, which is fine)
-			await supabase
-				.from('post_tags')
-				.insert({ tag_name: tagName })
-				.select()
-				.single();
+			await supabase.from('post_tags').insert({ tag_name: tagName }).select().single();
 		}
 
 		// Get tag IDs
@@ -43,14 +73,12 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 
 		if (tagData) {
 			// Create relationships
-			const relationships = tagData.map(tag => ({
+			const relationships = tagData.map((tag) => ({
 				post_id: postId,
 				tag_id: tag.id
 			}));
 
-			const { error } = await supabase
-				.from('posts_tags_rel')
-				.insert(relationships);
+			const { error } = await supabase.from('posts_tags_rel').insert(relationships);
 
 			return { error };
 		}
@@ -62,11 +90,8 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 }
 
 export async function removeTagsFromPost(supabase: SupabaseClient, postId: number) {
-	const { error } = await supabase
-		.from('posts_tags_rel')
-		.delete()
-		.eq('post_id', postId);
-	
+	const { error } = await supabase.from('posts_tags_rel').delete().eq('post_id', postId);
+
 	return { error };
 }
 
@@ -84,4 +109,4 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 	} catch (error) {
 		return { error };
 	}
-} 
+}

@@ -34,14 +34,18 @@
 	let currentPage = $state(1);
 	let replyingTo = $state<number | null>(null);
 	let expandedComments = $state(new Set<number>());
+	let hasLoaded = $state(false);
 
 	// Load initial comments
 	$effect(() => {
-		loadComments();
+		if (postId && !hasLoaded) {
+			hasLoaded = true;
+			loadComments();
+		}
 	});
 
 	async function loadComments(page = 1) {
-		if (loading) return;
+		if (loading || !postId) return;
 
 		loading = true;
 		try {

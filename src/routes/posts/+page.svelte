@@ -5,6 +5,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Edit, Eye, Plus, Search, X } from '@lucide/svelte';
 	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
+	import { extractTagNamesFromRelations } from '$lib/utils/tags';
 
 	interface Post {
 		id: string;
@@ -27,12 +28,7 @@
 		}>;
 	}
 
-	interface Tag {
-		id: number;
-		tag_name: string;
-	}
-
-	let { data } = $props<{ data: { session: any; posts: Post[]; tags: Tag[] } }>();
+	let { data } = $props();
 	let { session, posts, tags } = data;
 
 	let searchQuery = $state('');

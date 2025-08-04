@@ -1,3 +1,4 @@
+// @ts-nocheck - Svelte component imports
 export { default as AuthForm } from './AuthForm.svelte';
 export { default as AvatarUpload } from './AvatarUpload.svelte';
 export { default as Editor } from './Editor.svelte';
