@@ -4,6 +4,8 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { post_id } = params;
 
+	const { session } = await locals.safeGetSession();
+
 	if (!post_id) {
 		throw error(404, 'Post not found');
 	}
@@ -35,6 +37,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.eq('id', post_id);
 
 	return {
-		post
+		post,
+		session
 	};
-}; 
+};

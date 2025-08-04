@@ -7,3 +7,7 @@ export { default as PostFilters } from './PostFilters.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 export { default as ProfileCard } from './ProfileCard.svelte';
 export { default as ProfileDisplay } from './ProfileDisplay.svelte';
+export { default as CommentForm } from './CommentForm.svelte';
+export { default as CommentItem } from './CommentItem.svelte';
+export { default as CommentSection } from './CommentSection.svelte';
+export { default as LikeButton } from './LikeButton.svelte';

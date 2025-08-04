@@ -1,23 +1,18 @@
----
-description: When using svelte
-alwaysApply: false
----
-
 # Svelte 5 & SvelteKit Rules
 
 ## Project Overview
 
 This is a SvelteKit-based SaaS documentation platform using Svelte 5 runes, Shadcn-Svelte UI components, and Paraglide.js internationalization.
 
-## Common Svelte 5 Migration Mistakes
+## CRITICAL Svelte 5 Migration Rules
 
-**CRITICAL: Always use Svelte 5 syntax, not Svelte 4**
+**ALWAYS use Svelte 5 syntax, not Svelte 4:**
 
-- ❌ `export let data` (Svelte 4) → ✅ `let { data } = $props()` (Svelte 5)
-- ❌ `$: reactive` (Svelte 4) → ✅ `$derived()` or `$effect()` (Svelte 5)
-- ❌ `$page` (deprecated) → ✅ Use `$props()` to get page data
-- ❌ `on:click` → ✅ `onclick` (preferred in Svelte 5) and onkeydown etc.
-- ❌ `bind:value` → ✅ `bind:value` (still works, but consider `$bindable()` for complex cases)
+- ❌ `export let data` → ✅ `let { data } = $props()`
+- ❌ `$: reactive` → ✅ `$derived()` or `$effect()`
+- ❌ `onMount()` → ✅ `$effect()` (preferred) or `onMount()` (legacy)
+- ❌ `on:click` → ✅ `onclick` (preferred) and `onkeydown`, `onsubmit`, etc.
+- ❌ `createEventDispatcher()` → ✅ Use callback props instead
 
 **Always use $props() for server data in +page.svelte files**
 
@@ -30,9 +25,7 @@ This is a SvelteKit-based SaaS documentation platform using Svelte 5 runes, Shad
 - **Paraglide.js** for internationalization
 - **TypeScript** with strict mode
 
-## Svelte 5 Runes Usage
-
-Always use Svelte 5 runes for state management:
+## Svelte 5 Runes - Essential Usage
 
 ```typescript
 // State declaration
@@ -41,7 +34,7 @@ let count = $state(0);
 // Derived values
 let doubled = $derived(count * 2);
 
-// Effects
+// Effects (replaces onMount, $:, etc.)
 $effect(() => {
 	console.log(`Count is now ${count}`);
 });
@@ -53,295 +46,101 @@ let { optionalProp = 42, requiredProp } = $props();
 let { bindableProp = $bindable() } = $props();
 ```
 
-## Runes Edge Cases and Advanced Functionalities
+## New Template Syntax
 
-### $derived Edge Cases
+### Event Handlers
 
-#### Complex Derivations with $derived.by
+```svelte
+<!-- Svelte 5: Use onclick, onkeydown, etc. -->
+<button onclick={() => count++}>Click me</button>
+<input onkeydown={handleKeydown} />
+```
 
-Use `$derived.by` for complex calculations that don't fit in simple expressions:
+### Snippets (replaces slots)
 
-```typescript
-let items = $state([1, 2, 3, 4, 5]);
-let filteredSum = $derived.by(() => {
-	let sum = 0;
-	for (const item of items) {
-		if (item > 2) {
-			sum += item;
-		}
+```svelte
+<!-- Child component -->
+<script>
+	let { children, header, footer } = $props();
+</script>
+
+{@render header?.()}
+{@render children?.()}
+{@render footer?.()}
+
+<!-- Parent component -->
+<Child>
+	{#snippet header()}
+		<h1>My Header</h1>
+	{/snippet}
+
+	{#snippet children()}
+		<p>Main content</p>
+	{/snippet}
+
+	{#snippet footer()}
+		<footer>My Footer</footer>
+	{/snippet}
+</Child>
+```
+
+### Fragments
+
+```svelte
+<!-- Use fragments for multiple root elements -->
+{#fragment}
+	<div>First element</div>
+	<div>Second element</div>
+{/fragment}
+```
+
+### Key Blocks
+
+```svelte
+<!-- Re-render when key changes -->
+{#key user.id}
+	<UserProfile {user} />
+{/key}
+```
+
+### Await Blocks
+
+```svelte
+<!-- Handle async data -->
+{#await fetchUser()}
+	<p>Loading...</p>
+{:then user}
+	<UserProfile {user} />
+{:catch error}
+	<p>Error: {error.message}</p>
+{/await}
+```
+
+### Attachments
+
+```svelte
+<!-- Element-level lifecycle functions -->
+<script>
+	function animate(element) {
+		// Runs when element is created
+		gsap.to(element, { rotation: 360, duration: 2 });
+		return () => {
+			// Cleanup when element is removed
+			gsap.killTweensOf(element);
+		};
 	}
-	return sum;
-});
-```
+</script>
 
-#### Overriding Derived Values (Optimistic UI)
+<div {@attach animate} class="box"></div>
 
-Derived values can be temporarily overridden for optimistic UI patterns:
+<!-- Inline attachments -->
+<div {@attach (element) => console.log(element)}></div>
 
-```typescript
-let { post } = $props();
-let likes = $derived(post.likes);
+<!-- Conditional attachments -->
+<div {@attach showAnimation && animate}></div>
 
-async function handleLike() {
-	// Optimistic update
-	likes += 1;
-
-	try {
-		await likePost(post.id);
-	} catch (error) {
-		// Rollback on error
-		likes -= 1;
-	}
-}
-```
-
-#### Avoiding Dependency Tracking with untrack
-
-Use `untrack()` to prevent state from being treated as a dependency:
-
-```typescript
-let data = $state(null);
-let timestamp = $state(Date.now());
-
-$effect(() => {
-	// Only runs when data changes, not when timestamp changes
-	saveToStorage(data, {
-		timestamp: untrack(() => timestamp)
-	});
-});
-```
-
-### $effect Edge Cases
-
-#### When NOT to use $effect
-
-Avoid using `$effect` for state synchronization. Use `$derived` instead:
-
-```typescript
-// ❌ Don't do this
-let count = $state(0);
-let doubled = $state(0);
-
-$effect(() => {
-	doubled = count * 2;
-});
-
-// ✅ Do this instead
-let count = $state(0);
-let doubled = $derived(count * 2);
-```
-
-#### Infinite Loop Prevention
-
-Use `untrack()` to prevent infinite loops when reading and writing to the same state:
-
-```typescript
-let value = $state(0);
-
-$effect(() => {
-	// Prevent infinite loop
-	const currentValue = untrack(() => value);
-	if (currentValue < 0) {
-		value = 0;
-	}
-});
-```
-
-#### Effect Cleanup
-
-Return cleanup functions from effects:
-
-```typescript
-let isVisible = $state(false);
-
-$effect(() => {
-	if (isVisible) {
-		const interval = setInterval(() => {
-			console.log('Component is visible');
-		}, 1000);
-
-		// Cleanup function
-		return () => clearInterval(interval);
-	}
-});
-```
-
-### $state Edge Cases
-
-#### Deep State Mutations
-
-Objects and arrays are deeply reactive by default:
-
-```typescript
-let user = $state({
-	name: 'John',
-	preferences: {
-		theme: 'dark',
-		notifications: true
-	}
-});
-
-// These mutations trigger reactivity
-user.preferences.theme = 'light';
-user.preferences.notifications = false;
-```
-
-#### State in Classes
-
-Use `$state` in class fields for complex state management:
-
-```typescript
-class TodoStore {
-	todos = $state([]);
-	filter = $state('all');
-
-	get filteredTodos() {
-		return $derived.by(() => {
-			switch (this.filter) {
-				case 'active':
-					return this.todos.filter((todo) => !todo.completed);
-				case 'completed':
-					return this.todos.filter((todo) => todo.completed);
-				default:
-					return this.todos;
-			}
-		});
-	}
-
-	addTodo(text) {
-		this.todos.push({ id: Date.now(), text, completed: false });
-	}
-}
-```
-
-### Performance Optimization Edge Cases
-
-#### Conditional Dependencies
-
-Use conditional logic carefully in derived values:
-
-```typescript
-let showDetails = $state(false);
-let user = $state(null);
-
-// Only depends on user when showDetails is true
-let displayName = $derived.by(() => {
-	if (!showDetails) return 'Hidden';
-	return user?.name || 'Anonymous';
-});
-```
-
-#### Memoization with $derived
-
-Use derived values for expensive calculations:
-
-```typescript
-let items = $state([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-
-let expensiveCalculation = $derived.by(() => {
-	// This expensive calculation only runs when items changes
-	return items.reduce((acc, item) => {
-		// Simulate expensive operation
-		for (let i = 0; i < 1000000; i++) {
-			acc += Math.sqrt(item);
-		}
-		return acc;
-	}, 0);
-});
-```
-
-#### Effect Dependencies Optimization
-
-Use `$effect.tracking()` to optimize effect dependencies:
-
-```typescript
-let user = $state(null);
-let settings = $state({ theme: 'light' });
-
-$effect(() => {
-	// Only track user changes, ignore settings changes
-	const currentUser = $effect.tracking(() => user);
-
-	if (currentUser) {
-		console.log(`User ${currentUser.name} logged in`);
-	}
-});
-```
-
-### Props and Bindings Edge Cases
-
-#### Bindable Props with Validation
-
-Use bindable props with validation:
-
-```typescript
-let { count = $bindable(0), max = $bindable(100) } = $props();
-
-// Validate bindable props
-$effect(() => {
-	if (count > max) {
-		count = max;
-	}
-	if (count < 0) {
-		count = 0;
-	}
-});
-```
-
-#### Computed Props
-
-Use derived values for computed props:
-
-```typescript
-let { items = [] } = $props();
-
-let totalItems = $derived(items.length);
-let hasItems = $derived(items.length > 0);
-let firstItem = $derived(items[0]);
-```
-
-### Error Handling Edge Cases
-
-#### Effect Error Boundaries
-
-Handle errors in effects gracefully:
-
-```typescript
-let data = $state(null);
-
-$effect(() => {
-	try {
-		if (data) {
-			// Potentially dangerous operation
-			processData(data);
-		}
-	} catch (error) {
-		console.error('Error processing data:', error);
-		// Handle error gracefully
-		data = null;
-	}
-});
-```
-
-#### Async Operations in Effects
-
-Handle async operations properly:
-
-```typescript
-let userId = $state(null);
-
-$effect(() => {
-	if (userId) {
-		// Handle async operation
-		fetchUserData(userId)
-			.then((data) => {
-				// Update state with fetched data
-			})
-			.catch((error) => {
-				console.error('Failed to fetch user data:', error);
-			});
-	}
-});
+<!-- Multiple attachments -->
+<div {@attach animate} {@attach drag} class="box"></div>
 ```
 
 ## Project Structure
@@ -359,79 +158,6 @@ src/
 │   ├── member/          # Member profile pages
 │   ├── demo/            # Demo pages
 │   └── api/             # API routes
-├── app.html             # HTML template
-├── app.css              # Global styles
-├── app.d.ts             # TypeScript declarations
-├── hooks.server.ts      # Server-side hooks
-└── hooks.ts             # Client-side hooks
-```
-
-## UI and Styling with Shadcn-Svelte
-
-- Use Tailwind CSS for utility-first styling approach
-- Leverage Shadcn-Svelte components for pre-built, customizable UI elements
-- Import Shadcn-Svelte components from `$lib/components/ui`
-- Organize Tailwind classes using the `cn()` utility from `$lib/utils`
-
-## Component Development
-
-- Create .svelte files for Svelte components
-- Use .svelte.ts files for component logic and state machines
-- Implement proper component composition and reusability
-- Use Svelte's props for data passing
-- Leverage Svelte's reactive declarations for local state management
-
-## State Management
-
-Use classes for complex state management (state machines):
-
-```typescript
-// counter.svelte.ts
-import { writable } from 'svelte/store';
-
-function createModal(state: boolean) {
-	const { subscribe, set } = writable(state);
-	return {
-		subscribe,
-		open: () => set(true),
-		close: () => set(false)
-	};
-}
-export const modalProp = createModal(false);
-```
-
-Use in components:
-
-```svelte
-<script lang="ts">
-	import { modalProp } from './counter.svelte.ts';
-</script>
-
-<button onclick={modalProp.open}>
-	Count: {modalProp.subscribe}
-</button>
-```
-
-## Routing and Pages
-
-- Utilize SvelteKit's file-based routing system in the src/routes/ directory
-- Implement dynamic routes using [slug] syntax
-- Use load functions for server-side data fetching and pre-rendering
-- Implement proper error handling with +error.svelte pages
-
-## Internationalization (i18n) with Paraglide.js
-
-- Use Paraglide.js for internationalization
-- Use the `m()` function for all user-facing strings
-- Language files are in `messages/` directory
-- Supported languages: English (en), Chinese (cn), Russian (ru)
-
-```svelte
-<script>
-	import { m } from '@inlang/paraglide-js';
-</script>
-
-<h1>{m('welcome_message')}</h1>
 ```
 
 ## Common Patterns
@@ -448,35 +174,28 @@ export const load = async ({ locals }) => {
 
 ### Client-side State Management
 
-```typescript
-// +page.svelte
+```svelte
 <script>
-  let data = $state(null);
+	let data = $state(null);
 
-  $effect(() => {
-    const fetchData = async () => {
-      // Fetch data logic here
-      data = result;
-    };
-    fetchData();
-  });
+	$effect(() => {
+		const fetchData = async () => {
+			data = await fetch('/api/data').then((r) => r.json());
+		};
+		fetchData();
+	});
 </script>
 ```
 
-## Accessibility
+## Internationalization (i18n) with Paraglide.js
 
-- Ensure proper semantic HTML structure in Svelte components
-- Implement ARIA attributes where necessary
-- Ensure keyboard navigation support for interactive elements
-- Use Svelte's bind:this for managing focus programmatically
-- Follow WCAG 2.1 guidelines
+```svelte
+<script>
+	import { m } from '@inlang/paraglide-js';
+</script>
 
-## Testing
-
-- Unit tests with Vitest
-- E2E tests with Playwright
-- Component testing with Vitest Browser
-- Test files: `*.test.ts`, `*.spec.ts`
+<h1>{m('welcome_message')}</h1>
+```
 
 ## Development Workflow
 
@@ -491,6 +210,8 @@ export const load = async ({ locals }) => {
 - Svelte 5 Runes: https://svelte.dev/docs/svelte/what-are-runes
 - Svelte Documentation: https://svelte.dev/docs
 - SvelteKit Documentation: https://kit.svelte.dev/docs
+- Paraglide.js Documentation: https://inlang.com/m/gerre34r/library-inlang-paraglideJs/sveltekit
+
 - Paraglide.js Documentation: https://inlang.com/m/gerre34r/library-inlang-paraglideJs/sveltekit
 
 Refer to Svelte, SvelteKit, and Paraglide.js documentation for detailed information on components, internationalization, and best practices.

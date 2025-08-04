@@ -3,9 +3,11 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
+	import { ArrowLeft, Edit, Eye, Calendar, User, Heart } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import { Editor } from '$lib/components/modules';
+	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
+	import { getLikeCount, isPostLiked } from '$lib/utils/likes';
+	import { onMount } from 'svelte';
 
 	interface Post {
 		id: string;
@@ -28,9 +30,12 @@
 		}>;
 	}
 
-	let { post = null, session } = $props<{ post: Post | null; session?: any }>();
+	let { data } = $props();
+	let { post, session, supabase } = data;
 
 	let isAuthor = $derived(post?.user_id === session?.user?.id);
+	let likeCount = $state(0);
+	let isLiked = $state(false);
 
 	function handleBack() {
 		goto('/posts');
@@ -43,6 +48,16 @@
 	function handleContentChange(data: any) {
 		// Read-only mode, no changes needed
 	}
+
+	// Load like data when component mounts
+	onMount(async () => {
+		if (post?.id) {
+			likeCount = await getLikeCount(supabase, post.id);
+			if (session?.user?.id) {
+				isLiked = await isPostLiked(supabase, post.id, session.user.id);
+			}
+		}
+	});
 </script>
 
 <svelte:head>
@@ -121,6 +136,19 @@
 			</CardContent>
 		</Card>
 
+		<!-- Post Actions -->
+		<div class="mt-8 flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<LikeButton
+					postId={post.id}
+					currentUserId={session?.user?.id}
+					{supabase}
+					initialLikeCount={likeCount}
+					initialIsLiked={isLiked}
+				/>
+			</div>
+		</div>
+
 		<!-- Author Info -->
 		<Card class="mt-8">
 			<CardHeader>
@@ -143,6 +171,15 @@
 				</div>
 			</CardContent>
 		</Card>
+
+		<!-- Comments Section -->
+		<CommentSection
+			postId={post.id}
+			postAuthorId={post.user_id}
+			currentUserId={session?.user?.id}
+			currentUser={session?.user}
+			{supabase}
+		/>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-12 text-center">
 			<div class="mb-4 rounded-full bg-muted p-4">
