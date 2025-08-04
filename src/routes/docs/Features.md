@@ -1,150 +1,268 @@
-# Blog Features
+# Feavel Docs - Project Features
 
 ## Overview
 
-The blog feature provides a comprehensive content management system for users to create, edit, and share posts with rich content and advanced functionality.
+Feavel Docs is a comprehensive SvelteKit application that provides a modern blogging platform with user authentication, rich content editing, and internationalization support. Built with SvelteKit, Supabase, and shadcn-svelte components.
 
 ## Core Features
 
-### 1. Tag System
+### 1. Authentication System ✅
 
-- **Tag Management**: Users can add multiple tags to their posts
-- **Tag Search**: Users can search posts by tags using URL parameters (e.g., `?tag=javascript`)
-- **Tag Display**: Tags are displayed as badges using shadcn-svelte `badge` component
-- **Tag Navigation**: Clicking tags filters posts by that tag
-- **Tag Storage**: Tags are stored in Supabase `post_tags` table with many-to-many relationship
+- **User Registration**: Email-based signup with username validation
+- **User Login**: Email/password authentication with Supabase Auth
+- **Email Verification**: Automatic email confirmation workflow
+- **Session Management**: Secure session handling with Supabase SSR
+- **Profile Management**: User profiles with avatar upload functionality
+- **Username Validation**: Unique username requirements with regex validation
 
-### 2. Content Search
+### 2. Rich Content Editor ✅
 
-- **Full-Text Search**: Search through post titles and content
-- **Search Integration**: Ready for command palette integration using shadcn-svelte `command` component
-- **Search Results**: Display search results with highlighted matches
-- **Search History**: Track recent searches for quick access
-
-### 3. Rich Content Editor (✅ Implemented)
-
-- **Block-Based Editor**: Modern Editor.js integration with comprehensive toolset
-- **Advanced Tools**: Header, List, Quote, Code, Inline Code, Delimiter, Table, Simple Image, Checklist, Marker, Embed, Warning, Attaches, Link
+- **Editor.js Integration**: Modern block-based editor with comprehensive toolset
+- **Advanced Tools**:
+  - Header (H1-H6), List, Quote, Code blocks, Inline Code
+  - Delimiter, Table, Simple Image, Checklist, Marker
+  - Embed, Warning, Attaches, Link
 - **Enhanced Features**:
   - Drag & Drop support with `editorjs-drag-drop`
   - Multi-block selection with `editorjs-multiblock-selection-plugin`
   - Undo/Redo functionality with `editorjs-undo`
   - Color picker for text styling with `editorjs-color-picker`
-- **Media Support**: Picture uploads with local storage caching
-- **Auto-Save**: Content saved to local storage during editing
-- **Publish Workflow**: Images uploaded to Supabase only when post is published
-- **Content Types**: Support for text, images, code blocks, lists, quotes, tables, embeds, etc.
-- **Paste Handling**: Smart paste handling for HTML, files, and patterns
-- **Conversion Tools**: Convert between different block types
-- **Sanitization**: Automatic content sanitization for security
+- **Content Management**: JSONB storage for rich content in Supabase
+- **Auto-Save**: Local storage integration for draft saving
+- **Image Handling**: Automatic image compression and upload to Supabase storage
 
-### 4. Global Post Component
+### 3. Blog System ✅
 
-- **Reusable Component**: Single component for displaying posts across the app
-- **Flexible Props**: Accepts `{supabase}`, `{session}`, `{tags}` for different use cases
-- **Context-Aware**: Shows edit button only when session matches post author
-- **Responsive Design**: Adapts to different container sizes
-- **Loading States**: Skeleton loading for better UX
-
-### 5. Post Management
-
-- **CRUD Operations**: Create, read, update, delete posts
-- **Draft System**: Save posts as drafts before publishing
-- **Version Control**: Track content changes and revisions
+- **Post Creation**: Full CRUD operations for blog posts
+- **Rich Content**: Support for text, images, code blocks, lists, quotes, tables, embeds
 - **Publishing Controls**: Public/private visibility settings
-- **SEO Optimization**: Meta tags, structured data, and social sharing
+- **Post Views**: View counter tracking
+- **Cover Images**: Optional cover image support for posts
+- **Draft System**: Save posts as drafts before publishing
 
-### 6. User Experience
+### 4. Tag System ✅
 
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Accessibility**: WCAG compliant with keyboard navigation
-- **Performance**: Optimized loading with lazy loading and caching
-- **Internationalization**: Support for multiple languages via Paraglide.js
-- **Error Handling**: Graceful error states and user feedback
+- **Tag Management**: Add multiple tags to posts
+- **Tag Storage**: Supabase `post_tags` table with many-to-many relationships
+- **Tag Display**: Tags displayed as badges using shadcn-svelte components
+- **Tag Filtering**: URL-based tag filtering (e.g., `?tag=javascript`)
+- **Multi-Tag Selection**: Interactive tag selection component
 
-## Technical Requirements
+### 5. User Profiles ✅
 
-### Database Schema
+- **Profile Pages**: Individual user profile pages at `/member/[username]`
+- **Avatar Upload**: Image upload with automatic compression
+- **Profile Settings**: User profile editing interface
+- **Avatar Management**: Upload, update, and remove profile pictures
+- **Storage Integration**: Supabase storage for avatar files
 
-- **posts**: Main post content with JSONB for rich content
-- **post_tags**: Available tags for categorization
-- **posts_tags_rel**: Many-to-many relationship between posts and tags
-- **RLS Policies**: Row-level security for data protection
+### 6. Internationalization ✅
 
-### Storage
+- **Paraglide.js Integration**: Modern i18n solution
+- **Multi-language Support**: English (en), Chinese (cn), Russian (ru)
+- **Language Switching**: Dynamic locale switching
+- **Message Management**: Centralized message files in `messages/` directory
 
-- **Image Uploads**: Supabase storage for post images
-- **Local Storage**: Temporary content caching during editing
-- **CDN Integration**: Optimized image delivery
+### 7. File Storage System ✅
 
-### API Endpoints
+- **Supabase Storage**: File upload, download, and management
+- **Image Compression**: Automatic image optimization
+- **File Validation**: Type and size validation
+- **CDN Integration**: Optimized file delivery
+- **Demo Interface**: Storage demonstration page
 
-- **Post CRUD**: RESTful endpoints for post management
-- **Tag Operations**: Tag creation, listing, and filtering
-- **Search API**: Full-text search with pagination
-- **Upload API**: Image upload with validation
+### 8. UI/UX Features ✅
+
+- **shadcn-svelte Components**: Comprehensive UI component library
+- **Responsive Design**: Mobile-first responsive layout
+- **Dark Mode Support**: Theme switching capabilities
+- **Loading States**: Skeleton loading and progress indicators
+- **Toast Notifications**: User feedback with svelte-sonner
+- **Form Handling**: Superforms integration for type-safe forms
+
+## Technical Architecture
+
+### Database Schema (Supabase)
+
+```sql
+-- Users table (Supabase Auth)
+users (
+  id: uuid PRIMARY KEY,
+  username: text UNIQUE,
+  avatar_url: text,
+  created_at: timestamptz DEFAULT now()
+)
+
+-- Posts table
+posts (
+  id: bigint PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  title: text,
+  content: jsonb,           -- Legacy content
+  content_v2: jsonb,        -- Editor.js content
+  post_cover: text,         -- Cover image URL
+  public_visibility: boolean DEFAULT false,
+  post_views: bigint DEFAULT 1,
+  created_at: timestamptz DEFAULT now()
+)
+
+-- Tags table
+post_tags (
+  id: bigint PRIMARY KEY,
+  tag_name: text UNIQUE,
+  created_at: timestamptz DEFAULT now()
+)
+
+-- Junction table
+posts_tags_rel (
+  id: bigint PRIMARY KEY,
+  post_id: bigint REFERENCES posts(id),
+  tag_id: bigint REFERENCES post_tags(id),
+  created_at: timestamptz DEFAULT now()
+)
+```
+
+### Storage Structure
+
+```
+storage/
+├── avatars/          # User profile pictures
+└── demo/             # Demo file uploads
+```
+
+### Routes Structure
+
+```
+src/routes/
+├── auth/             # Authentication pages
+│   ├── login/        # Sign in
+│   ├── signup/       # Sign up
+│   └── confirm/      # Email confirmation
+├── member/           # User profiles
+│   └── [slug]/       # Individual user pages
+├── posts/            # Blog system
+│   ├── new/          # Create post
+│   ├── edit/[id]/    # Edit post
+│   └── [post_id]/    # View post
+├── demo/             # Feature demonstrations
+│   ├── storage/      # File storage demo
+│   └── paraglide/    # i18n demo
+└── docs/             # Documentation
+```
+
+## Development Features
+
+### Testing
+
+- **Unit Testing**: Vitest integration
+- **E2E Testing**: Playwright test suite
+- **Component Testing**: Svelte component testing
+
+### Code Quality
+
+- **TypeScript**: Full type safety
+- **ESLint**: Code linting and formatting
+- **Prettier**: Code formatting
+- **Svelte Check**: Type checking for Svelte files
+
+### Development Tools
+
+- **Hot Reload**: Fast development with Vite
+- **Type Checking**: Real-time TypeScript validation
+- **Form Validation**: Zod schema validation
+- **State Management**: Svelte 5 runes for reactive state
+
+## Dependencies
+
+### Core Dependencies
+
+- **SvelteKit**: Full-stack framework
+- **Supabase**: Backend-as-a-Service
+- **shadcn-svelte**: UI component library
+- **Editor.js**: Rich text editor
+- **Paraglide.js**: Internationalization
+
+### Editor.js Tools
+
+- **Core**: `@editorjs/editorjs`
+- **Blocks**: Header, List, Quote, Code, Table, Image
+- **Enhancements**: Drag & Drop, Undo/Redo, Multi-selection, Color picker
+
+### Development Dependencies
+
+- **TypeScript**: Type safety
+- **Tailwind CSS**: Utility-first CSS
+- **Vitest**: Unit testing
+- **Playwright**: E2E testing
 
 ## User Flows
 
-### Creating a Post
+### Authentication Flow
 
-1. User navigates to `/blog/new`
-2. Editor loads with empty canvas and full toolset
-3. User adds content blocks using toolbox or keyboard shortcuts
-4. User can drag & drop blocks for reordering
-5. User adds tags from existing list or creates new ones
-6. User saves draft (local storage) or publishes (Supabase)
-7. Images uploaded to storage only on publish
+1. User visits `/auth/signup`
+2. Enters email, password, and username
+3. System validates username availability
+4. Account created with email verification
+5. User receives confirmation email
+6. User can sign in at `/auth/login`
 
-### Searching Posts
+### Blog Post Creation
 
-1. User enters search term in command palette
-2. System searches titles and content
-3. Results displayed with highlighted matches
-4. User can filter by tags
-5. User clicks result to view full post
+1. User navigates to `/posts/new`
+2. Editor loads with full toolset
+3. User adds content blocks and title
+4. User selects tags from available options
+5. User sets visibility (public/private)
+6. Post saved to Supabase with rich content
 
-### Tag Navigation
+### Profile Management
 
-1. User clicks tag on post or search page
-2. URL updates with tag parameter
-3. Posts filtered by selected tag
-4. Tag highlighted in UI
-5. User can combine multiple tags
+1. User visits `/member/[username]/settings`
+2. User can upload/update avatar
+3. Image automatically compressed and stored
+4. Profile information displayed and editable
+5. Changes reflected across the application
 
-## Success Metrics
+## Performance Optimizations
 
-- **User Engagement**: Time spent creating/reading posts
-- **Content Quality**: Post completion rates and edit frequency
-- **Search Usage**: Search queries and result clicks
-- **Tag Adoption**: Tag usage patterns and discovery
-- **Performance**: Page load times and editor responsiveness
+### Frontend
 
-## Editor.js Features
+- **Lazy Loading**: Component and route lazy loading
+- **Image Optimization**: Automatic compression and WebP support
+- **Caching**: Local storage for drafts and user preferences
+- **Bundle Optimization**: Tree shaking and code splitting
 
-### Available Tools
+### Backend
 
-- **Header**: Multiple heading levels (H1-H6)
-- **List**: Ordered and unordered lists
-- **Quote**: Blockquotes with attribution
-- **Code**: Syntax-highlighted code blocks
-- **Inline Code**: Inline code formatting
-- **Delimiter**: Visual separators
-- **Table**: Data tables with editing
-- **Simple Image**: Image blocks with captions
-- **Checklist**: Task lists with checkboxes
-- **Marker**: Text highlighting
-- **Embed**: External content embedding
-- **Warning**: Alert/notice blocks
-- **Attaches**: File attachments
-- **Link**: URL linking
+- **Database Indexing**: Optimized queries with proper indexes
+- **Storage CDN**: Fast file delivery through Supabase CDN
+- **RLS Policies**: Row-level security for data protection
+- **Connection Pooling**: Efficient database connections
 
-### Advanced Features
+## Security Features
 
-- **Drag & Drop**: Reorder blocks with mouse
-- **Multi-block Selection**: Select multiple blocks at once
-- **Undo/Redo**: Full undo/redo history
-- **Color Picker**: Text color customization
-- **Paste Handling**: Smart paste from various sources
-- **Conversion**: Convert between block types
-- **Sanitization**: Automatic content cleaning
+- **Authentication**: Supabase Auth with email verification
+- **Authorization**: Row-level security policies
+- **Input Validation**: Zod schema validation
+- **File Upload Security**: Type and size validation
+- **XSS Protection**: Content sanitization
+- **CSRF Protection**: Built-in SvelteKit protection
+
+## Future Enhancements
+
+### Planned Features
+
+- **Search Functionality**: Full-text search implementation
+- **Comment System**: Post commenting and replies
+- **Social Features**: User following and activity feed
+- **Advanced Analytics**: Post analytics and user insights
+- **API Documentation**: Comprehensive API documentation
+- **Mobile App**: React Native companion app
+
+### Technical Improvements
+
+- **Performance Monitoring**: Real-time performance metrics
+- **Error Tracking**: Comprehensive error logging
+- **SEO Optimization**: Advanced meta tags and structured data
+- **PWA Support**: Progressive web app capabilities
+- **Offline Support**: Service worker implementation
