@@ -8,7 +8,8 @@
 	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
 	import { getAvatarUrl } from '$lib/utils/user';
 
-	let { post, session, supabase } = $props();
+	let { data } = $props();
+	let { post, session, supabase } = data;
 
 	let isAuthor = $derived(post?.user_id === session?.user?.id);
 
