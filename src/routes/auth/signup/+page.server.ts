@@ -14,7 +14,6 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
 	default: async (event) => {
 		const {
-			request,
 			locals: { supabase }
 		} = event;
 		const form = await superValidate(event, zod(formSchema));
@@ -33,7 +32,7 @@ export const actions: Actions = {
 		}
 
 		// Create user account with username in metadata
-		const { data: authData, error: signUpError } = await supabase.auth.signUp({
+		const { error: signUpError } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {

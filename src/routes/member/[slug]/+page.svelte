@@ -2,7 +2,7 @@
 	import { ProfileDisplay } from '$lib/components/modules';
 
 	const { data: propsData } = $props();
-	const { userProfile, isOwnProfile, session, supabase } = propsData;
+	const { userProfile, isOwnProfile, supabase } = propsData;
 </script>
 
 <div class="h-full pt-24">

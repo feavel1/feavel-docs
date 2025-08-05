@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
 import { getUserProfileByUsername } from '$lib/utils/user';
 

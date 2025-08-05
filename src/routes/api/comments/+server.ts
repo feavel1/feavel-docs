@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createComment, updateComment, deleteComment, getComments } from '$lib/utils/comments';
+import { createComment, updateComment, deleteComment } from '$lib/utils/comments';
+import type { CommentFormData } from '$lib/types/comments';
 
 // Validation helpers
 const validateId = (id: any): number | null => {
@@ -33,10 +34,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Content is required' }, { status: 400 });
 		}
 
-		const comment = await createComment(locals.supabase, validPostId, {
+		const commentData: CommentFormData = {
 			content: validContent,
-			parent_id: validParentId ?? undefined
-		});
+			...(validParentId && { parent_id: validParentId })
+		};
+		const comment = await createComment(locals.supabase, validPostId, commentData);
 
 		return comment
 			? json({ comment })

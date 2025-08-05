@@ -1,29 +1,17 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
 	import { MessageSquare, Loader2, ChevronDown } from '@lucide/svelte';
-	import CommentForm from './CommentForm.svelte';
-	import CommentItem from './CommentItem.svelte';
-	import type { PostComment, CommentFormData } from '$lib/types/comments';
 	import {
 		getComments,
-		getCommentReplies,
 		createComment,
 		updateComment,
-		deleteComment
+		deleteComment,
+		getCommentReplies
 	} from '$lib/utils/comments';
-	import type { SupabaseClient } from '@supabase/supabase-js';
-
-	interface Props {
-		postId: number;
-		postAuthorId: string;
-		currentUserId?: string;
-		currentUser?: {
-			username: string;
-			avatar_url?: string;
-		};
-		supabase: SupabaseClient;
-	}
+	import type { PostComment, CommentFormData } from '$lib/types/comments';
+	import CommentForm from './CommentForm.svelte';
+	import CommentItem from './CommentItem.svelte';
 
 	let { postId, postAuthorId, currentUserId, currentUser, supabase } = $props();
 
@@ -141,7 +129,6 @@
 	<CardContent class="space-y-6">
 		{#if currentUserId}
 			<CommentForm
-				{postId}
 				parentId={undefined}
 				onSubmit={handleSubmitComment}
 				user={currentUser}
@@ -193,7 +180,6 @@
 						{#if replyingTo === comment.id}
 							<div class="ml-11">
 								<CommentForm
-									{postId}
 									parentId={comment.id}
 									onSubmit={handleSubmitComment}
 									user={currentUser}

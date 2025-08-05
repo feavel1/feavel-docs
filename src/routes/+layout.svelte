@@ -2,29 +2,22 @@
 	import '../app.css';
 	import { page } from '$app/state';
 	import { locales, localizeHref } from '$lib/paraglide/runtime';
-	import { invalidate } from '$app/navigation';
 	import { Toaster } from '$lib/components/ui/sonner';
-	import { getAvatarUrl } from '$lib/utils/user';
 
 	let { children, data } = $props();
-	let { supabase, session, userProfile } = data;
-
-	const avatarDisplayUrl = $derived(
-		getAvatarUrl(userProfile?.avatar_url, userProfile?.username, supabase)
-	);
+	let { supabase, session } = data;
 
 	$effect(() => {
-		const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
+		const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
 			if (newSession?.expires_at !== session?.expires_at) {
-				invalidate('supabase:auth');
+				session = newSession;
 			}
 		});
-		return () => authListener.subscription.unsubscribe();
-	});
 
-	async function handleLogout() {
-		await supabase.auth.signOut();
-	}
+		return () => {
+			authListener.subscription.unsubscribe();
+		};
+	});
 </script>
 
 <!-- Hidden locale links for SEO -->

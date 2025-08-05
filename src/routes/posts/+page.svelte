@@ -3,9 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Edit, Eye, Plus, Search, X } from '@lucide/svelte';
+	import { Edit, Eye, Plus, Search } from '@lucide/svelte';
 	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
-	import { extractTagNamesFromRelations } from '$lib/utils/tags';
 
 	interface Post {
 		id: string;

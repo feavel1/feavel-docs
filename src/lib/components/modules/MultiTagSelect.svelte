@@ -9,8 +9,7 @@
 		CommandList
 	} from '$lib/components/ui/command';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Check, ChevronsUpDown, X, Filter } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, Filter } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
 
 	interface Tag {
@@ -42,10 +41,6 @@
 		} else {
 			selectedTags = [...selectedTags, tagName];
 		}
-	}
-
-	function removeTag(tagName: string) {
-		selectedTags = selectedTags.filter((tag) => tag !== tagName);
 	}
 
 	function clearAll() {

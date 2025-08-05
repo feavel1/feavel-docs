@@ -12,7 +12,7 @@
 		onTagsChange: (tags: string[]) => void;
 	}
 
-	let { tags, searchQuery, selectedTags, onSearchChange, onTagsChange }: Props = $props();
+	let { tags, searchQuery, selectedTags }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

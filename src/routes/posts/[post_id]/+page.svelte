@@ -1,41 +1,16 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { ArrowLeft, Edit, Eye, Calendar, User, Heart } from '@lucide/svelte';
+	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
-	import { getLikeCount, isPostLiked } from '$lib/utils/likes';
-	import { onMount } from 'svelte';
+	import { getAvatarUrl } from '$lib/utils/user';
 
-	interface Post {
-		id: string;
-		title: string;
-		content?: string;
-		content_v2?: any;
-		post_cover?: string;
-		post_views?: number;
-		created_at: string;
-		user_id: string;
-		public_visibility: boolean;
-		users?: {
-			username: string;
-			avatar_url?: string;
-		};
-		posts_tags_rel?: Array<{
-			post_tags: {
-				tag_name: string;
-			};
-		}>;
-	}
-
-	let { data } = $props();
-	let { post, session, supabase } = data;
+	let { post, session, supabase } = $props();
 
 	let isAuthor = $derived(post?.user_id === session?.user?.id);
-	let likeCount = $state(0);
-	let isLiked = $state(false);
 
 	function handleBack() {
 		goto('/posts');
@@ -45,19 +20,9 @@
 		goto(`/posts/edit/${post?.id}`);
 	}
 
-	function handleContentChange(data: any) {
+	function handleContentChange(_data: any) {
 		// Read-only mode, no changes needed
 	}
-
-	// Load like data when component mounts
-	onMount(async () => {
-		if (post?.id) {
-			likeCount = await getLikeCount(supabase, post.id);
-			if (session?.user?.id) {
-				isLiked = await isPostLiked(supabase, post.id, session.user.id);
-			}
-		}
-	});
 </script>
 
 <svelte:head>
@@ -139,13 +104,7 @@
 		<!-- Post Actions -->
 		<div class="mt-8 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<LikeButton
-					postId={post.id}
-					currentUserId={session?.user?.id}
-					{supabase}
-					initialLikeCount={likeCount}
-					initialIsLiked={isLiked}
-				/>
+				<LikeButton postId={post.id} {supabase} currentUserId={session?.user?.id} />
 			</div>
 		</div>
 
@@ -157,7 +116,10 @@
 			<CardContent>
 				<div class="flex items-center gap-4">
 					<Avatar class="h-12 w-12">
-						<AvatarImage src={post.users?.avatar_url} alt={post.users?.username} />
+						<AvatarImage
+							src={getAvatarUrl(post.users?.avatar_url, post.users?.username, supabase)}
+							alt={post.users?.username}
+						/>
 						<AvatarFallback>
 							{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
 						</AvatarFallback>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -12,8 +11,7 @@
 	import { Upload, Download, Trash2, Link } from '@lucide/svelte';
 
 	const { data: propsData } = $props();
-	const { session } = propsData;
-	const { supabase } = $page.data;
+	const { session, supabase } = propsData;
 
 	let isUploading = $state(false);
 	let isDownloading = $state(false);
@@ -29,17 +27,19 @@
 		isUploading = true;
 
 		try {
-			const result = await uploadFile(supabase, {
-				file,
-				path: `demo/${session?.user?.id || 'anonymous'}/${file.name}`,
-				bucket: 'storage'
-			});
+			if (file) {
+				const result = await uploadFile(supabase, {
+					file,
+					path: `demo/${session?.user?.id || 'anonymous'}/${file.name}`,
+					bucket: 'storage'
+				});
 
-			if (result) {
-				uploadedFile = result;
-				console.log('File uploaded successfully:', result);
-			} else {
-				console.error('Upload failed');
+				if (result) {
+					uploadedFile = result;
+					console.log('File uploaded successfully:', result);
+				} else {
+					console.error('Upload failed');
+				}
 			}
 		} catch (error) {
 			console.error('Upload error:', error);

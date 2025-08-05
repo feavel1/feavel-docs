@@ -1,63 +1,85 @@
 # Features
 
-## Authentication & Authorization
+## Core Features
 
-- **Secure Session Management**: Uses `safeGetSession()` for verified user data
-- **Row Level Security (RLS)**: Enabled on all user data tables
-- **Input Validation**: Comprehensive validation for all API endpoints
-- **Authorization Checks**: Users can only modify their own content
+### Authentication
 
-## Blog System
+- User registration and login
+- Email confirmation
+- Password reset functionality
+- Session management
 
-- **Rich Text Editor**: EditorJS integration for content creation
-- **Post Management**: Create, edit, and delete posts
-- **Public/Private Posts**: Control post visibility
-- **Post Views**: Track post view counts
-- **Cover Images**: Support for post cover images
+### Blog System
 
-## Comment System
+- Create, edit, and delete blog posts
+- Rich text editor with EditorJS
+- Post cover images
+- Post visibility settings (public/private)
+- Post views tracking
+- **Avatar display in post detail pages using proper Supabase storage URLs**
 
-- **Nested Comments**: Support for threaded discussions
-- **Real-time Updates**: Live comment updates
-- **Moderation**: Soft delete for comments
-- **User Attribution**: Comments linked to user profiles
+### User Profiles
 
-## Like System
+- User profile management
+- Avatar upload and display
+- Profile customization
+- Member directory
 
-- **Toggle Likes**: Like/unlike posts
-- **Like Counts**: Track total likes per post
-- **User State**: Track if current user liked a post
+### Comments System
 
-## User Profiles
+- Add comments to posts
+- Nested comment replies
+- Comment moderation
+- Real-time comment updates
 
-- **Avatar Upload**: Profile picture management
-- **User Information**: Display names, descriptions, birthdays
-- **Profile Pages**: Public user profiles
-- **Settings**: User account management
+### Like System
 
-## Tag System
+- Like/unlike posts with proper state management
+- Real-time like count updates
+- User-specific like status tracking
+- **Fixed type handling for string/number post IDs**
+- **Improved error handling with maybeSingle() queries**
 
-- **Multi-tag Selection**: Select multiple tags for posts
-- **Tag Management**: Create and manage tags
-- **Tag Filtering**: Filter posts by tags
+### Tag System
 
-## Security Features
+- Multi-tag selection for posts
+- Tag-based post filtering
+- Tag management
 
-- **Input Sanitization**: All user inputs are validated and sanitized
-- **SQL Injection Protection**: Parameterized queries via Supabase
-- **XSS Protection**: Content sanitization
-- **Rate Limiting**: API rate limiting (planned)
-- **Error Handling**: Comprehensive error handling without exposing internals
+### Search and Filtering
 
-## Performance
+- Post search functionality
+- Tag-based filtering
+- User-based filtering
 
-- **Pagination**: Efficient data loading
-- **Optimized Queries**: Minimal database calls
-- **Caching**: Client-side caching for better UX
-- **Lazy Loading**: Load content as needed
+### Responsive Design
 
-## Internationalization
+- Mobile-first design
+- Responsive navigation
+- Adaptive layouts
 
-- **Multi-language Support**: English, Russian, Chinese
-- **Dynamic Language Switching**: Real-time language changes
-- **Localized Content**: Translated UI elements
+## Technical Features
+
+### Svelte 5 Integration
+
+- Modern Svelte 5 runes
+- Reactive state management
+- Component composition
+
+### UI Components
+
+- Shadcn-Svelte components
+- Consistent design system
+- Accessible components
+
+### Database
+
+- Supabase integration
+- Real-time subscriptions
+- Row Level Security (RLS)
+
+### Internationalization
+
+- Paraglide.js integration
+- Multi-language support
+- Dynamic language switching

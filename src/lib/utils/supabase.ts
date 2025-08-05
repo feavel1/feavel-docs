@@ -162,3 +162,8 @@ export async function deleteAvatar(
 
 	return success;
 }
+
+// Real-time subscription helpers (to be implemented)
+// export function subscribeToTable(supabase: SupabaseClient, table: string, callback: (payload: any) => void) {
+//   return supabase.channel(table).on('postgres_changes', { event: '*', schema: 'public', table }, callback).subscribe();
+// }

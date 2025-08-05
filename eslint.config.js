@@ -23,7 +23,17 @@ export default ts.config(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+			// Strict rules for unused imports and variables
+			'@typescript-eslint/no-unused-vars': 'error',
+			'@typescript-eslint/no-unused-imports': 'error',
+			'no-unused-vars': 'off', // Use TypeScript version instead
+			// Additional strict rules
+			'@typescript-eslint/no-explicit-any': 'warn',
+			'@typescript-eslint/prefer-const': 'error',
+			'@typescript-eslint/no-var-requires': 'error',
+			'@typescript-eslint/explicit-function-return-type': 'warn',
+			'@typescript-eslint/no-non-null-assertion': 'warn'
 		}
 	},
 	{

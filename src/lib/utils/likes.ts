@@ -1,13 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PostLike } from '$lib/types/comments';
 
-export async function getLikeCount(supabase: SupabaseClient, postId: number): Promise<number> {
-	if (postId <= 0) return 0;
+export async function getLikeCount(
+	supabase: SupabaseClient,
+	postId: string | number
+): Promise<number> {
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId)) return 0;
 
 	const { count, error } = await supabase
 		.from('post_likes')
 		.select('*', { count: 'exact', head: true })
-		.eq('post_id', postId);
+		.eq('post_id', numericPostId);
 
 	if (error) {
 		console.error('Error fetching like count:', error);
@@ -19,38 +23,40 @@ export async function getLikeCount(supabase: SupabaseClient, postId: number): Pr
 
 export async function isPostLiked(
 	supabase: SupabaseClient,
-	postId: number,
+	postId: string | number,
 	userId: string
 ): Promise<boolean> {
-	if (postId <= 0 || !userId) return false;
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId) || !userId) return false;
 
 	const { data, error } = await supabase
 		.from('post_likes')
 		.select('id')
-		.eq('post_id', postId)
+		.eq('post_id', numericPostId)
 		.eq('user_id', userId)
-		.single();
+		.maybeSingle();
 
 	return !error && !!data;
 }
 
 export async function toggleLike(
 	supabase: SupabaseClient,
-	postId: number,
+	postId: string | number,
 	userId: string
 ): Promise<{ success: boolean; isLiked: boolean }> {
-	if (postId <= 0 || !userId) {
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId) || !userId) {
 		return { success: false, isLiked: false };
 	}
 
-	const isLiked = await isPostLiked(supabase, postId, userId);
+	const isLiked = await isPostLiked(supabase, numericPostId, userId);
 
 	if (isLiked) {
 		// Unlike
 		const { error } = await supabase
 			.from('post_likes')
 			.delete()
-			.eq('post_id', postId)
+			.eq('post_id', numericPostId)
 			.eq('user_id', userId);
 
 		if (error) {
@@ -62,7 +68,7 @@ export async function toggleLike(
 	} else {
 		// Like
 		const { error } = await supabase.from('post_likes').insert({
-			post_id: postId,
+			post_id: numericPostId,
 			user_id: userId
 		});
 
@@ -77,10 +83,11 @@ export async function toggleLike(
 
 export async function getLikedUsers(
 	supabase: SupabaseClient,
-	postId: number,
+	postId: string | number,
 	limit: number = 10
 ): Promise<PostLike[]> {
-	if (postId <= 0 || limit < 1) return [];
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId) || limit < 1) return [];
 
 	const { data, error } = await supabase
 		.from('post_likes')
@@ -90,7 +97,7 @@ export async function getLikedUsers(
 			users!inner(username, avatar_url)
 		`
 		)
-		.eq('post_id', postId)
+		.eq('post_id', numericPostId)
 		.order('created_at', { ascending: false })
 		.limit(limit);
 

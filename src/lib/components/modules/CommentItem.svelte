@@ -1,26 +1,14 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { MoreHorizontal, Trash2, Edit, Reply, MessageSquare, Calendar } from '@lucide/svelte';
+	import { Reply, Edit, Trash2, Calendar, MoreHorizontal, MessageSquare } from '@lucide/svelte';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
-	import type { PostComment } from '$lib/types/comments';
 	import Self from './CommentItem.svelte';
-
-	interface Props {
-		comment: PostComment;
-		currentUserId?: string;
-		postAuthorId?: string;
-		onReply: (commentId: number) => void;
-		onEdit: (commentId: number, content: string) => Promise<void>;
-		onDelete: (commentId: number) => Promise<void>;
-		showReplies?: boolean;
-	}
 
 	let {
 		comment,
@@ -36,9 +24,9 @@
 	let editContent = $state(comment.content);
 	let isSubmitting = $state(false);
 
-	const canEdit = currentUserId === comment.user_id;
-	const canDelete = currentUserId === comment.user_id || currentUserId === postAuthorId;
-	const isAuthor = comment.user_id === postAuthorId;
+	const canEdit = $derived(currentUserId === comment.user_id);
+	const canDelete = $derived(currentUserId === comment.user_id || currentUserId === postAuthorId);
+	const canReply = $derived(!!currentUserId);
 
 	async function handleEdit() {
 		if (!editContent.trim() || isSubmitting) return;
@@ -48,7 +36,7 @@
 			await onEdit(comment.id, editContent.trim());
 			isEditing = false;
 		} catch (error) {
-			console.error('Error updating comment:', error);
+			console.error('Error editing comment:', error);
 		} finally {
 			isSubmitting = false;
 		}
@@ -65,6 +53,11 @@
 		} finally {
 			isSubmitting = false;
 		}
+	}
+
+	function handleCancelEdit() {
+		isEditing = false;
+		editContent = comment.content;
 	}
 
 	function formatDate(dateString: string) {
@@ -100,8 +93,8 @@
 				<span class="text-sm font-medium">
 					{comment.users?.username || 'Unknown'}
 				</span>
-				{#if isAuthor}
-					<Badge variant="secondary" class="text-xs">Author</Badge>
+				{#if comment.user_id === postAuthorId}
+					<span class="text-xs text-muted-foreground">Author</span>
 				{/if}
 				<span class="flex items-center gap-1 text-xs text-muted-foreground">
 					<Calendar class="h-3 w-3" />
@@ -146,15 +139,7 @@
 					<Button size="sm" onclick={handleEdit} disabled={!editContent.trim() || isSubmitting}>
 						Save
 					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => {
-							isEditing = false;
-							editContent = comment.content;
-						}}
-						disabled={isSubmitting}
-					>
+					<Button variant="ghost" size="sm" onclick={handleCancelEdit} disabled={isSubmitting}>
 						Cancel
 					</Button>
 				</div>
@@ -166,15 +151,17 @@
 		{/if}
 
 		<div class="flex items-center gap-4 text-xs text-muted-foreground">
-			<Button
-				variant="ghost"
-				size="sm"
-				onclick={() => onReply(comment.id)}
-				class="h-auto p-0 text-xs"
-			>
-				<Reply class="mr-1 h-3 w-3" />
-				Reply
-			</Button>
+			{#if canReply}
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => onReply(comment.id)}
+					class="h-auto p-0 text-xs"
+				>
+					<Reply class="mr-1 h-3 w-3" />
+					Reply
+				</Button>
+			{/if}
 
 			{#if comment._reply_count && comment._reply_count > 0}
 				<div class="flex items-center gap-1">

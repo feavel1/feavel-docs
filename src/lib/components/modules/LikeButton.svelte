@@ -1,21 +1,19 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Heart } from '@lucide/svelte';
-	import { toggleLike, getLikeCount } from '$lib/utils/likes';
+	import { toggleLike, getLikeCount, isPostLiked } from '$lib/utils/likes';
 	import type { SupabaseClient } from '@supabase/supabase-js';
 
 	interface Props {
-		postId: number;
-		currentUserId?: string;
+		postId: string | number;
 		supabase: SupabaseClient;
-		initialLikeCount?: number;
-		initialIsLiked?: boolean;
+		currentUserId?: string;
 	}
 
-	let { postId, currentUserId, supabase, initialLikeCount = 0, initialIsLiked = false } = $props();
+	let { postId, supabase, currentUserId }: Props = $props();
 
-	let likeCount = $state(initialLikeCount);
-	let isLiked = $state(initialIsLiked);
+	let likeCount = $state(0);
+	let isLiked = $state(false);
 	let isSubmitting = $state(false);
 
 	async function handleToggleLike() {
@@ -26,7 +24,12 @@
 			const result = await toggleLike(supabase, postId, currentUserId);
 			if (result.success) {
 				isLiked = result.isLiked;
-				likeCount += result.isLiked ? 1 : -1;
+				// Update like count based on the action
+				if (result.isLiked) {
+					likeCount += 1;
+				} else {
+					likeCount = Math.max(0, likeCount - 1);
+				}
 			}
 		} catch (error) {
 			console.error('Error toggling like:', error);
@@ -35,11 +38,17 @@
 		}
 	}
 
-	// Update like count when component mounts
+	// Initialize like state when component mounts
 	$effect(() => {
-		if (currentUserId) {
+		if (postId && currentUserId) {
+			// Get current like count
 			getLikeCount(supabase, postId).then((count) => {
 				likeCount = count;
+			});
+
+			// Get current like status
+			isPostLiked(supabase, postId, currentUserId).then((liked) => {
+				isLiked = liked;
 			});
 		}
 	});

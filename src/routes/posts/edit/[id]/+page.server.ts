@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getTags, getPostTags } from '$lib/utils/tags';
+import { getTags } from '$lib/utils/tags';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { session } = await locals.safeGetSession();

@@ -3,22 +3,8 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Send, Loader2 } from '@lucide/svelte';
-	import type { CommentFormData } from '$lib/types/comments';
-
-	interface Props {
-		postId: number;
-		parentId?: number | null;
-		onSubmit: (comment: CommentFormData) => Promise<void>;
-		user?: {
-			username: string;
-			avatar_url?: string;
-		};
-		placeholder?: string;
-		buttonText?: string;
-	}
 
 	let {
-		postId,
 		parentId,
 		onSubmit,
 		user,
