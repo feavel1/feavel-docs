@@ -33,7 +33,8 @@
 		}>;
 	}
 
-	let { post = null, tags = [] } = $props<{ post: Post | null; tags: string[] }>();
+	let { data } = $props();
+	let { post, tags }: { post: Post; tags: string[] } = data;
 
 	let editorContent = $state<any>(post?.content_v2 || null);
 	let postTitle = $state(post?.title || '');

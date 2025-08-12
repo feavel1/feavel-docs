@@ -1,7 +1,3 @@
----
-alwaysApply: true
----
-
 # Feavel Docs - AI Agent Instructions
 
 ## Project Overview
@@ -34,6 +30,7 @@ Feavel Docs is a SvelteKit-based blogging platform using Supabase for backend se
 
 ```bash
 bun install  # or npm install
+cp .env.example .env  # Add Supabase credentials
 bun run dev
 ```
 
@@ -77,17 +74,3 @@ bun run dev
 - Component patterns: `src/lib/components/modules/PostCard.svelte`
 - Data handling: `src/lib/utils/posts.ts`
 - Route structure: `src/routes/posts/[post_id]/+page.svelte`
-
-## Agent Speed & Quality Directives
-
-- Prefer codebase exploration over external search:
-  - Use semantic search to locate behavior and patterns before web searches.
-  - Read only the necessary files; avoid opening entire directories if not needed.
-- Parallelize independent work:
-  - Batch reads/searches/tests when possible to reduce roundtrips.
-- Follow Svelte 5 runes and project conventions consistently.
-- For Supabase:
-  - Use `locals.supabase` on the server and `locals.safeGetSession()` for auth checks.
-  - Use `maybeSingle()` for optional single-record queries.
-- Keep edits minimal and scoped; do not refactor unrelated code.
-- After substantive edits: run lint, type-check, tests, and build in that order.
