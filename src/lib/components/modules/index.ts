@@ -12,3 +12,4 @@ export { default as CommentForm } from './CommentForm.svelte';
 export { default as CommentItem } from './CommentItem.svelte';
 export { default as CommentSection } from './CommentSection.svelte';
 export { default as LikeButton } from './LikeButton.svelte';
+export { default as ModeToggle } from './ModeToggle.svelte';
