@@ -2,7 +2,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
@@ -116,17 +115,31 @@
 			</CardHeader>
 			<CardContent>
 				<div class="flex items-center gap-4">
-					<Avatar class="h-12 w-12">
-						<AvatarImage
-							src={getAvatarUrl(post.users?.avatar_url, post.users?.username, supabase)}
-							alt={post.users?.username}
-						/>
-						<AvatarFallback>
-							{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
-						</AvatarFallback>
-					</Avatar>
+					<div class="flex-shrink-0">
+						<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
+							<img
+								class="h-12 w-12 rounded-full object-cover"
+								src={getAvatarUrl(post.users?.avatar_url, post.users?.username, supabase)}
+								alt={post.users?.full_name || post.users?.username}
+								onerror={(e) => {
+									const target = e.target as HTMLImageElement;
+									target.style.display = 'none';
+									const fallback = target.nextElementSibling as HTMLElement;
+									if (fallback) {
+										fallback.style.display = 'flex';
+									} else {
+										// If no fallback element, show the parent container
+										target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
+									}
+								}}
+							/>
+							<span class="text-lg font-medium text-gray-700" style="display: none;">
+								{(post.users?.full_name ?? post.users?.username ?? '').charAt(0).toUpperCase()}
+							</span>
+						</div>
+					</div>
 					<div>
-						<p class="font-medium">{post.users?.username || 'Unknown'}</p>
+						<p class="font-medium">{post.users?.full_name || post.users?.username || 'Unknown'}</p>
 						<p class="text-sm text-muted-foreground">
 							Published on {new Date(post.created_at).toLocaleDateString()}
 						</p>

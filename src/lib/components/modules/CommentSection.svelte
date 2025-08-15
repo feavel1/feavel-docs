@@ -159,6 +159,7 @@
 							{comment}
 							{currentUserId}
 							{postAuthorId}
+							{supabase}
 							onReply={handleReply}
 							onEdit={handleEditComment}
 							onDelete={handleDeleteComment}

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Reply, Edit, Trash2, Calendar, MoreHorizontal, MessageSquare } from '@lucide/svelte';
 	import {
 		DropdownMenu,
@@ -8,6 +7,7 @@
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
+	import { getAvatarUrl } from '$lib/utils/user';
 	import Self from './CommentItem.svelte';
 
 	let {
@@ -17,8 +17,18 @@
 		onReply,
 		onEdit,
 		onDelete,
-		showReplies = false
-	} = $props();
+		showReplies = false,
+		supabase
+	} = $props<{
+		comment: any;
+		currentUserId: any;
+		postAuthorId: any;
+		onReply: any;
+		onEdit: any;
+		onDelete: any;
+		showReplies?: boolean;
+		supabase?: any;
+	}>();
 
 	let isEditing = $state(false);
 	let editContent = $state(comment.content);
@@ -80,12 +90,29 @@
 </script>
 
 <div class="flex gap-3">
-	<Avatar class="h-8 w-8 flex-shrink-0">
-		<AvatarImage src={comment.users?.avatar_url} alt={comment.users?.username} />
-		<AvatarFallback>
-			{comment.users?.username?.charAt(0)?.toUpperCase() || 'U'}
-		</AvatarFallback>
-	</Avatar>
+	<div class="flex-shrink-0">
+		<div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+			<img
+				class="h-8 w-8 rounded-full object-cover"
+				src={getAvatarUrl(comment.users?.avatar_url, comment.users?.username, supabase)}
+				alt={comment.users?.full_name || comment.users?.username}
+				onerror={(e) => {
+					const target = e.target as HTMLImageElement;
+					target.style.display = 'none';
+					const fallback = target.nextElementSibling as HTMLElement;
+					if (fallback) {
+						fallback.style.display = 'flex';
+					} else {
+						// If no fallback element, show the parent container
+						target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
+					}
+				}}
+			/>
+			<span class="text-sm font-medium text-gray-700" style="display: none;">
+				{(comment.users?.full_name ?? comment.users?.username ?? '').charAt(0).toUpperCase()}
+			</span>
+		</div>
+	</div>
 
 	<div class="flex-1 space-y-2">
 		<div class="flex items-start justify-between">
@@ -175,7 +202,7 @@
 		{#if showReplies && comment.replies && comment.replies.length > 0}
 			<div class="mt-4 ml-6 space-y-4 border-l-2 border-muted pl-4">
 				{#each comment.replies as reply (reply.id)}
-					<Self comment={reply} {currentUserId} {postAuthorId} {onReply} {onEdit} {onDelete} />
+					<Self comment={reply} {currentUserId} {postAuthorId} {supabase} {onReply} {onEdit} {onDelete} />
 				{/each}
 			</div>
 		{/if}
