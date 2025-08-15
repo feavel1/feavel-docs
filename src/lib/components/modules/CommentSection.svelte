@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { MessageSquare, Loader2, ChevronDown } from '@lucide/svelte';
+	import { MessageSquare, Loader2, ChevronDown, Eye, EyeOff } from '@lucide/svelte';
 	import {
 		getComments,
 		createComment,
@@ -22,9 +22,10 @@
 	let loadingMore = $state(false);
 	let hasMore = $state(true);
 	let currentPage = $state(1);
-	let replyingTo = $state<number | null>(null);
+	let replyForms = $state(new Map<number, boolean>()); // Track reply forms for each comment
 	let expandedComments = $state(new Set<number>());
 	let hasLoaded = $state(false);
+	let commentsVisible = $state(true);
 
 	// Load initial comments
 	$effect(() => {
@@ -79,17 +80,7 @@
 		if (newComment) {
 			if (commentData.parent_id) {
 				// This is a reply, add it to the parent comment's replies
-				comments = comments.map((comment) => {
-					if (comment.id === commentData.parent_id) {
-						const updatedReplies = comment.replies ? [...comment.replies, newComment] : [newComment];
-						return {
-							...comment,
-							replies: updatedReplies,
-							_reply_count: (comment._reply_count || 0) + 1
-						};
-					}
-					return comment;
-				});
+				comments = updateCommentReplies(comments, commentData.parent_id, newComment);
 				// Expand the parent comment to show the new reply
 				expandedComments.add(commentData.parent_id);
 			} else {
@@ -99,38 +90,134 @@
 		}
 		
 		// Reset reply form
-		replyingTo = null;
+		if (commentData.parent_id) {
+			replyForms.delete(commentData.parent_id);
+		}
+	}
+
+	// Helper function to recursively update replies in nested comments
+	function updateCommentReplies(commentsList: PostComment[], parentId: number, newReply: PostComment): PostComment[] {
+		return commentsList.map((comment) => {
+			if (comment.id === parentId) {
+				// Found the parent comment, add the reply
+				const updatedReplies = comment.replies ? [...comment.replies, newReply] : [newReply];
+				// Update the cache as well
+				if (repliesCache.has(comment.id)) {
+					repliesCache.set(comment.id, updatedReplies);
+				}
+				return {
+					...comment,
+					replies: updatedReplies,
+					_reply_count: (comment._reply_count || 0) + 1
+				};
+			} else if (comment.replies && comment.replies.length > 0) {
+				// Check nested replies
+				const updatedReplies = updateCommentReplies(comment.replies, parentId, newReply);
+				if (updatedReplies !== comment.replies) {
+					// Replies were updated, update this comment
+					return {
+						...comment,
+						replies: updatedReplies
+					};
+				}
+			}
+			return comment;
+		});
 	}
 
 	async function handleEditComment(commentId: number, content: string) {
 		const updatedComment = await updateComment(supabase, commentId, content);
 		if (updatedComment) {
-			comments = comments.map((comment) => (comment.id === commentId ? updatedComment : comment));
+			// Update in main comments list
+			comments = comments.map((comment) => {
+				// Check if this is a top-level comment
+				if (comment.id === commentId) {
+					return updatedComment;
+				}
+				// Check if this is a reply in any comment's replies
+				if (comment.replies) {
+					const updatedReplies = comment.replies.map((reply) => 
+						reply.id === commentId ? updatedComment : reply
+					);
+					// Update cache if needed
+					if (repliesCache.has(comment.id)) {
+						repliesCache.set(comment.id, updatedReplies);
+					}
+					return {
+						...comment,
+						replies: updatedReplies
+					};
+				}
+				return comment;
+			});
 		}
 	}
 
 	async function handleDeleteComment(commentId: number) {
 		const success = await deleteComment(supabase, commentId);
 		if (success) {
-			comments = comments.filter((comment) => comment.id !== commentId);
+			// Remove from main comments list and update replies in nested comments
+			comments = comments.map((comment) => {
+				// If this is a top-level comment being deleted
+				if (comment.id === commentId) {
+					// Remove from cache if present
+					repliesCache.delete(commentId);
+					return null; // Will be filtered out
+				}
+				// If this comment has replies, check if any reply is being deleted
+				if (comment.replies) {
+					const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
+					// Update cache if needed
+					if (repliesCache.has(comment.id)) {
+						repliesCache.set(comment.id, filteredReplies);
+					}
+					// Update reply count
+					return {
+						...comment,
+						replies: filteredReplies,
+						_reply_count: filteredReplies.length
+					};
+				}
+				return comment;
+			}).filter((comment) => comment !== null) as PostComment[];
 		}
 	}
 
 	function handleReply(commentId: number) {
-		replyingTo = commentId;
+		replyForms.set(commentId, true);
 		expandedComments.add(commentId);
 	}
 
+	function toggleCommentsVisibility() {
+		commentsVisible = !commentsVisible;
+	}
+
+	// Cache for replies to avoid re-fetching when expanding/collapsing
+	let repliesCache = $state(new Map<number, PostComment[]>());
+
 	async function toggleReplies(commentId: number) {
 		if (expandedComments.has(commentId)) {
+			// Just collapse, keep replies in cache
 			expandedComments.delete(commentId);
 		} else {
 			expandedComments.add(commentId);
-			// Load replies if not already loaded
+			// Load replies if not already loaded or cached
 			const comment = comments.find((c) => c.id === commentId);
-			if (comment && !comment.replies) {
-				const replies = await getCommentReplies(supabase, commentId);
-				comments = comments.map((c) => (c.id === commentId ? { ...c, replies } : c));
+			if (comment) {
+				// Check if we have cached replies
+				if (repliesCache.has(commentId)) {
+					// Use cached replies
+					const cachedReplies = repliesCache.get(commentId);
+					comments = comments.map((c) => 
+						c.id === commentId ? { ...c, replies: cachedReplies } : c
+					);
+				} else if (!comment.replies) {
+					// Fetch replies if not cached and not already loaded
+					const replies = await getCommentReplies(supabase, commentId);
+					// Cache the replies
+					repliesCache.set(commentId, replies);
+					comments = comments.map((c) => (c.id === commentId ? { ...c, replies } : c));
+				}
 			}
 		}
 	}
@@ -138,12 +225,24 @@
 
 <Card class="mt-8">
 	<CardHeader>
-		<CardTitle class="flex items-center gap-2">
-			<MessageSquare class="h-5 w-5" />
-			Comments ({comments.length})
-		</CardTitle>
+		<div class="flex items-center justify-between">
+			<CardTitle class="flex items-center gap-2">
+				<MessageSquare class="h-5 w-5" />
+				Comments ({comments.length})
+			</CardTitle>
+			<Button variant="ghost" size="sm" onclick={toggleCommentsVisibility} class="ml-2">
+				{#if commentsVisible}
+					<EyeOff class="h-4 w-4" />
+					<span class="ml-1">Hide</span>
+				{:else}
+					<Eye class="h-4 w-4" />
+					<span class="ml-1">Show</span>
+				{/if}
+			</Button>
+		</div>
 	</CardHeader>
 	<CardContent class="space-y-6">
+		{#if commentsVisible}
 		{#if currentUserId}
 			<CommentForm
 				parentId={undefined}
@@ -175,6 +274,7 @@
 							{currentUserId}
 							{postAuthorId}
 							{supabase}
+							{currentUser}
 							onReply={handleReply}
 							onEdit={handleEditComment}
 							onDelete={handleDeleteComment}
@@ -195,7 +295,7 @@
 							</Button>
 						{/if}
 
-						{#if replyingTo === comment.id}
+						{#if replyForms.has(comment.id)}
 							<div class="ml-11">
 								<CommentForm
 									parentId={comment.id}
@@ -220,6 +320,7 @@
 					</div>
 				{/if}
 			</div>
+		{/if}
 		{/if}
 	</CardContent>
 </Card>

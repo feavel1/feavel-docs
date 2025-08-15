@@ -9,6 +9,8 @@
 	} from '$lib/components/ui/dropdown-menu';
 	import { getAvatarUrl } from '$lib/utils/user';
 	import Self from './CommentItem.svelte';
+	import CommentForm from './CommentForm.svelte';
+	import type { CommentFormData } from '$lib/types/comments';
 
 	let {
 		comment,
@@ -18,7 +20,8 @@
 		onEdit,
 		onDelete,
 		showReplies = false,
-		supabase
+		supabase,
+		currentUser
 	} = $props<{
 		comment: any;
 		currentUserId: any;
@@ -28,11 +31,13 @@
 		onDelete: any;
 		showReplies?: boolean;
 		supabase?: any;
+		currentUser?: any;
 	}>();
 
 	let isEditing = $state(false);
 	let editContent = $state(comment.content);
 	let isSubmitting = $state(false);
+	let isReplying = $state(false); // Track if we're replying to this specific comment
 
 	const canEdit = $derived(currentUserId === comment.user_id);
 	const canDelete = $derived(currentUserId === comment.user_id || currentUserId === postAuthorId);
@@ -68,6 +73,14 @@
 	function handleCancelEdit() {
 		isEditing = false;
 		editContent = comment.content;
+	}
+
+	function handleReplyClick() {
+		isReplying = true;
+	}
+
+	function handleCancelReply() {
+		isReplying = false;
 	}
 
 	function formatDate(dateString: string) {
@@ -182,7 +195,7 @@
 				<Button
 					variant="ghost"
 					size="sm"
-					onclick={() => onReply(comment.id)}
+					onclick={handleReplyClick}
 					class="h-auto p-0 text-xs"
 				>
 					<Reply class="mr-1 h-3 w-3" />
@@ -199,10 +212,39 @@
 			{/if}
 		</div>
 
+		{#if isReplying}
+			<div class="mt-3 ml-6">
+				<CommentForm
+					parentId={comment.id}
+					onSubmit={(data: CommentFormData) => {
+						isReplying = false;
+						// Call the parent's onSubmit handler with the proper data
+						return onReply(data);
+					}}
+					user={currentUser}
+					placeholder="Write a reply..."
+					buttonText="Reply"
+				/>
+				<Button variant="ghost" size="sm" onclick={handleCancelReply} class="mt-2">
+					Cancel
+				</Button>
+			</div>
+		{/if}
+
 		{#if showReplies && comment.replies && comment.replies.length > 0}
 			<div class="mt-4 ml-6 space-y-4 border-l-2 border-muted pl-4">
 				{#each comment.replies as reply (reply.id)}
-					<Self comment={reply} {currentUserId} {postAuthorId} {supabase} {onReply} {onEdit} {onDelete} />
+					<Self 
+						comment={reply} 
+						{currentUserId} 
+						{postAuthorId} 
+						{supabase} 
+						{currentUser}
+						{onReply} 
+						{onEdit} 
+						{onDelete} 
+						showReplies={false}
+					/>
 				{/each}
 			</div>
 		{/if}
