@@ -24,11 +24,6 @@ bun run dev
 # Type checking
 bun run check
 
-# Code formatting
-bun run format
-
-# Linting
-bun run lint
 
 # Run all tests
 bun test

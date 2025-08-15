@@ -77,14 +77,29 @@
 
 		const newComment = await createComment(supabase, postId, currentUserId, commentData);
 		if (newComment) {
-			// Add to the beginning of the list
-			comments = [newComment, ...comments];
-
-			// If this is a reply, expand the parent comment
 			if (commentData.parent_id) {
+				// This is a reply, add it to the parent comment's replies
+				comments = comments.map((comment) => {
+					if (comment.id === commentData.parent_id) {
+						const updatedReplies = comment.replies ? [...comment.replies, newComment] : [newComment];
+						return {
+							...comment,
+							replies: updatedReplies,
+							_reply_count: (comment._reply_count || 0) + 1
+						};
+					}
+					return comment;
+				});
+				// Expand the parent comment to show the new reply
 				expandedComments.add(commentData.parent_id);
+			} else {
+				// This is a top-level comment, add it to the beginning of the list
+				comments = [newComment, ...comments];
 			}
 		}
+		
+		// Reset reply form
+		replyingTo = null;
 	}
 
 	async function handleEditComment(commentId: number, content: string) {
