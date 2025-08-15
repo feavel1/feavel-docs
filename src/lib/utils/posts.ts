@@ -38,3 +38,21 @@ export function getPostViews(post: Post): number {
 export function isPostOwner(post: Post, userId?: string): boolean {
 	return post.user_id === userId;
 }
+
+/**
+ * Get the number of likes for a post
+ * @param post The post object
+ * @returns The number of likes
+ */
+export function getPostLikes(post: Post): number {
+	return post.post_likes?.length || 0;
+}
+
+/**
+ * Get the number of comments for a post
+ * @param post The post object
+ * @returns The number of comments
+ */
+export function getPostComments(post: Post): number {
+	return post.post_comments?.length || 0;
+}

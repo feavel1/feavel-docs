@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			content: validContent,
 			...(validParentId && { parent_id: validParentId })
 		};
-		const comment = await createComment(locals.supabase, validPostId, commentData);
+		const comment = await createComment(locals.supabase, validPostId, user.id, commentData);
 
 		return comment
 			? json({ comment })

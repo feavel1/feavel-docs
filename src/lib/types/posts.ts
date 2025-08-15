@@ -1,3 +1,5 @@
+import type { PostLike, PostComment } from './comments';
+
 export interface Post {
 	id: string;
 	title: string;
@@ -17,6 +19,8 @@ export interface Post {
 			tag_name: string;
 		};
 	}>;
+	post_likes?: PostLike[];
+	post_comments?: PostComment[];
 }
 
 export interface Tag {

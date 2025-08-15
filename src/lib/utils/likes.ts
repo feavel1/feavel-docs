@@ -1,12 +1,24 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PostLike } from '$lib/types/comments';
 
+// Simple in-memory cache for like counts
+const likeCountCache = new Map<string, { count: number; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export async function getLikeCount(
 	supabase: SupabaseClient,
 	postId: string | number
 ): Promise<number> {
 	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
 	if (numericPostId <= 0 || isNaN(numericPostId)) return 0;
+
+	const cacheKey = `post_${numericPostId}`;
+	const cached = likeCountCache.get(cacheKey);
+
+	// Check if we have a valid cached value
+	if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+		return cached.count;
+	}
 
 	const { count, error } = await supabase
 		.from('post_likes')
@@ -18,7 +30,21 @@ export async function getLikeCount(
 		return 0;
 	}
 
-	return count || 0;
+	const likeCount = count || 0;
+
+	// Cache the result
+	likeCountCache.set(cacheKey, { count: likeCount, timestamp: Date.now() });
+
+	return likeCount;
+}
+
+// Clear cache when toggling likes
+export function clearLikeCountCache(postId: string | number): void {
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId)) return;
+
+	const cacheKey = `post_${numericPostId}`;
+	likeCountCache.delete(cacheKey);
 }
 
 export async function isPostLiked(
@@ -64,6 +90,9 @@ export async function toggleLike(
 			return { success: false, isLiked: true };
 		}
 
+		// Clear cache after successful unlike
+		clearLikeCountCache(numericPostId);
+
 		return { success: true, isLiked: false };
 	} else {
 		// Like
@@ -76,6 +105,9 @@ export async function toggleLike(
 			console.error('Error liking post:', error);
 			return { success: false, isLiked: false };
 		}
+
+		// Clear cache after successful like
+		clearLikeCountCache(numericPostId);
 
 		return { success: true, isLiked: true };
 	}

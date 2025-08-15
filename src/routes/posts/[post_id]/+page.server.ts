@@ -19,6 +19,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			users!inner(username, avatar_url),
 			posts_tags_rel(
 				post_tags!inner(tag_name)
+			),
+			post_likes(
+				id,
+				user_id,
+				created_at,
+				users!inner(username, avatar_url)
+			),
+			post_comments(
+				id,
+				created_at,
+				updated_at,
+				user_id,
+				parent_id,
+				content,
+				is_deleted,
+				users!inner(username, avatar_url, full_name)
 			)
 		`
 		)

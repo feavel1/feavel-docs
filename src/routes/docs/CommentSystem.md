@@ -58,7 +58,7 @@ Fetches comments for a specific post with pagination.
 
 Fetches replies for a specific comment.
 
-### createComment(supabase, postId, commentData)
+### createComment(supabase, postId, userId, commentData)
 
 Creates a new comment or reply.
 

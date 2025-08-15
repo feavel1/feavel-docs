@@ -1,6 +1,5 @@
 ---
 description: When using supabase / database or +page.server.ts files.
-alwaysApply: false
 ---
 
 # Supabase Integration Rules

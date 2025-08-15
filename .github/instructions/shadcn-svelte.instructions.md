@@ -1,6 +1,5 @@
 ---
 description: UI/UX rules for shadcn-svelte usage in Feavel Docs
-alwaysApply: false
 ---
 
 ## General Rules

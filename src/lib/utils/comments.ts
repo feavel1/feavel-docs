@@ -73,14 +73,16 @@ export async function getCommentReplies(
 export async function createComment(
 	supabase: SupabaseClient,
 	postId: number,
+	userId: string,
 	commentData: CommentFormData
 ): Promise<PostComment | null> {
-	if (postId <= 0 || !commentData.content?.trim()) return null;
+	if (postId <= 0 || !userId || !commentData.content?.trim()) return null;
 
 	const { data, error } = await supabase
 		.from('post_comments')
 		.insert({
 			post_id: postId,
+			user_id: userId,
 			content: commentData.content.trim(),
 			parent_id: commentData.parent_id || null
 		})

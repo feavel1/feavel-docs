@@ -15,6 +15,8 @@
 
 	let { postId, postAuthorId, currentUserId, currentUser, supabase } = $props();
 
+	const COMMENT_LIMIT = 10;
+	
 	let comments = $state<PostComment[]>([]);
 	let loading = $state(false);
 	let loadingMore = $state(false);
@@ -45,7 +47,7 @@
 				comments = [...comments, ...newComments];
 			}
 
-			hasMore = newComments.length === 10; // Assuming 10 is the limit
+			hasMore = newComments.length === COMMENT_LIMIT;
 			currentPage = page;
 		} catch (error) {
 			console.error('Error loading comments:', error);
@@ -61,7 +63,7 @@
 		try {
 			const newComments = await getComments(supabase, postId, currentPage + 1);
 			comments = [...comments, ...newComments];
-			hasMore = newComments.length === 10;
+			hasMore = newComments.length === COMMENT_LIMIT;
 			currentPage++;
 		} catch (error) {
 			console.error('Error loading more comments:', error);
@@ -73,7 +75,7 @@
 	async function handleSubmitComment(commentData: CommentFormData) {
 		if (!currentUserId) return;
 
-		const newComment = await createComment(supabase, postId, commentData);
+		const newComment = await createComment(supabase, postId, currentUserId, commentData);
 		if (newComment) {
 			// Add to the beginning of the list
 			comments = [newComment, ...comments];
