@@ -22,17 +22,7 @@
 		showReplies = false,
 		supabase,
 		currentUser
-	} = $props<{
-		comment: any;
-		currentUserId: any;
-		postAuthorId: any;
-		onReply: any;
-		onEdit: any;
-		onDelete: any;
-		showReplies?: boolean;
-		supabase?: any;
-		currentUser?: any;
-	}>();
+	} = $props();
 
 	let isEditing = $state(false);
 	let editContent = $state(comment.content);
@@ -192,12 +182,7 @@
 
 		<div class="flex items-center gap-4 text-xs text-muted-foreground">
 			{#if canReply}
-				<Button
-					variant="ghost"
-					size="sm"
-					onclick={handleReplyClick}
-					class="h-auto p-0 text-xs"
-				>
+				<Button variant="ghost" size="sm" onclick={handleReplyClick} class="h-auto p-0 text-xs">
 					<Reply class="mr-1 h-3 w-3" />
 					Reply
 				</Button>
@@ -216,33 +201,33 @@
 			<div class="mt-3 ml-6">
 				<CommentForm
 					parentId={comment.id}
-					onSubmit={(data: CommentFormData) => {
-						isReplying = false;
+					onSubmit={async (data: CommentFormData) => {
 						// Call the parent's onSubmit handler with the proper data
-						return onReply(data);
+						const result = await onReply(data);
+						// Close the reply form after successful submission
+						isReplying = false;
+						return result;
 					}}
 					user={currentUser}
 					placeholder="Write a reply..."
 					buttonText="Reply"
 				/>
-				<Button variant="ghost" size="sm" onclick={handleCancelReply} class="mt-2">
-					Cancel
-				</Button>
+				<Button variant="ghost" size="sm" onclick={handleCancelReply} class="mt-2">Cancel</Button>
 			</div>
 		{/if}
 
 		{#if showReplies && comment.replies && comment.replies.length > 0}
 			<div class="mt-4 ml-6 space-y-4 border-l-2 border-muted pl-4">
 				{#each comment.replies as reply (reply.id)}
-					<Self 
-						comment={reply} 
-						{currentUserId} 
-						{postAuthorId} 
-						{supabase} 
+					<Self
+						comment={reply}
+						{currentUserId}
+						{postAuthorId}
+						{supabase}
 						{currentUser}
-						{onReply} 
-						{onEdit} 
-						{onDelete} 
+						{onReply}
+						{onEdit}
+						{onDelete}
 						showReplies={false}
 					/>
 				{/each}

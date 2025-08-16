@@ -22,7 +22,6 @@
 	let loadingMore = $state(false);
 	let hasMore = $state(true);
 	let currentPage = $state(1);
-	let replyForms = $state(new Map<number, boolean>()); // Track reply forms for each comment
 	let expandedComments = $state(new Set<number>());
 	let hasLoaded = $state(false);
 	let commentsVisible = $state(true);
@@ -89,10 +88,9 @@
 			}
 		}
 		
-		// Reset reply form
-		if (commentData.parent_id) {
-			replyForms.delete(commentData.parent_id);
-		}
+		// Reply form is handled by CommentItem component
+		
+		return newComment;
 	}
 
 	// Helper function to recursively update replies in nested comments
@@ -183,10 +181,7 @@
 		}
 	}
 
-	function handleReply(commentId: number) {
-		replyForms.set(commentId, true);
-		expandedComments.add(commentId);
-	}
+	// Removed unused handleReply function
 
 	function toggleCommentsVisibility() {
 		commentsVisible = !commentsVisible;
@@ -275,7 +270,7 @@
 							{postAuthorId}
 							{supabase}
 							{currentUser}
-							onReply={handleReply}
+							onReply={handleSubmitComment}
 							onEdit={handleEditComment}
 							onDelete={handleDeleteComment}
 							showReplies={expandedComments.has(comment.id)}
@@ -293,18 +288,6 @@
 								{comment._reply_count}
 								{comment._reply_count === 1 ? 'reply' : 'replies'}
 							</Button>
-						{/if}
-
-						{#if replyForms.has(comment.id)}
-							<div class="ml-11">
-								<CommentForm
-									parentId={comment.id}
-									onSubmit={handleSubmitComment}
-									user={currentUser}
-									placeholder="Write a reply..."
-									buttonText="Reply"
-								/>
-							</div>
 						{/if}
 					</div>
 				{/each}
