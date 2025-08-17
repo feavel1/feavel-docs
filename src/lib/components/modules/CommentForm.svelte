@@ -39,10 +39,10 @@
 	}
 </script>
 
-<div class="flex gap-3">
-	<Avatar class="h-8 w-8 flex-shrink-0">
+<div class="flex gap-2">
+	<Avatar class="h-7 w-7 flex-shrink-0">
 		<AvatarImage src={user?.avatar_url} alt={user?.username} />
-		<AvatarFallback>
+		<AvatarFallback class="text-xs">
 			{user?.username?.charAt(0)?.toUpperCase() || 'U'}
 		</AvatarFallback>
 	</Avatar>
@@ -51,17 +51,17 @@
 		<Textarea
 			bind:value={content}
 			{placeholder}
-			class="min-h-[80px] resize-none"
+			class="min-h-[60px] resize-none text-sm py-2 px-3"
 			onkeydown={handleKeyDown}
 			disabled={isSubmitting}
 		/>
 		<div class="flex items-center justify-between">
 			<p class="text-xs text-muted-foreground">Press Cmd+Enter to submit</p>
-			<Button onclick={handleSubmit} disabled={!content.trim() || isSubmitting} size="sm">
+			<Button onclick={handleSubmit} disabled={!content.trim() || isSubmitting} size="sm" class="h-7 text-xs px-3">
 				{#if isSubmitting}
-					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+					<Loader2 class="mr-1 h-3 w-3 animate-spin" />
 				{:else}
-					<Send class="mr-2 h-4 w-4" />
+					<Send class="mr-1 h-3 w-3" />
 				{/if}
 				{buttonText}
 			</Button>

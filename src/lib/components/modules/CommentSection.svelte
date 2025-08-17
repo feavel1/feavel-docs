@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { MessageSquare, Loader2, ChevronDown, Eye, EyeOff } from '@lucide/svelte';
+	import { MessageSquare, Loader2, Eye, EyeOff } from '@lucide/svelte';
 	import {
 		getComments,
 		createComment,
@@ -123,6 +123,43 @@
 		});
 	}
 
+	// Helper function to recursively find a comment by ID
+	function findCommentById(commentsList: PostComment[], id: number): PostComment | null {
+		for (const comment of commentsList) {
+			if (comment.id === id) {
+				return comment;
+			}
+			if (comment.replies && comment.replies.length > 0) {
+				const found = findCommentById(comment.replies, id);
+				if (found) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
+
+	// Helper function to recursively update a specific comment with new replies
+	function updateCommentWithReplies(commentsList: PostComment[], targetId: number, updatedComment: PostComment): PostComment[] {
+		return commentsList.map((comment) => {
+			if (comment.id === targetId) {
+				// Found the target comment, update it
+				return updatedComment;
+			} else if (comment.replies && comment.replies.length > 0) {
+				// Check nested replies
+				const updatedReplies = updateCommentWithReplies(comment.replies, targetId, updatedComment);
+				if (updatedReplies !== comment.replies) {
+					// Replies were updated, update this comment
+					return {
+						...comment,
+						replies: updatedReplies
+					};
+				}
+			}
+			return comment;
+		});
+	}
+
 	async function handleEditComment(commentId: number, content: string) {
 		const updatedComment = await updateComment(supabase, commentId, content);
 		if (updatedComment) {
@@ -194,49 +231,57 @@
 		if (expandedComments.has(commentId)) {
 			// Just collapse, keep replies in cache
 			expandedComments.delete(commentId);
+			// Force reactivity by creating a new Set
+			expandedComments = new Set(expandedComments);
 		} else {
 			expandedComments.add(commentId);
+			// Force reactivity by creating a new Set
+			expandedComments = new Set(expandedComments);
 			// Load replies if not already loaded or cached
-			const comment = comments.find((c) => c.id === commentId);
+			const comment = findCommentById(comments, commentId);
 			if (comment) {
 				// Check if we have cached replies
 				if (repliesCache.has(commentId)) {
 					// Use cached replies
 					const cachedReplies = repliesCache.get(commentId);
-					comments = comments.map((c) => 
-						c.id === commentId ? { ...c, replies: cachedReplies } : c
-					);
-				} else if (!comment.replies) {
+					// Update the comment with cached replies
+					comments = updateCommentWithReplies(comments, commentId, {
+						...comment,
+						replies: cachedReplies
+					});
+				} else if (!comment.replies || comment.replies.length === 0) {
 					// Fetch replies if not cached and not already loaded
 					const replies = await getCommentReplies(supabase, commentId);
 					// Cache the replies
 					repliesCache.set(commentId, replies);
-					comments = comments.map((c) => (c.id === commentId ? { ...c, replies } : c));
+					// Update the comment with fetched replies
+					comments = updateCommentWithReplies(comments, commentId, {
+						...comment,
+						replies
+					});
 				}
 			}
 		}
 	}
 </script>
 
-<Card class="mt-8">
-	<CardHeader>
+<Card class="mt-6 border-0 border-t border-border bg-transparent p-0 shadow-none">
+	<CardHeader class="p-0 pb-4">
 		<div class="flex items-center justify-between">
-			<CardTitle class="flex items-center gap-2">
-				<MessageSquare class="h-5 w-5" />
+			<CardTitle class="flex items-center gap-2 text-base font-medium">
+				<MessageSquare class="h-4 w-4" />
 				Comments ({comments.length})
 			</CardTitle>
-			<Button variant="ghost" size="sm" onclick={toggleCommentsVisibility} class="ml-2">
+			<Button variant="ghost" size="sm" onclick={toggleCommentsVisibility} class="ml-2 h-7 w-7 p-0">
 				{#if commentsVisible}
-					<EyeOff class="h-4 w-4" />
-					<span class="ml-1">Hide</span>
+					<EyeOff class="h-3 w-3" />
 				{:else}
-					<Eye class="h-4 w-4" />
-					<span class="ml-1">Show</span>
+					<Eye class="h-3 w-3" />
 				{/if}
 			</Button>
 		</div>
 	</CardHeader>
-	<CardContent class="space-y-6">
+	<CardContent class="p-0">
 		{#if commentsVisible}
 		{#if currentUserId}
 			<CommentForm
@@ -246,24 +291,24 @@
 				placeholder="Share your thoughts..."
 			/>
 		{:else}
-			<div class="py-4 text-center text-muted-foreground">
+			<div class="py-4 text-center text-muted-foreground text-sm">
 				<p>Please log in to leave a comment.</p>
 			</div>
 		{/if}
 
 		{#if loading && comments.length === 0}
-			<div class="flex justify-center py-8">
-				<Loader2 class="h-6 w-6 animate-spin" />
+			<div class="flex justify-center py-6">
+				<Loader2 class="h-5 w-5 animate-spin" />
 			</div>
 		{:else if comments.length === 0}
-			<div class="py-8 text-center text-muted-foreground">
-				<MessageSquare class="mx-auto mb-4 h-12 w-12 opacity-50" />
+			<div class="py-6 text-center text-muted-foreground text-sm">
+				<MessageSquare class="mx-auto mb-3 h-8 w-8 opacity-50" />
 				<p>No comments yet. Be the first to share your thoughts!</p>
 			</div>
 		{:else}
-			<div class="space-y-6">
+			<div class="space-y-4 pt-4">
 				{#each comments as comment (comment.id)}
-					<div class="space-y-4">
+					<div class="border-0 border-b border-border pb-4 last:border-0 last:pb-0">
 						<CommentItem
 							{comment}
 							{currentUserId}
@@ -273,30 +318,18 @@
 							onReply={handleSubmitComment}
 							onEdit={handleEditComment}
 							onDelete={handleDeleteComment}
+							onToggleReplies={toggleReplies}
 							showReplies={expandedComments.has(comment.id)}
+							expandedComments={expandedComments}
 						/>
-
-						{#if comment._reply_count && comment._reply_count > 0}
-							<Button
-								variant="ghost"
-								size="sm"
-								onclick={() => toggleReplies(comment.id)}
-								class="ml-11 text-xs"
-							>
-								<ChevronDown class="mr-1 h-3 w-3" />
-								{expandedComments.has(comment.id) ? 'Hide' : 'Show'}
-								{comment._reply_count}
-								{comment._reply_count === 1 ? 'reply' : 'replies'}
-							</Button>
-						{/if}
 					</div>
 				{/each}
 
 				{#if hasMore}
 					<div class="flex justify-center pt-4">
-						<Button variant="outline" onclick={loadMoreComments} disabled={loadingMore}>
+						<Button variant="ghost" onclick={loadMoreComments} disabled={loadingMore} class="h-8 text-sm">
 							{#if loadingMore}
-								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+								<Loader2 class="mr-2 h-3 w-3 animate-spin" />
 							{/if}
 							Load More Comments
 						</Button>

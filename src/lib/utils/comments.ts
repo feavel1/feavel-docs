@@ -67,7 +67,30 @@ export async function getCommentReplies(
 		return [];
 	}
 
-	return data;
+	// Get reply counts for each reply recursively
+	const repliesWithCounts = await Promise.all(
+		data.map(async (reply) => {
+			const { count } = await supabase
+				.from('post_comments')
+				.select('*', { count: 'exact', head: true })
+				.eq('parent_id', reply.id)
+				.is('is_deleted', false);
+
+			// If this reply has replies, recursively fetch them with counts
+			let nestedReplies: PostComment[] = [];
+			if (count && count > 0) {
+				nestedReplies = await getCommentReplies(supabase, reply.id);
+			}
+
+			return {
+				...reply,
+				_reply_count: count || 0,
+				replies: nestedReplies
+			};
+		})
+	);
+
+	return repliesWithCounts;
 }
 
 export async function createComment(

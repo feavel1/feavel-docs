@@ -133,6 +133,7 @@
 									}
 								}}
 							/>
+
 							<span class="text-lg font-medium text-gray-700" style="display: none;">
 								{(post.users?.full_name ?? post.users?.username ?? '').charAt(0).toUpperCase()}
 							</span>

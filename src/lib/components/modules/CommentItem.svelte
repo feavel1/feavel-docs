@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Reply, Edit, Trash2, Calendar, MoreHorizontal, MessageSquare } from '@lucide/svelte';
+	import { Reply, Edit, Trash2, Calendar, MoreHorizontal } from '@lucide/svelte';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -19,7 +19,9 @@
 		onReply,
 		onEdit,
 		onDelete,
+		onToggleReplies,
 		showReplies = false,
+		expandedComments,
 		supabase,
 		currentUser
 	} = $props();
@@ -92,7 +94,7 @@
 	}
 </script>
 
-<div class="flex gap-3">
+<div class="flex gap-3 py-2">
 	<div class="flex-shrink-0">
 		<div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
 			<img
@@ -132,73 +134,92 @@
 				</span>
 			</div>
 
-			{#if (canEdit || canDelete) && !isEditing}
-				<DropdownMenu>
-					<DropdownMenuTrigger>
-						<Button variant="ghost" size="sm" class="h-6 w-6 p-0">
-							<MoreHorizontal class="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{#if canEdit}
-							<DropdownMenuItem onclick={() => (isEditing = true)}>
-								<Edit class="mr-2 h-4 w-4" />
-								Edit
-							</DropdownMenuItem>
-						{/if}
-						{#if canDelete}
-							<DropdownMenuItem onclick={handleDelete} class="text-destructive">
-								<Trash2 class="mr-2 h-4 w-4" />
-								Delete
-							</DropdownMenuItem>
-						{/if}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			{/if}
+			<div class="flex items-center gap-1">
+				{#if canReply}
+					<Button
+						variant="ghost"
+						size="sm"
+						onclick={handleReplyClick}
+						class="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+					>
+						<Reply class="mr-1 h-3 w-3" />
+						Reply
+					</Button>
+				{/if}
+
+				{#if comment._reply_count && comment._reply_count > 0}
+					<Button
+						variant="ghost"
+						size="sm"
+						onclick={() => onToggleReplies(comment.id)}
+						class="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+					>
+						{expandedComments?.has(comment.id) ? 'Hide Replies' : 'Show Replies'} ({comment._reply_count})
+					</Button>
+				{/if}
+
+				{#if (canEdit || canDelete) && !isEditing}
+					<DropdownMenu>
+						<DropdownMenuTrigger>
+							<Button variant="ghost" size="icon" class="h-6 w-6 p-0">
+								<MoreHorizontal class="h-3 w-3" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							{#if canEdit}
+								<DropdownMenuItem onclick={() => (isEditing = true)} class="text-xs">
+									<Edit class="mr-2 h-3 w-3" />
+									Edit
+								</DropdownMenuItem>
+							{/if}
+							{#if canDelete}
+								<DropdownMenuItem onclick={handleDelete} class="text-xs text-destructive">
+									<Trash2 class="mr-2 h-3 w-3" />
+									Delete
+								</DropdownMenuItem>
+							{/if}
+						</DropdownMenuContent>
+					</DropdownMenu>
+				{/if}
+			</div>
 		</div>
 
 		{#if isEditing}
 			<div class="space-y-2">
 				<textarea
 					bind:value={editContent}
-					class="min-h-[80px] w-full resize-none rounded-md border p-2"
+					class="min-h-[60px] w-full resize-none rounded-md border p-2 text-sm"
 					placeholder="Edit your comment..."
 					disabled={isSubmitting}
 				></textarea>
 				<div class="flex gap-2">
-					<Button size="sm" onclick={handleEdit} disabled={!editContent.trim() || isSubmitting}>
+					<Button
+						size="sm"
+						onclick={handleEdit}
+						disabled={!editContent.trim() || isSubmitting}
+						class="h-7 text-xs"
+					>
 						Save
 					</Button>
-					<Button variant="ghost" size="sm" onclick={handleCancelEdit} disabled={isSubmitting}>
+					<Button
+						variant="ghost"
+						size="sm"
+						onclick={handleCancelEdit}
+						disabled={isSubmitting}
+						class="h-7 text-xs"
+					>
 						Cancel
 					</Button>
 				</div>
 			</div>
 		{:else}
-			<div class="prose prose-sm max-w-none">
+			<div class="text-sm">
 				<p class="whitespace-pre-wrap">{comment.content}</p>
 			</div>
 		{/if}
 
-		<div class="flex items-center gap-4 text-xs text-muted-foreground">
-			{#if canReply}
-				<Button variant="ghost" size="sm" onclick={handleReplyClick} class="h-auto p-0 text-xs">
-					<Reply class="mr-1 h-3 w-3" />
-					Reply
-				</Button>
-			{/if}
-
-			{#if comment._reply_count && comment._reply_count > 0}
-				<div class="flex items-center gap-1">
-					<MessageSquare class="h-3 w-3" />
-					{comment._reply_count}
-					{comment._reply_count === 1 ? 'reply' : 'replies'}
-				</div>
-			{/if}
-		</div>
-
 		{#if isReplying}
-			<div class="mt-3 ml-6">
+			<div class="mt-3 ml-6 border-l-2 border-muted pl-4">
 				<CommentForm
 					parentId={comment.id}
 					onSubmit={async (data: CommentFormData) => {
@@ -212,12 +233,14 @@
 					placeholder="Write a reply..."
 					buttonText="Reply"
 				/>
-				<Button variant="ghost" size="sm" onclick={handleCancelReply} class="mt-2">Cancel</Button>
+				<Button variant="ghost" size="sm" onclick={handleCancelReply} class="mt-2 text-xs"
+					>Cancel</Button
+				>
 			</div>
 		{/if}
 
 		{#if showReplies && comment.replies && comment.replies.length > 0}
-			<div class="mt-4 ml-6 space-y-4 border-l-2 border-muted pl-4">
+			<div class="mt-3 ml-6 space-y-4 border-l-2 border-muted pl-4">
 				{#each comment.replies as reply (reply.id)}
 					<Self
 						comment={reply}
@@ -228,7 +251,9 @@
 						{onReply}
 						{onEdit}
 						{onDelete}
-						showReplies={false}
+						{onToggleReplies}
+						showReplies={expandedComments.has(reply.id)}
+						{expandedComments}
 					/>
 				{/each}
 			</div>
