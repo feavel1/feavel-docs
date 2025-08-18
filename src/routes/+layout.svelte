@@ -1,46 +1,30 @@
 <script lang="ts">
 	import '../app.css';
-	import { page } from '$app/state';
-	import { locales, localizeHref } from '$lib/paraglide/runtime';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
-	import { ModeToggle } from '$lib/components/modules';
+	import HamburgerMenu from '$lib/components/modules/HamburgerMenu.svelte';
+	import Feavel from '$lib/components/modules/Feavel.svelte';
 
-	let { children, data } = $props();
-	let { supabase, session } = data;
-
-	$effect(() => {
-		const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-			if (newSession?.expires_at !== session?.expires_at) {
-				session = newSession;
-			}
-		});
-
-		return () => {
-			authListener.subscription.unsubscribe();
-		};
-	});
+	let { children } = $props();
 </script>
 
-<!-- Hidden locale links for SEO -->
-<div style="display:none">
-	{#each locales as locale}
-		<a href={localizeHref(page.url.pathname, { locale })}>{locale}</a>
-	{/each}
-</div>
+<svelte:head>
+	<title>Feavel Docs</title>
+</svelte:head>
 
 <ModeWatcher />
 
 <div class="min-h-screen">
-	<!-- Header with Mode Toggle -->
-	<header class="border-b">
-		<div class="container flex h-16 items-center justify-between px-4">
-			<a href="/" class="text-lg font-semibold">Feavel Docs</a>
-			<ModeToggle />
+	<header class="fixed top-0 z-50 w-full px-4 pt-2 pb-1 lg:px-14 lg:pt-10">
+		<div class="flex items-center justify-between">
+			<Feavel />
+			<HamburgerMenu />
 		</div>
 	</header>
 
-	{@render children()}
+	<main class="mx-auto min-h-dvh pt-20">
+		{@render children()}
+	</main>
 </div>
 
 <Toaster />

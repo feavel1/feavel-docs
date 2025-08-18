@@ -1,6 +1,6 @@
 <script lang="ts">
-	import A from './A.svelte';
-	import Group from './Group.svelte';
+	import A from './NavLink.svelte';
+	import Group from './NavigationGroup.svelte';
 	import LangSwitch from './LangSwitch.svelte';
 </script>
 
@@ -8,9 +8,9 @@
 	<div class="absolute bottom-20">
 		<div class="grid-cols-2 gap-x-14 lg:grid">
 			<Group title="WORKS">
-				<A href="/works/posts">Posts</A>
+				<A href="/posts">Posts</A>
 
-				<A href="/">Music</A>
+				<A href="/posts?tags=art">Art</A>
 
 				<A href="/">Research</A>
 
@@ -48,12 +48,6 @@
 			</div>
 			<Group title="LANGUAGE / СМЕНИТЬ ЯЗЫК / 更改语言">
 				<div class="child:bg-transparent flex flex-row gap-2">
-					<!-- <select class="">
-						<option value="1">Catppuccin</option>
-						<option value="2">Pine</option>
-						<option value="3">Rose</option>
-					</select> -->
-
 					<LangSwitch />
 				</div>
 			</Group>
