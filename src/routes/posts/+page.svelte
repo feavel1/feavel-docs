@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge';
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
@@ -32,6 +32,33 @@
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
+	
+	// Initialize selectedTags from URL parameters
+	let urlTags = $derived(page.url.searchParams.get('tags'));
+	$effect(() => {
+		if (urlTags) {
+			selectedTags = urlTags.split(',').map(tag => decodeURIComponent(tag.trim()));
+		} else {
+			selectedTags = [];
+		}
+	});
+
+	$effect(() => {
+		// Update URL when selectedTags change
+		const currentTagsParam = page.url.searchParams.get('tags');
+		const newTagsParam = selectedTags.length > 0 ? selectedTags.map(tag => encodeURIComponent(tag)).join(',') : null;
+		
+		// Only update URL if tags have changed
+		if (newTagsParam !== currentTagsParam) {
+			const newUrl = new URL(page.url);
+			if (newTagsParam) {
+				newUrl.searchParams.set('tags', newTagsParam);
+			} else {
+				newUrl.searchParams.delete('tags');
+			}
+			history.replaceState(null, '', newUrl.toString());
+		}
+	});
 
 	let filteredPosts = $derived.by(() => {
 		let filtered = posts;
@@ -54,12 +81,6 @@
 
 		return filtered;
 	});
-
-	function handleTagClick(tag: string) {
-		if (!selectedTags.includes(tag)) {
-			selectedTags = [...selectedTags, tag];
-		}
-	}
 </script>
 
 <svelte:head>
@@ -135,13 +156,14 @@
 						{#if post.posts_tags_rel && post.posts_tags_rel.length > 0}
 							<div class="mb-3 flex flex-wrap gap-1">
 								{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-									<Badge
+									<Button
 										variant="outline"
-										class="cursor-pointer text-xs hover:bg-primary/10"
-										onclick={() => handleTagClick(relation.post_tags.tag_name)}
+										size="sm"
+										href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+										class="h-6 px-2 text-xs"
 									>
 										{relation.post_tags.tag_name}
-									</Badge>
+									</Button>
 								{/each}
 							</div>
 						{/if}

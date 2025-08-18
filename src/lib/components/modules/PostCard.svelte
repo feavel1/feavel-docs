@@ -9,10 +9,9 @@
 	interface Props {
 		post: Post;
 		userId?: string;
-		onTagClick?: (tag: string) => void;
 	}
 
-	let { post, userId, onTagClick }: Props = $props();
+	let { post, userId }: Props = $props();
 
 	let tags = $derived(getPostTags(post));
 	let isOwner = $derived(isPostOwner(post, userId));
@@ -55,13 +54,14 @@
 		{#if tags.length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
 				{#each tags as tag}
-					<Badge
+					<Button
 						variant="outline"
-						class="cursor-pointer text-xs hover:bg-primary/10"
-						onclick={() => onTagClick?.(tag)}
+						size="sm"
+						href={`/posts?tags=${encodeURIComponent(tag)}`}
+						class="h-6 px-2 text-xs"
 					>
 						{tag}
-					</Badge>
+					</Button>
 				{/each}
 			</div>
 		{/if}

@@ -75,9 +75,14 @@
 			{#if post.posts_tags_rel && post.posts_tags_rel.length > 0}
 				<div class="mb-6 flex flex-wrap gap-2">
 					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-						<Badge variant="secondary">
+						<Button
+							variant="outline"
+							size="sm"
+							href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+							class="h-6 px-2 text-xs"
+						>
 							{relation.post_tags.tag_name}
-						</Badge>
+						</Button>
 					{/each}
 				</div>
 			{/if}
