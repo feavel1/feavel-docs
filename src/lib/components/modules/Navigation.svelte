@@ -2,6 +2,7 @@
 	import A from './NavLink.svelte';
 	import Group from './NavigationGroup.svelte';
 	import LangSwitch from './LangSwitch.svelte';
+	import { mostUsedTags } from '$lib/stores/mostUsedTags';
 </script>
 
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
@@ -10,15 +11,9 @@
 			<Group title="WORKS">
 				<A href="/posts">Posts</A>
 
-				<A href="/posts?tags=art">Art</A>
-
-				<A href="/">Research</A>
-
-				<A href="/">Visual Arts</A>
-
-				<A href="/">Philosophy</A>
-
-				<A href="/">Photography</A>
+				{#each $mostUsedTags.tags as tag}
+					<A href="/posts?tags={tag}">{tag}</A>
+				{/each}
 			</Group>
 
 			<Group title="INFO">

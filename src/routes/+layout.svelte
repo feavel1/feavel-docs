@@ -4,8 +4,12 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import HamburgerMenu from '$lib/components/modules/HamburgerMenu.svelte';
 	import Feavel from '$lib/components/modules/Feavel.svelte';
+	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
 
-	let { children } = $props();
+	let { children, data } = $props();
+
+	// Initialize the most used tags store with data from the server
+	updateMostUsedTags(data.mostUsedTags || []);
 </script>
 
 <svelte:head>

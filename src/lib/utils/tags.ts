@@ -110,3 +110,63 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 		return { error };
 	}
 }
+
+// Cache for most used tags
+let mostUsedTagsCache: { data: string[]; timestamp: number } | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get the most used tags based on their frequency in posts
+ * Returns the top 5 most used tags ordered by frequency
+ * Implements caching to improve performance
+ */
+export async function getMostUsedTags(supabase: SupabaseClient, limit: number = 5) {
+	// Check if we have valid cached data
+	const now = Date.now();
+	if (mostUsedTagsCache && now - mostUsedTagsCache.timestamp < CACHE_DURATION) {
+		return { data: mostUsedTagsCache.data, error: null };
+	}
+
+	// More efficient approach: Use a simpler query that should work
+	// Get all tags with their usage counts
+	const { data, error } = await supabase
+		.from('posts_tags_rel')
+		.select(
+			`
+			tag_id,
+			post_tags(tag_name)
+		`
+		)
+		.order('tag_id');
+
+	if (error) {
+		console.error('Error fetching most used tags:', error);
+		return { data: [], error };
+	}
+
+	// Process the data to count occurrences and get top tags
+	const tagCounts: { [key: string]: { name: string; count: number } } = {};
+
+	// Count occurrences of each tag
+	data.forEach((item: any) => {
+		const tagName = item.post_tags?.tag_name;
+		if (tagName) {
+			if (tagCounts[tagName]) {
+				tagCounts[tagName].count++;
+			} else {
+				tagCounts[tagName] = { name: tagName, count: 1 };
+			}
+		}
+	});
+
+	// Sort by count and take the top N
+	const sortedTags = Object.values(tagCounts)
+		.sort((a, b) => b.count - a.count)
+		.slice(0, limit)
+		.map((tag) => tag.name);
+
+	// Update cache
+	mostUsedTagsCache = { data: sortedTags, timestamp: now };
+
+	return { data: sortedTags, error: null };
+}
