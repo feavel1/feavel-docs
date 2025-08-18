@@ -3,13 +3,14 @@
 	import Group from './NavigationGroup.svelte';
 	import LangSwitch from './LangSwitch.svelte';
 	import { mostUsedTags } from '$lib/stores/mostUsedTags';
+	import { m } from '$lib/paraglide/messages.js';
 </script>
 
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
 	<div class="absolute bottom-20">
 		<div class="grid-cols-2 gap-x-14 lg:grid">
 			<Group title="WORKS">
-				<A href="/posts">Posts</A>
+				<A href="/posts">{m.posts()}</A>
 
 				{#each $mostUsedTags.tags as tag}
 					<A href="/posts?tags={tag}">{tag}</A>
