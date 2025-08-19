@@ -12,7 +12,7 @@
 	import { uploadPostCover } from '$lib/utils/supabase';
 
 	let { data } = $props();
-	let { tags } = data;
+	let { tags, session, supabase } = data;
 
 	let editorContent = $state<any>(null);
 	let postTitle = $state('');
@@ -90,9 +90,9 @@
 			// Upload cover image if a file is selected
 			if (coverFile) {
 				isUploading = true;
-				const { data: sessionData } = await fetch('/api/auth/session').then(res => res.json());
-				if (sessionData?.session) {
-					const filename = await uploadPostCover(sessionData.session.supabase, coverFile);
+
+				if (session) {
+					const filename = await uploadPostCover(supabase, coverFile);
 					if (filename) {
 						coverFilename = filename;
 					} else {
@@ -114,13 +114,16 @@
 			let response;
 			if (coverFile) {
 				const formData = new FormData();
-				formData.append('data', JSON.stringify({
-					title: postTitle,
-					content: editorContent,
-					cover: coverFilename,
-					public_visibility: isPublic,
-					tags: selectedTags
-				}));
+				formData.append(
+					'data',
+					JSON.stringify({
+						title: postTitle,
+						content: editorContent,
+						cover: coverFilename,
+						public_visibility: isPublic,
+						tags: selectedTags
+					})
+				);
 				formData.append('cover', coverFile);
 
 				response = await fetch('/api/posts', {
@@ -211,25 +214,29 @@
 					<div>
 						<Label for="cover">Cover Image (optional)</Label>
 						<div class="space-y-2">
-							<Input 
-								type="file" 
-								accept="image/*" 
-								onchange={handleCoverFileSelect}
-							/>
+							<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
 							{#if coverPreview}
 								<div class="mt-2">
-									<img src={coverPreview} alt="Cover preview" class="h-32 w-full object-cover rounded-md" />
+									<img
+										src={coverPreview}
+										alt="Cover preview"
+										class="h-32 w-full rounded-md object-cover"
+									/>
 								</div>
 							{:else if postCover}
 								<div class="mt-2">
-									<img src={postCover} alt="Cover preview" class="h-32 w-full object-cover rounded-md" />
+									<img
+										src={postCover}
+										alt="Cover preview"
+										class="h-32 w-full rounded-md object-cover"
+									/>
 								</div>
 							{/if}
 							{#if coverFile || postCover}
-								<Button 
-									type="button" 
-									variant="outline" 
-									size="sm" 
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
 									onclick={() => {
 										coverFile = null;
 										coverPreview = '';

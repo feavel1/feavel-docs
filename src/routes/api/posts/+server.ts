@@ -30,9 +30,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			public_visibility = parsedData.public_visibility;
 			tags = parsedData.tags;
 
-			// If we have a cover file, use its filename
-			if (coverFile) {
-				cover = coverFile.name;
+			// If we have a cover file, use the generated filename from the client
+			if (coverFile && cover) {
+				// cover already contains the generated filename from the client
+				// so we don't need to do anything here
 			}
 		} else {
 			// Handle regular JSON request
