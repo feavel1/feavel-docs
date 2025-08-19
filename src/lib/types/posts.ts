@@ -32,6 +32,7 @@ export interface PostsPageData {
 	session: any;
 	posts: Post[];
 	tags: Tag[];
+	supabase: any;
 }
 
 export interface PostFilters {

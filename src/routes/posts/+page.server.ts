@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
-import type { PostsPageData } from '$lib/types/posts';
 
-export const load: PageServerLoad = async ({ locals }): Promise<PostsPageData> => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const { session } = await locals.safeGetSession();
 
 	// Fetch posts with related data

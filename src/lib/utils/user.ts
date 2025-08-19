@@ -61,6 +61,7 @@ export function getAvatarUrl(
 		}
 
 		if (supabase) {
+			// Use the new storage utility
 			const { data } = supabase.storage.from('storage').getPublicUrl(`avatars/${avatarUrl}`);
 			return data.publicUrl;
 		}

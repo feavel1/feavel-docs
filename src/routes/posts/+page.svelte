@@ -33,22 +33,13 @@
 		post_comments?: Array<any>;
 	}
 
-	interface PageProps {
-		data: {
-			session: any;
-			posts: Post[];
-			tags: any[];
-		};
-		loading?: boolean;
-	}
-
-	let { data, loading = false }: PageProps = $props();
-	let { session, posts, tags } = data;
+	let { data, loading = false } = $props();
+	let { session, posts, tags, supabase } = data;
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
 	let sortBy = $state<'newest' | 'popular' | 'liked'>('newest');
-	
+
 	// Define sort options for SingleSelect component
 	let options = $state([
 		{ value: 'newest', label: 'Newest', icon: Clock },
@@ -131,7 +122,6 @@
 		return filtered;
 	});
 
-
 	// Generate skeleton loaders for loading state
 	let skeletonPosts = $derived(Array(6).fill(0));
 </script>
@@ -162,11 +152,7 @@
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3">
-			<SingleSelect
-				bind:value={sortBy}
-				{options}
-				placeholder="Sort by..."
-			/>
+			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
 
 			<MultiTagSelect
 				{tags}
@@ -214,7 +200,7 @@
 	{:else if filteredPosts.length > 0}
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each filteredPosts as post (post.id)}
-				<PostCard {post} userId={session?.user?.id} />
+				<PostCard {post} userId={session?.user?.id} {supabase} />
 			{/each}
 		</div>
 

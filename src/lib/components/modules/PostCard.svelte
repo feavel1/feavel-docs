@@ -5,13 +5,15 @@
 	import { Edit, Eye, Heart, MessageCircle } from '@lucide/svelte';
 	import type { Post } from '$lib/types/posts';
 	import { getPostTags, formatDate, getPostViews, isPostOwner, getPostLikes, getPostComments } from '$lib/utils/posts';
+	import { getPostCoverUrl } from '$lib/utils/storage';
 
 	interface Props {
 		post: Post;
 		userId?: string;
+		supabase: any;
 	}
 
-	let { post, userId }: Props = $props();
+	let { post, userId, supabase }: Props = $props();
 
 	let tags = $derived(getPostTags(post));
 	let isOwner = $derived(isPostOwner(post, userId));
@@ -23,7 +25,7 @@
 	{#if post.post_cover}
 		<div class="aspect-video overflow-hidden">
 			<img
-				src={post.post_cover}
+				src={getPostCoverUrl(post.post_cover, supabase)}
 				alt={post.title}
 				loading="lazy"
 				class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

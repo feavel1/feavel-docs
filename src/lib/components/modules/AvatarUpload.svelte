@@ -3,8 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card, CardContent } from '$lib/components/ui/card';
-	import { uploadAvatar, deleteAvatar } from '$lib/utils/supabase';
-	import { getAvatarUrl } from '$lib/utils/user';
+	import { uploadAvatar, deleteAvatar, getAvatarUrl } from '$lib/utils/storage';
 	import { toast } from 'svelte-sonner';
 
 	const { supabase, userId, username, currentAvatarUrl } = $props();
@@ -13,56 +12,9 @@
 	let fileInput: HTMLInputElement;
 	let currentAvatar = $state(currentAvatarUrl);
 
-	const avatarDisplayUrl = $derived(getAvatarUrl(currentAvatar, username, supabase));
+	const avatarDisplayUrl = $derived(currentAvatar ? getAvatarUrl(currentAvatar, supabase) : '');
 
-	async function compressImage(
-		file: File,
-		maxWidth = 400,
-		maxHeight = 400,
-		quality = 0.8
-	): Promise<File> {
-		return new Promise((resolve) => {
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d')!;
-			const img = new Image();
-
-			img.onload = () => {
-				let { width, height } = img;
-				if (width > height) {
-					if (width > maxWidth) {
-						height = (height * maxWidth) / width;
-						width = maxWidth;
-					}
-				} else {
-					if (height > maxHeight) {
-						width = (width * maxHeight) / height;
-						height = maxHeight;
-					}
-				}
-
-				canvas.width = width;
-				canvas.height = height;
-				ctx.drawImage(img, 0, 0, width, height);
-				canvas.toBlob(
-					(blob) => {
-						if (blob) {
-							const compressedFile = new File([blob], file.name, {
-								type: 'image/jpeg',
-								lastModified: Date.now()
-							});
-							resolve(compressedFile);
-						} else {
-							resolve(file);
-						}
-					},
-					'image/jpeg',
-					quality
-				);
-			};
-
-			img.src = URL.createObjectURL(file);
-		});
-	}
+	import { compressImage } from '$lib/utils/storage';
 
 	async function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;

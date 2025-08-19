@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
 	import { getAvatarUrl } from '$lib/utils/user';
+	import { getPostCoverUrl } from '$lib/utils/storage';
 
 	let { data } = $props();
 	let { post, session, supabase } = data;
@@ -67,7 +68,11 @@
 
 			{#if post.post_cover}
 				<div class="mb-6 overflow-hidden rounded-lg">
-					<img src={post.post_cover} alt="Post cover" class="h-64 w-full object-cover md:h-96" />
+					<img
+						src={getPostCoverUrl(post.post_cover, supabase)}
+						alt="Post cover"
+						class="h-64 w-full object-cover md:h-96"
+					/>
 				</div>
 			{/if}
 

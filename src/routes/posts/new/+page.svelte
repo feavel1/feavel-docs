@@ -9,7 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
-	import { uploadPostCover } from '$lib/utils/supabase';
+	import { uploadPostCover } from '$lib/utils/storage';
 
 	let { data } = $props();
 	let { tags, session, supabase } = data;
