@@ -9,6 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
+	import { uploadPostCover } from '$lib/utils/supabase';
 
 	let { data } = $props();
 	let { tags } = data;
@@ -16,9 +17,12 @@
 	let editorContent = $state<any>(null);
 	let postTitle = $state('');
 	let postCover = $state('');
+	let coverPreview = $state('');
+	let coverFile = $state<File | null>(null);
 	let selectedTags = $state<string[]>([]);
 	let isPublic = $state(false);
 	let isSubmitting = $state(false);
+	let isUploading = $state(false);
 
 	// Initialize the tag store with server data
 	$effect(() => {
@@ -52,6 +56,26 @@
 		}
 	}
 
+	function handleCoverFileSelect(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+
+		if (!file) return;
+
+		if (!file.type.startsWith('image/')) {
+			toast.error('Please select an image file');
+			return;
+		}
+
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error('File size must be less than 5MB');
+			return;
+		}
+
+		coverFile = file;
+		coverPreview = URL.createObjectURL(file);
+	}
+
 	async function handleSubmit() {
 		if (!postTitle.trim()) {
 			toast.error('Title is required');
@@ -61,19 +85,64 @@
 		isSubmitting = true;
 
 		try {
-			const response = await fetch('/api/posts', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
+			let coverFilename = postCover;
+
+			// Upload cover image if a file is selected
+			if (coverFile) {
+				isUploading = true;
+				const { data: sessionData } = await fetch('/api/auth/session').then(res => res.json());
+				if (sessionData?.session) {
+					const filename = await uploadPostCover(sessionData.session.supabase, coverFile);
+					if (filename) {
+						coverFilename = filename;
+					} else {
+						toast.error('Failed to upload cover image');
+						isSubmitting = false;
+						isUploading = false;
+						return;
+					}
+				} else {
+					toast.error('You must be logged in to upload images');
+					isSubmitting = false;
+					isUploading = false;
+					return;
+				}
+				isUploading = false;
+			}
+
+			// For file uploads, we need to send as multipart form data
+			let response;
+			if (coverFile) {
+				const formData = new FormData();
+				formData.append('data', JSON.stringify({
 					title: postTitle,
 					content: editorContent,
-					cover: postCover,
+					cover: coverFilename,
 					public_visibility: isPublic,
 					tags: selectedTags
-				})
-			});
+				}));
+				formData.append('cover', coverFile);
+
+				response = await fetch('/api/posts', {
+					method: 'POST',
+					body: formData
+				});
+			} else {
+				// Regular JSON request
+				response = await fetch('/api/posts', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						title: postTitle,
+						content: editorContent,
+						cover: coverFilename,
+						public_visibility: isPublic,
+						tags: selectedTags
+					})
+				});
+			}
 
 			const result = await response.json();
 
@@ -88,6 +157,7 @@
 			toast.error('Failed to create post');
 		} finally {
 			isSubmitting = false;
+			isUploading = false;
 		}
 	}
 
@@ -115,7 +185,7 @@
 			</Button>
 			<Button onclick={handleSubmit} disabled={isSubmitting || !postTitle.trim()}>
 				<Save class="mr-2 h-4 w-4" />
-				{isSubmitting ? 'Saving...' : 'Publish Post'}
+				{isSubmitting || isUploading ? 'Saving...' : 'Publish Post'}
 			</Button>
 		</div>
 	</div>
@@ -139,8 +209,37 @@
 					</div>
 
 					<div>
-						<Label for="cover">Cover Image URL (optional)</Label>
-						<Input id="cover" bind:value={postCover} placeholder="https://example.com/image.jpg" />
+						<Label for="cover">Cover Image (optional)</Label>
+						<div class="space-y-2">
+							<Input 
+								type="file" 
+								accept="image/*" 
+								onchange={handleCoverFileSelect}
+							/>
+							{#if coverPreview}
+								<div class="mt-2">
+									<img src={coverPreview} alt="Cover preview" class="h-32 w-full object-cover rounded-md" />
+								</div>
+							{:else if postCover}
+								<div class="mt-2">
+									<img src={postCover} alt="Cover preview" class="h-32 w-full object-cover rounded-md" />
+								</div>
+							{/if}
+							{#if coverFile || postCover}
+								<Button 
+									type="button" 
+									variant="outline" 
+									size="sm" 
+									onclick={() => {
+										coverFile = null;
+										coverPreview = '';
+										postCover = '';
+									}}
+								>
+									Remove Cover
+								</Button>
+							{/if}
+						</div>
 					</div>
 
 					<div>

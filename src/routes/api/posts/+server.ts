@@ -9,8 +9,36 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		const body = await request.json();
-		const { title, content, cover, public_visibility, tags } = body;
+		// Check if this is a multipart form request (for file uploads)
+		const contentType = request.headers.get('content-type') || '';
+		let title, content, cover, public_visibility, tags;
+
+		if (contentType.includes('multipart/form-data')) {
+			// Handle multipart form data (file upload)
+			const formData = await request.formData();
+			const jsonData = formData.get('data') as string;
+			const coverFile = formData.get('cover') as File | null;
+
+			if (!jsonData) {
+				return json({ error: 'Missing data' }, { status: 400 });
+			}
+
+			const parsedData = JSON.parse(jsonData);
+			title = parsedData.title;
+			content = parsedData.content;
+			cover = parsedData.cover;
+			public_visibility = parsedData.public_visibility;
+			tags = parsedData.tags;
+
+			// If we have a cover file, use its filename
+			if (coverFile) {
+				cover = coverFile.name;
+			}
+		} else {
+			// Handle regular JSON request
+			const body = await request.json();
+			({ title, content, cover, public_visibility, tags } = body);
+		}
 
 		if (!title?.trim()) {
 			return json({ error: 'Title is required' }, { status: 400 });

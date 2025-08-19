@@ -163,6 +163,87 @@ export async function deleteAvatar(
 	return success;
 }
 
+async function compressImage(
+	file: File,
+	maxWidth = 1200,
+	maxHeight = 800,
+	quality = 0.9
+): Promise<File> {
+	return new Promise((resolve) => {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d')!;
+		const img = new Image();
+
+		img.onload = () => {
+			let { width, height } = img;
+			if (width > height) {
+				if (width > maxWidth) {
+					height = (height * maxWidth) / width;
+					width = maxWidth;
+				}
+			} else {
+				if (height > maxHeight) {
+					width = (width * maxHeight) / height;
+					height = maxHeight;
+				}
+			}
+
+			canvas.width = width;
+			canvas.height = height;
+			ctx.drawImage(img, 0, 0, width, height);
+			canvas.toBlob(
+				(blob) => {
+					if (blob) {
+						const compressedFile = new File([blob], file.name, {
+							type: 'image/jpeg',
+							lastModified: Date.now()
+						});
+						resolve(compressedFile);
+					} else {
+						resolve(file);
+					}
+				},
+				'image/jpeg',
+				quality
+			);
+		};
+
+		img.src = URL.createObjectURL(file);
+	});
+}
+
+export async function uploadPostCover(
+	supabase: SupabaseClient,
+	file: File
+): Promise<string | null> {
+	const timestamp = Date.now();
+	const random = Math.random();
+	const extension = file.name.split('.').pop() || 'jpeg';
+	const filename = `${timestamp}.${random}.${extension}`;
+	const path = `post_covers/${filename}`;
+
+	try {
+		// Compress the image
+		const compressedFile = await compressImage(file);
+
+		// Upload the file
+		const result = await uploadFile(supabase, {
+			file: compressedFile,
+			path,
+			bucket: 'storage',
+			upsert: true
+		});
+
+		if (!result) return null;
+
+		// Return only the filename, not the full path
+		return filename;
+	} catch (error) {
+		console.error('Post cover upload failed:', error);
+		return null;
+	}
+}
+
 // Real-time subscription helpers (to be implemented)
 // export function subscribeToTable(supabase: SupabaseClient, table: string, callback: (payload: any) => void) {
 //   return supabase.channel(table).on('postgres_changes', { event: '*', schema: 'public', table }, callback).subscribe();
