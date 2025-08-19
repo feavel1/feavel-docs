@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { modalProp } from './HamburgerModalProp';
+	import { modalProp } from '$lib/components/modules/HamburgerModalProp';
 
 	let { href, children } = $props();
 </script>

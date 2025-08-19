@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import Navigation from './Navigation.svelte';
-	import { modalProp } from './HamburgerModalProp';
+	import Navigation from '$lib/components/modules/navigation/Navigation.svelte';
+	import { modalProp } from '$lib/components/modules/HamburgerModalProp';
 	import { Menu } from '@lucide/svelte';
 </script>
 

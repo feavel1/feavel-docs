@@ -25,6 +25,7 @@
 	let expandedComments = $state(new Set<number>());
 	let hasLoaded = $state(false);
 	let commentsVisible = $state(true);
+	let repliesCache = $state(new Map<number, PostComment[]>());
 
 	// Load initial comments
 	$effect(() => {
@@ -88,18 +89,72 @@
 			}
 		}
 		
-		// Reply form is handled by CommentItem component
-		
 		return newComment;
 	}
 
-	// Helper function to recursively update replies in nested comments
+	async function handleEditComment(commentId: number, content: string) {
+		const updatedComment = await updateComment(supabase, commentId, content);
+		if (updatedComment) {
+			comments = updateCommentsWithEditedComment(comments, updatedComment);
+		}
+	}
+
+	async function handleDeleteComment(commentId: number) {
+		const success = await deleteComment(supabase, commentId);
+		if (success) {
+			comments = removeCommentFromList(comments, commentId);
+			repliesCache.delete(commentId);
+		}
+	}
+
+	function toggleCommentsVisibility() {
+		commentsVisible = !commentsVisible;
+	}
+
+	async function toggleReplies(commentId: number) {
+		if (expandedComments.has(commentId)) {
+			expandedComments.delete(commentId);
+			expandedComments = new Set(expandedComments);
+		} else {
+			expandedComments.add(commentId);
+			expandedComments = new Set(expandedComments);
+			
+			const comment = findCommentById(comments, commentId);
+			if (comment && !comment.replies?.length) {
+				if (repliesCache.has(commentId)) {
+					const cachedReplies = repliesCache.get(commentId);
+					comments = updateCommentWithReplies(comments, commentId, {
+						...comment,
+						replies: cachedReplies
+					});
+				} else {
+					const replies = await getCommentReplies(supabase, commentId);
+					repliesCache.set(commentId, replies);
+					comments = updateCommentWithReplies(comments, commentId, {
+						...comment,
+						replies
+					});
+				}
+			}
+		}
+	}
+
+	// Helper functions
+	function findCommentById(commentsList: PostComment[], id: number): PostComment | null {
+		for (const comment of commentsList) {
+			if (comment.id === id) return comment;
+			if (comment.replies?.length) {
+				const found = findCommentById(comment.replies, id);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
 	function updateCommentReplies(commentsList: PostComment[], parentId: number, newReply: PostComment): PostComment[] {
 		return commentsList.map((comment) => {
 			if (comment.id === parentId) {
-				// Found the parent comment, add the reply
 				const updatedReplies = comment.replies ? [...comment.replies, newReply] : [newReply];
-				// Update the cache as well
 				if (repliesCache.has(comment.id)) {
 					repliesCache.set(comment.id, updatedReplies);
 				}
@@ -108,105 +163,40 @@
 					replies: updatedReplies,
 					_reply_count: (comment._reply_count || 0) + 1
 				};
-			} else if (comment.replies && comment.replies.length > 0) {
-				// Check nested replies
+			} else if (comment.replies?.length) {
 				const updatedReplies = updateCommentReplies(comment.replies, parentId, newReply);
 				if (updatedReplies !== comment.replies) {
-					// Replies were updated, update this comment
-					return {
-						...comment,
-						replies: updatedReplies
-					};
+					return { ...comment, replies: updatedReplies };
 				}
 			}
 			return comment;
 		});
 	}
 
-	// Helper function to recursively find a comment by ID
-	function findCommentById(commentsList: PostComment[], id: number): PostComment | null {
-		for (const comment of commentsList) {
-			if (comment.id === id) {
-				return comment;
-			}
-			if (comment.replies && comment.replies.length > 0) {
-				const found = findCommentById(comment.replies, id);
-				if (found) {
-					return found;
-				}
-			}
-		}
-		return null;
-	}
-
-	// Helper function to recursively update a specific comment with new replies
-	function updateCommentWithReplies(commentsList: PostComment[], targetId: number, updatedComment: PostComment): PostComment[] {
+	function updateCommentsWithEditedComment(commentsList: PostComment[], updatedComment: PostComment): PostComment[] {
 		return commentsList.map((comment) => {
-			if (comment.id === targetId) {
-				// Found the target comment, update it
+			if (comment.id === updatedComment.id) {
 				return updatedComment;
-			} else if (comment.replies && comment.replies.length > 0) {
-				// Check nested replies
-				const updatedReplies = updateCommentWithReplies(comment.replies, targetId, updatedComment);
+			} else if (comment.replies?.length) {
+				const updatedReplies = updateCommentsWithEditedComment(comment.replies, updatedComment);
 				if (updatedReplies !== comment.replies) {
-					// Replies were updated, update this comment
-					return {
-						...comment,
-						replies: updatedReplies
-					};
+					return { ...comment, replies: updatedReplies as PostComment[] };
 				}
 			}
 			return comment;
 		});
 	}
 
-	async function handleEditComment(commentId: number, content: string) {
-		const updatedComment = await updateComment(supabase, commentId, content);
-		if (updatedComment) {
-			// Update in main comments list
-			comments = comments.map((comment) => {
-				// Check if this is a top-level comment
+	function removeCommentFromList(commentsList: PostComment[], commentId: number): PostComment[] {
+		return commentsList
+			.map((comment) => {
 				if (comment.id === commentId) {
-					return updatedComment;
-				}
-				// Check if this is a reply in any comment's replies
-				if (comment.replies) {
-					const updatedReplies = comment.replies.map((reply) => 
-						reply.id === commentId ? updatedComment : reply
-					);
-					// Update cache if needed
-					if (repliesCache.has(comment.id)) {
-						repliesCache.set(comment.id, updatedReplies);
-					}
-					return {
-						...comment,
-						replies: updatedReplies
-					};
-				}
-				return comment;
-			});
-		}
-	}
-
-	async function handleDeleteComment(commentId: number) {
-		const success = await deleteComment(supabase, commentId);
-		if (success) {
-			// Remove from main comments list and update replies in nested comments
-			comments = comments.map((comment) => {
-				// If this is a top-level comment being deleted
-				if (comment.id === commentId) {
-					// Remove from cache if present
-					repliesCache.delete(commentId);
-					return null; // Will be filtered out
-				}
-				// If this comment has replies, check if any reply is being deleted
-				if (comment.replies) {
+					return null;
+				} else if (comment.replies?.length) {
 					const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
-					// Update cache if needed
 					if (repliesCache.has(comment.id)) {
 						repliesCache.set(comment.id, filteredReplies);
 					}
-					// Update reply count
 					return {
 						...comment,
 						replies: filteredReplies,
@@ -214,54 +204,22 @@
 					};
 				}
 				return comment;
-			}).filter((comment) => comment !== null) as PostComment[];
-		}
+			})
+			.filter((comment) => comment !== null) as PostComment[];
 	}
 
-	// Removed unused handleReply function
-
-	function toggleCommentsVisibility() {
-		commentsVisible = !commentsVisible;
-	}
-
-	// Cache for replies to avoid re-fetching when expanding/collapsing
-	let repliesCache = $state(new Map<number, PostComment[]>());
-
-	async function toggleReplies(commentId: number) {
-		if (expandedComments.has(commentId)) {
-			// Just collapse, keep replies in cache
-			expandedComments.delete(commentId);
-			// Force reactivity by creating a new Set
-			expandedComments = new Set(expandedComments);
-		} else {
-			expandedComments.add(commentId);
-			// Force reactivity by creating a new Set
-			expandedComments = new Set(expandedComments);
-			// Load replies if not already loaded or cached
-			const comment = findCommentById(comments, commentId);
-			if (comment) {
-				// Check if we have cached replies
-				if (repliesCache.has(commentId)) {
-					// Use cached replies
-					const cachedReplies = repliesCache.get(commentId);
-					// Update the comment with cached replies
-					comments = updateCommentWithReplies(comments, commentId, {
-						...comment,
-						replies: cachedReplies
-					});
-				} else if (!comment.replies || comment.replies.length === 0) {
-					// Fetch replies if not cached and not already loaded
-					const replies = await getCommentReplies(supabase, commentId);
-					// Cache the replies
-					repliesCache.set(commentId, replies);
-					// Update the comment with fetched replies
-					comments = updateCommentWithReplies(comments, commentId, {
-						...comment,
-						replies
-					});
+	function updateCommentWithReplies(commentsList: PostComment[], targetId: number, updatedComment: PostComment): PostComment[] {
+		return commentsList.map((comment) => {
+			if (comment.id === targetId) {
+				return updatedComment;
+			} else if (comment.replies?.length) {
+				const updatedReplies = updateCommentWithReplies(comment.replies, targetId, updatedComment);
+				if (updatedReplies !== comment.replies) {
+					return { ...comment, replies: updatedReplies };
 				}
 			}
-		}
+			return comment;
+		});
 	}
 </script>
 

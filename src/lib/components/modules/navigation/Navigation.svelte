@@ -1,7 +1,7 @@
 <script lang="ts">
 	import A from './NavLink.svelte';
 	import Group from './NavigationGroup.svelte';
-	import LangSwitch from './LangSwitch.svelte';
+	import LangSwitch from '$lib/components/modules/LangSwitch.svelte';
 	import { mostUsedTags } from '$lib/stores/mostUsedTags';
 	import { m } from '$lib/paraglide/messages.js';
 </script>

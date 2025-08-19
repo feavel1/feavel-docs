@@ -3,9 +3,10 @@
 	import type { SupabaseClient } from '@supabase/supabase-js';
 	import type { UserProfile } from '$lib/utils/user';
 
-	const { userProfile, supabase } = $props<{
+	const { userProfile, supabase, isOwnProfile = false } = $props<{
 		userProfile: UserProfile;
 		supabase: SupabaseClient;
+		isOwnProfile?: boolean;
 	}>();
 
 	function handleImageError(event: Event) {
@@ -49,7 +50,11 @@
 				href="/member/{userProfile.username}"
 				class="inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-3 py-2 text-sm leading-4 font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
 			>
-				View Profile
+				{#if isOwnProfile}
+					Your Profile
+				{:else}
+					View Profile
+				{/if}
 			</a>
 		</div>
 	</div>

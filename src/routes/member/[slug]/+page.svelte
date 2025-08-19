@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProfileDisplay } from '$lib/components/modules';
+	import { ProfileCard } from '$lib/components/modules';
 
 	const { data: propsData } = $props();
 	const { userProfile, isOwnProfile, supabase } = propsData;
@@ -21,7 +21,7 @@
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
 			<div class="px-6 py-12 shadow sm:rounded-lg sm:px-12">
 				{#if userProfile}
-					<ProfileDisplay {userProfile} {supabase} {isOwnProfile} />
+					<ProfileCard {userProfile} {supabase} {isOwnProfile} />
 				{:else}
 					<div class="text-center text-gray-500">
 						Profile not found.<br />

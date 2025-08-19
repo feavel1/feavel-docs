@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
-	import { Badge } from '$lib/components/ui/badge';
 	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
