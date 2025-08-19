@@ -3,6 +3,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Send, Loader2 } from '@lucide/svelte';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	let {
 		parentId,
@@ -41,7 +42,7 @@
 
 <div class="flex gap-2">
 	<Avatar class="h-7 w-7 flex-shrink-0">
-		<AvatarImage src={user?.avatar_url} alt={user?.username} />
+		<AvatarImage src={getAvatarUrl(user?.avatar_url, user?.username)} alt={user?.username} />
 		<AvatarFallback class="text-xs">
 			{user?.username?.charAt(0)?.toUpperCase() || 'U'}
 		</AvatarFallback>

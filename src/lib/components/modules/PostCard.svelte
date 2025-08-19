@@ -6,6 +6,7 @@
 	import type { Post } from '$lib/types/posts';
 	import { getPostTags, formatDate, getPostViews, isPostOwner, getPostLikes, getPostComments } from '$lib/utils/posts';
 	import { getPostCoverUrl } from '$lib/utils/storage';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	interface Props {
 		post: Post;
@@ -44,7 +45,7 @@
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
 					{#if post.users?.avatar_url}
-						<AvatarImage src={post.users.avatar_url} alt={post.users.username} />
+						<AvatarImage src={getAvatarUrl(post.users.avatar_url, post.users.username, supabase)} alt={post.users.username} />
 					{/if}
 					<AvatarFallback class="text-xs font-medium">
 						{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
