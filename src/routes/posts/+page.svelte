@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Edit, Eye, Plus, Search } from '@lucide/svelte';
+	import { Card, CardContent, CardFooter, CardHeader } from '$lib/components/ui/card';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Eye, Heart, Plus, Search, Clock } from '@lucide/svelte';
 	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
+	import SingleSelect from '$lib/components/modules/SingleSelect.svelte';
+	import PostCard from '$lib/components/modules/PostCard.svelte';
+	import { getPostLikes } from '$lib/utils/posts';
 
 	interface Post {
 		id: string;
@@ -25,43 +29,75 @@
 				tag_name: string;
 			};
 		}>;
+		post_likes?: Array<any>;
+		post_comments?: Array<any>;
 	}
 
-	let { data } = $props();
+	interface PageProps {
+		data: {
+			session: any;
+			posts: Post[];
+			tags: any[];
+		};
+		loading?: boolean;
+	}
+
+	let { data, loading = false }: PageProps = $props();
 	let { session, posts, tags } = data;
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
+	let sortBy = $state<'newest' | 'popular' | 'liked'>('newest');
 	
+	// Define sort options for SingleSelect component
+	let options = $state([
+		{ value: 'newest', label: 'Newest', icon: Clock },
+		{ value: 'popular', label: 'Most Viewed', icon: Eye },
+		{ value: 'liked', label: 'Most Liked', icon: Heart }
+	]);
+
 	// Initialize selectedTags from URL parameters
 	let urlTags = $derived(page.url.searchParams.get('tags'));
+	let urlSort = $derived(page.url.searchParams.get('sort'));
+
 	$effect(() => {
 		if (urlTags) {
-			selectedTags = urlTags.split(',').map(tag => decodeURIComponent(tag.trim()));
+			selectedTags = urlTags.split(',').map((tag) => decodeURIComponent(tag.trim()));
 		} else {
 			selectedTags = [];
 		}
-	});
 
-	$effect(() => {
-		// Update URL when selectedTags change
-		const currentTagsParam = page.url.searchParams.get('tags');
-		const newTagsParam = selectedTags.length > 0 ? selectedTags.map(tag => encodeURIComponent(tag)).join(',') : null;
-		
-		// Only update URL if tags have changed
-		if (newTagsParam !== currentTagsParam) {
-			const newUrl = new URL(page.url);
-			if (newTagsParam) {
-				newUrl.searchParams.set('tags', newTagsParam);
-			} else {
-				newUrl.searchParams.delete('tags');
-			}
-			history.replaceState(null, '', newUrl.toString());
+		if (urlSort && ['newest', 'popular', 'liked'].includes(urlSort)) {
+			sortBy = urlSort as 'newest' | 'popular' | 'liked';
+		} else {
+			sortBy = 'newest';
 		}
 	});
 
+	$effect(() => {
+		// Update URL when selectedTags or sortBy change
+		const newUrl = new URL(page.url);
+
+		// Update tags parameter
+		if (selectedTags.length > 0) {
+			const newTagsParam = selectedTags.map((tag) => encodeURIComponent(tag)).join(',');
+			newUrl.searchParams.set('tags', newTagsParam);
+		} else {
+			newUrl.searchParams.delete('tags');
+		}
+
+		// Update sort parameter
+		if (sortBy !== 'newest') {
+			newUrl.searchParams.set('sort', sortBy);
+		} else {
+			newUrl.searchParams.delete('sort');
+		}
+
+		history.replaceState(null, '', newUrl.toString());
+	});
+
 	let filteredPosts = $derived.by(() => {
-		let filtered = posts;
+		let filtered = [...posts]; // Create a copy to avoid mutating original
 
 		// Filter by tags
 		if (selectedTags.length > 0) {
@@ -79,8 +115,25 @@
 			);
 		}
 
+		// Sort posts
+		filtered.sort((a, b) => {
+			switch (sortBy) {
+				case 'popular':
+					return (b.post_views || 0) - (a.post_views || 0);
+				case 'liked':
+					return getPostLikes(b) - getPostLikes(a);
+				case 'newest':
+				default:
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+			}
+		});
+
 		return filtered;
 	});
+
+
+	// Generate skeleton loaders for loading state
+	let skeletonPosts = $derived(Array(6).fill(0));
 </script>
 
 <svelte:head>
@@ -90,7 +143,7 @@
 
 <div class="container mx-auto max-w-6xl px-4 py-8">
 	<!-- Header -->
-	<div class="mb-8 flex items-center justify-between">
+	<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-3xl font-bold">Blog Posts</h1>
 			<p class="text-muted-foreground">Discover stories, ideas, and insights from our community</p>
@@ -101,78 +154,73 @@
 		</Button>
 	</div>
 
-	<!-- Search and Filters -->
+	<!-- Search, Filters, and Sorting -->
 	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="relative max-w-md flex-1">
 			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 			<Input placeholder="Search posts..." bind:value={searchQuery} class="pl-10" />
 		</div>
 
-		<MultiTagSelect
-			{tags}
-			bind:selectedTags
-			placeholder="Filter by tags..."
-			label=""
-			showSearch={false}
-		/>
+		<div class="flex flex-wrap items-center gap-3">
+			<SingleSelect
+				bind:value={sortBy}
+				{options}
+				placeholder="Sort by..."
+			/>
+
+			<MultiTagSelect
+				{tags}
+				bind:selectedTags
+				placeholder="Filter by tags..."
+				label=""
+				showSearch={false}
+			/>
+		</div>
 	</div>
 
 	<!-- Posts Grid -->
-	{#if filteredPosts.length > 0}
+	{#if loading}
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each filteredPosts as post (post.id)}
-				<Card class="group transition-all hover:shadow-lg">
-					{#if post.post_cover}
-						<div class="aspect-video overflow-hidden rounded-t-lg">
-							<img
-								src={post.post_cover}
-								alt="Post cover"
-								class="h-full w-full object-cover transition-transform group-hover:scale-105"
-							/>
-						</div>
-					{/if}
-					<CardHeader class="pb-3">
-						<div class="flex items-start justify-between">
-							<CardTitle class="line-clamp-2 text-lg">{post.title}</CardTitle>
-							{#if post.user_id === session?.user?.id}
-								<Button variant="ghost" size="sm" href={`/posts/edit/${post.id}`}>
-									<Edit class="h-4 w-4" />
-								</Button>
-							{/if}
-						</div>
-
-						<div class="flex items-center gap-2 text-sm text-muted-foreground">
-							<span>by {post.users?.username || 'Unknown'}</span>
-							<span>•</span>
-							<span>{new Date(post.created_at).toLocaleDateString()}</span>
-							<span>•</span>
-							<span class="flex items-center gap-1">
-								<Eye class="h-4 w-4" />
-								{post.post_views || 0}
-							</span>
+			{#each skeletonPosts as _}
+				<Card class="flex h-full flex-col overflow-hidden">
+					<Skeleton class="aspect-video" />
+					<CardHeader class="flex-shrink-0 pb-3">
+						<Skeleton class="mb-2 h-6 w-3/4" />
+						<div class="flex items-center gap-2">
+							<Skeleton class="h-8 w-8 rounded-full" />
+							<div class="space-y-1">
+								<Skeleton class="h-4 w-20" />
+								<Skeleton class="h-3 w-16" />
+							</div>
 						</div>
 					</CardHeader>
-					<CardContent class="pt-0">
-						{#if post.posts_tags_rel && post.posts_tags_rel.length > 0}
-							<div class="mb-3 flex flex-wrap gap-1">
-								{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-									<Button
-										variant="outline"
-										size="sm"
-										href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-										class="h-6 px-2 text-xs"
-									>
-										{relation.post_tags.tag_name}
-									</Button>
-								{/each}
-							</div>
-						{/if}
-						<Button variant="outline" size="sm" href="/posts/{post.id}" class="w-full">
-							Read More
-						</Button>
+					<CardContent class="flex-grow pt-0">
+						<div class="mb-3 flex flex-wrap gap-1">
+							<Skeleton class="h-6 w-16" />
+							<Skeleton class="h-6 w-20" />
+						</div>
 					</CardContent>
+					<CardFooter class="flex flex-shrink-0 items-center justify-between pt-0">
+						<div class="flex items-center gap-3">
+							<Skeleton class="h-4 w-8" />
+							<Skeleton class="h-4 w-8" />
+							<Skeleton class="h-4 w-8" />
+						</div>
+						<Skeleton class="h-8 w-24" />
+					</CardFooter>
 				</Card>
 			{/each}
+		</div>
+	{:else if filteredPosts.length > 0}
+		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+			{#each filteredPosts as post (post.id)}
+				<PostCard {post} userId={session?.user?.id} />
+			{/each}
+		</div>
+
+		<!-- Results count -->
+		<div class="mt-6 text-center text-sm text-muted-foreground">
+			Showing {filteredPosts.length} of {posts.length} posts
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-12 text-center">

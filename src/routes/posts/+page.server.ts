@@ -13,7 +13,9 @@ export const load: PageServerLoad = async ({ locals }): Promise<PostsPageData> =
 			users!inner(username, avatar_url),
 			posts_tags_rel(
 				post_tags!inner(tag_name)
-			)
+			),
+			post_likes(id),
+			post_comments(id)
 		`
 		)
 		.eq('public_visibility', true)

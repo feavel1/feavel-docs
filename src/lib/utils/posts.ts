@@ -56,3 +56,34 @@ export function getPostLikes(post: Post): number {
 export function getPostComments(post: Post): number {
 	return post.post_comments?.length || 0;
 }
+
+/**
+ * Calculate estimated reading time for a post
+ * @param content The post content
+ * @returns Estimated reading time in minutes
+ */
+export function getReadingTime(content: string | any): number {
+	if (!content) return 1;
+	
+	// Handle Editor.js content structure
+	let text = '';
+	if (typeof content === 'object' && content.blocks) {
+		text = content.blocks
+			.map((block: any) => {
+				if (block.type === 'paragraph' && block.data?.text) {
+					return block.data.text;
+				}
+				return '';
+			})
+			.join(' ');
+	} else if (typeof content === 'string') {
+		text = content;
+	} else {
+		return 1;
+	}
+	
+	// Average reading speed: 200 words per minute
+	const wordsPerMinute = 200;
+	const wordCount = text.trim().split(/\s+/).length;
+	return Math.ceil(wordCount / wordsPerMinute) || 1;
+}
