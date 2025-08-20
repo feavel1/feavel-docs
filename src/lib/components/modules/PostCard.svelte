@@ -16,17 +16,22 @@
 
 	let { post, userId, supabase }: Props = $props();
 
+	// Derived values for better performance
 	let tags = $derived(getPostTags(post));
 	let isOwner = $derived(isPostOwner(post, userId));
 	let likes = $derived(getPostLikes(post));
 	let comments = $derived(getPostComments(post));
+	let postViews = $derived(getPostViews(post));
+	let formattedDate = $derived(formatDate(post.created_at));
+	let avatarUrl = $derived(getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase));
+	let coverUrl = $derived(getPostCoverUrl(post.post_cover || '', supabase));
 </script>
 
 <Card class="group flex h-full flex-col overflow-hidden transition-all hover:shadow-lg">
 	{#if post.post_cover}
 		<div class="aspect-video overflow-hidden">
 			<img
-				src={getPostCoverUrl(post.post_cover, supabase)}
+				src={coverUrl}
 				alt={post.title}
 				loading="lazy"
 				class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -45,7 +50,7 @@
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
 					{#if post.users?.avatar_url}
-						<AvatarImage src={getAvatarUrl(post.users.avatar_url, post.users.username, supabase)} alt={post.users.username} />
+						<AvatarImage src={avatarUrl} alt={post.users.username} />
 					{/if}
 					<AvatarFallback class="text-xs font-medium">
 						{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -53,7 +58,7 @@
 				</Avatar>
 				<div class="text-sm">
 					<div class="font-medium">{post.users?.username || 'Unknown'}</div>
-					<div class="text-muted-foreground text-xs">{formatDate(post.created_at)}</div>
+					<div class="text-muted-foreground text-xs">{formattedDate}</div>
 				</div>
 			</div>
 			
@@ -68,21 +73,22 @@
 	<CardContent class="flex-grow pt-0">
 		{#if tags.length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each tags.slice(0, 3) as tag}
-					<Button
-						variant="outline"
-						size="sm"
-						href={`/posts?tags=${encodeURIComponent(tag)}`}
-						class="h-6 px-2 text-xs"
-					>
-						{tag}
-					</Button>
+				{#each tags as tag, i}
+					{#if i < 3}
+						<Button
+							variant="outline"
+							size="sm"
+							href={`/posts?tags=${encodeURIComponent(tag)}`}
+							class="h-6 px-2 text-xs"
+						>
+							{tag}
+						</Button>
+					{:else if i === 3}
+						<div class="flex h-6 items-center rounded border px-2 text-xs text-muted-foreground">
+							+{tags.length - 3}
+						</div>
+					{/if}
 				{/each}
-				{#if tags.length > 3}
-					<div class="flex h-6 items-center rounded border px-2 text-xs text-muted-foreground">
-						+{tags.length - 3}
-					</div>
-				{/if}
 			</div>
 		{/if}
 	</CardContent>
@@ -91,7 +97,7 @@
 		<div class="flex items-center gap-3 text-sm text-muted-foreground">
 			<span class="flex items-center gap-1">
 				<Eye class="h-4 w-4" />
-				{getPostViews(post)}
+				{postViews}
 			</span>
 			<span class="flex items-center gap-1">
 				<Heart class="h-4 w-4" />

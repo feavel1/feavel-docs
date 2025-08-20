@@ -7,7 +7,7 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
-	import { uploadFile, downloadFile, deleteFile, getFileUrl } from '$lib/utils/supabase';
+	import { uploadFile, downloadFile, deleteFile, getFileUrl } from '$lib/utils/storage';
 	import { Upload, Download, Trash2, Link } from '@lucide/svelte';
 
 	const { data: propsData } = $props();
@@ -28,9 +28,8 @@
 
 		try {
 			if (file) {
-				const result = await uploadFile(supabase, {
+				const result = await uploadFile(supabase, `demo/${session?.user?.id || 'anonymous'}/${file.name}`, {
 					file,
-					path: `demo/${session?.user?.id || 'anonymous'}/${file.name}`,
 					bucket: 'storage'
 				});
 
@@ -54,7 +53,7 @@
 		isDownloading = true;
 
 		try {
-			const blob = await downloadFile(supabase, {
+			const blob = await downloadFile(supabase, uploadedFile.path, {
 				path: uploadedFile.path,
 				bucket: 'storage'
 			});
@@ -79,7 +78,7 @@
 		isDeleting = true;
 
 		try {
-			const success = await deleteFile(supabase, {
+			const success = await deleteFile(supabase, uploadedFile.path, {
 				path: uploadedFile.path,
 				bucket: 'storage'
 			});
@@ -102,7 +101,7 @@
 		if (!uploadedFile) return;
 
 		try {
-			const url = await getFileUrl(supabase, {
+			const url = await getFileUrl(supabase, uploadedFile.path, {
 				path: uploadedFile.path,
 				bucket: 'storage'
 			});

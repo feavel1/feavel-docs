@@ -36,10 +36,23 @@
 	let open = $state(false);
 
 	function toggleTag(tagName: string) {
-		if (selectedTags.includes(tagName)) {
-			selectedTags = selectedTags.filter((tag) => tag !== tagName);
+		if (!tagName || typeof tagName !== 'string') {
+			console.warn('Invalid tag name provided to toggleTag');
+			return;
+		}
+		
+		const sanitizedTagName = tagName.trim();
+		
+		if (selectedTags.includes(sanitizedTagName)) {
+			selectedTags = selectedTags.filter((tag) => tag !== sanitizedTagName);
 		} else {
-			selectedTags = [...selectedTags, tagName];
+			// Validate that the tag exists in the available tags
+			const tagExists = tags.some(tag => tag.tag_name === sanitizedTagName);
+			if (tagExists) {
+				selectedTags = [...selectedTags, sanitizedTagName];
+			} else {
+				console.warn('Tag not found in available tags:', sanitizedTagName);
+			}
 		}
 	}
 

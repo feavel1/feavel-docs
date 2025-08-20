@@ -2,8 +2,6 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Card, CardContent, CardFooter, CardHeader } from '$lib/components/ui/card';
-	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Eye, Heart, Plus, Search, Clock } from '@lucide/svelte';
 	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
 	import SingleSelect from '$lib/components/modules/SingleSelect.svelte';
@@ -33,7 +31,7 @@
 		post_comments?: Array<any>;
 	}
 
-	let { data, loading = false } = $props();
+	let { data } = $props();
 	let { session, posts, tags, supabase } = data;
 
 	let searchQuery = $state('');
@@ -121,9 +119,6 @@
 
 		return filtered;
 	});
-
-	// Generate skeleton loaders for loading state
-	let skeletonPosts = $derived(Array(6).fill(0));
 </script>
 
 <svelte:head>
@@ -165,39 +160,7 @@
 	</div>
 
 	<!-- Posts Grid -->
-	{#if loading}
-		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each skeletonPosts as _}
-				<Card class="flex h-full flex-col overflow-hidden">
-					<Skeleton class="aspect-video" />
-					<CardHeader class="flex-shrink-0 pb-3">
-						<Skeleton class="mb-2 h-6 w-3/4" />
-						<div class="flex items-center gap-2">
-							<Skeleton class="h-8 w-8 rounded-full" />
-							<div class="space-y-1">
-								<Skeleton class="h-4 w-20" />
-								<Skeleton class="h-3 w-16" />
-							</div>
-						</div>
-					</CardHeader>
-					<CardContent class="flex-grow pt-0">
-						<div class="mb-3 flex flex-wrap gap-1">
-							<Skeleton class="h-6 w-16" />
-							<Skeleton class="h-6 w-20" />
-						</div>
-					</CardContent>
-					<CardFooter class="flex flex-shrink-0 items-center justify-between pt-0">
-						<div class="flex items-center gap-3">
-							<Skeleton class="h-4 w-8" />
-							<Skeleton class="h-4 w-8" />
-							<Skeleton class="h-4 w-8" />
-						</div>
-						<Skeleton class="h-8 w-24" />
-					</CardFooter>
-				</Card>
-			{/each}
-		</div>
-	{:else if filteredPosts.length > 0}
+	{#if filteredPosts.length > 0}
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each filteredPosts as post (post.id)}
 				<PostCard {post} userId={session?.user?.id} {supabase} />

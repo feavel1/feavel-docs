@@ -18,30 +18,28 @@ export interface DownloadOptions {
 	bucket?: string;
 }
 
-// Storage path management
-export class StoragePath {
-	private static readonly BUCKETS = {
-		DEFAULT: 'storage',
-		AVATARS: 'storage',
-		POST_COVERS: 'storage'
-	} as const;
-
-	private static readonly FOLDERS = {
+// Storage configuration
+const STORAGE_CONFIG = {
+	BUCKET: 'storage',
+	FOLDERS: {
 		AVATARS: 'avatars',
 		POST_COVERS: 'post_covers',
 		SERVICE_COVERS: 'service_covers'
-	} as const;
+	}
+} as const;
 
+// Storage path management
+export class StoragePath {
 	static avatars(filename: string): string {
-		return `${this.FOLDERS.AVATARS}/${filename}`;
+		return `${STORAGE_CONFIG.FOLDERS.AVATARS}/${filename}`;
 	}
 
 	static postCovers(filename: string): string {
-		return `${this.FOLDERS.POST_COVERS}/${filename}`;
+		return `${STORAGE_CONFIG.FOLDERS.POST_COVERS}/${filename}`;
 	}
 
 	static serviceCovers(filename: string): string {
-		return `${this.FOLDERS.SERVICE_COVERS}/${filename}`;
+		return `${STORAGE_CONFIG.FOLDERS.SERVICE_COVERS}/${filename}`;
 	}
 
 	static fromPath(path: string): { folder: string; filename: string } {
@@ -53,7 +51,7 @@ export class StoragePath {
 	}
 
 	static getBucket(): string {
-		return this.BUCKETS.DEFAULT;
+		return STORAGE_CONFIG.BUCKET;
 	}
 }
 
@@ -72,7 +70,7 @@ export async function uploadFile(
 		});
 
 		if (error) {
-			console.error('Upload error:', error);
+			console.error(`Upload error for ${path}:`, error.message);
 			return null;
 		}
 
@@ -83,8 +81,8 @@ export async function uploadFile(
 			size: file.size,
 			mimeType: file.type
 		};
-	} catch (error) {
-		console.error('Upload failed:', error);
+	} catch (error: any) {
+		console.error(`Upload failed for ${path}:`, error.message || error);
 		return null;
 	}
 }
@@ -100,13 +98,13 @@ export async function downloadFile(
 		const { data, error } = await supabase.storage.from(bucket).download(path);
 
 		if (error) {
-			console.error('Download error:', error);
+			console.error(`Download error for ${path}:`, error.message);
 			return null;
 		}
 
 		return data;
-	} catch (error) {
-		console.error('Download failed:', error);
+	} catch (error: any) {
+		console.error(`Download failed for ${path}:`, error.message || error);
 		return null;
 	}
 }
@@ -122,13 +120,13 @@ export async function deleteFile(
 		const { error } = await supabase.storage.from(bucket).remove([path]);
 
 		if (error) {
-			console.error('Delete error:', error);
+			console.error(`Delete error for ${path}:`, error.message);
 			return false;
 		}
 
 		return true;
-	} catch (error) {
-		console.error('Delete failed:', error);
+	} catch (error: any) {
+		console.error(`Delete failed for ${path}:`, error.message || error);
 		return false;
 	}
 }
@@ -143,8 +141,8 @@ export async function getFileUrl(
 	try {
 		const { data } = supabase.storage.from(bucket).getPublicUrl(path);
 		return data.publicUrl;
-	} catch (error) {
-		console.error('Get URL failed:', error);
+	} catch (error: any) {
+		console.error(`Get URL failed for ${path}:`, error.message || error);
 		return null;
 	}
 }
@@ -156,43 +154,59 @@ export async function compressImage(
 	maxHeight = 800,
 	quality = 0.9
 ): Promise<File> {
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		const canvas = document.createElement('canvas');
-		const ctx = canvas.getContext('2d')!;
+		const ctx = canvas.getContext('2d');
+		
+		if (!ctx) {
+			reject(new Error('Could not get canvas context'));
+			return;
+		}
+		
 		const img = new Image();
 
 		img.onload = () => {
-			let { width, height } = img;
-			if (width > height) {
-				if (width > maxWidth) {
-					height = (height * maxWidth) / width;
-					width = maxWidth;
-				}
-			} else {
-				if (height > maxHeight) {
-					width = (width * maxHeight) / height;
-					height = maxHeight;
-				}
-			}
-
-			canvas.width = width;
-			canvas.height = height;
-			ctx.drawImage(img, 0, 0, width, height);
-			canvas.toBlob(
-				(blob) => {
-					if (blob) {
-						const compressedFile = new File([blob], file.name, {
-							type: 'image/jpeg',
-							lastModified: Date.now()
-						});
-						resolve(compressedFile);
-					} else {
-						resolve(file);
+			try {
+				let { width, height } = img;
+				if (width > height) {
+					if (width > maxWidth) {
+						height = (height * maxWidth) / width;
+						width = maxWidth;
 					}
-				},
-				'image/jpeg',
-				quality
-			);
+				} else {
+					if (height > maxHeight) {
+						width = (width * maxHeight) / height;
+						height = maxHeight;
+					}
+				}
+
+				canvas.width = width;
+				canvas.height = height;
+				ctx.drawImage(img, 0, 0, width, height);
+				canvas.toBlob(
+					(blob) => {
+						if (blob) {
+							const compressedFile = new File([blob], file.name, {
+								type: 'image/jpeg',
+								lastModified: Date.now()
+							});
+							resolve(compressedFile);
+						} else {
+							resolve(file);
+						}
+					},
+					'image/jpeg',
+					quality
+				);
+			} catch (error) {
+				console.error('Image compression failed:', error);
+				resolve(file); // Return original file if compression fails
+			}
+		};
+
+		img.onerror = () => {
+			console.error('Failed to load image for compression');
+			resolve(file); // Return original file if loading fails
 		};
 
 		img.src = URL.createObjectURL(file);
@@ -219,7 +233,10 @@ export async function uploadAvatar(
 			upsert: true
 		});
 
-		if (!result) return null;
+		if (!result) {
+			console.error('Failed to upload avatar file');
+			return null;
+		}
 
 		const { error: updateError } = await supabase
 			.from('users')
@@ -227,14 +244,14 @@ export async function uploadAvatar(
 			.eq('id', userId);
 
 		if (updateError) {
-			console.error('Failed to update avatar_url:', updateError);
+			console.error('Failed to update avatar_url in database:', updateError.message);
 			await deleteFile(supabase, path, { path, bucket: StoragePath.getBucket() });
 			return null;
 		}
 
 		return result;
-	} catch (error) {
-		console.error('Avatar upload failed:', error);
+	} catch (error: any) {
+		console.error('Avatar upload failed:', error.message || error);
 		return null;
 	}
 }
@@ -247,14 +264,18 @@ export async function deleteAvatar(
 	if (!avatarFilename) return true;
 
 	const path = StoragePath.avatars(avatarFilename);
-	const success = await deleteFile(supabase, path, { path, bucket: StoragePath.getBucket() });
+	const fileDeleted = await deleteFile(supabase, path, { path, bucket: StoragePath.getBucket() });
 
-	if (success) {
+	if (fileDeleted) {
 		const { error } = await supabase.from('users').update({ avatar_url: null }).eq('id', userId);
-		if (error) console.error('Failed to clear avatar_url:', error);
+		if (error) {
+			console.error('Failed to clear avatar_url in database:', error.message);
+			return false;
+		}
+		return true;
 	}
 
-	return success;
+	return false;
 }
 
 // Post cover management
@@ -279,12 +300,15 @@ export async function uploadPostCover(
 			upsert: true
 		});
 
-		if (!result) return null;
+		if (!result) {
+			console.error('Failed to upload post cover file');
+			return null;
+		}
 
 		// Return only the filename, not the full path
 		return filename;
-	} catch (error) {
-		console.error('Post cover upload failed:', error);
+	} catch (error: any) {
+		console.error('Post cover upload failed:', error.message || error);
 		return null;
 	}
 }
@@ -293,15 +317,25 @@ export async function uploadPostCover(
 export function getAvatarUrl(filename: string, supabase: SupabaseClient): string {
 	if (!filename) return '';
 	
-	const path = StoragePath.avatars(filename);
-	const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
-	return data.publicUrl;
+	try {
+		const path = StoragePath.avatars(filename);
+		const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
+		return data.publicUrl;
+	} catch (error: any) {
+		console.error('Failed to get avatar URL:', error.message || error);
+		return '';
+	}
 }
 
 export function getPostCoverUrl(filename: string, supabase: SupabaseClient): string {
 	if (!filename) return '';
 	
-	const path = StoragePath.postCovers(filename);
-	const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
-	return data.publicUrl;
+	try {
+		const path = StoragePath.postCovers(filename);
+		const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
+		return data.publicUrl;
+	} catch (error: any) {
+		console.error('Failed to get post cover URL:', error.message || error);
+		return '';
+	}
 }
