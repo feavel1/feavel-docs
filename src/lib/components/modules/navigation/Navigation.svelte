@@ -9,26 +9,23 @@
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
 	<div class="absolute bottom-20">
 		<div class="grid-cols-2 gap-x-14 lg:grid">
-			<Group title="WORKS">
-				<A href="/posts">{m.posts()}</A>
-
+			<Group title="POSTS">
 				{#each $mostUsedTags.tags as tag}
-					<A href="/posts?tags={tag}">{tag}</A>
+					<A href="/posts?tags={tag}">{tag.toLocaleUpperCase()}</A>
 				{/each}
 			</Group>
 
-			<Group title="INFO">
-				<A href="/info/about">About</A>
-				<A href="/auth/login">Profile</A>
+			<Group title="SERVICES">
+				<A href="/services">Services</A>
+				<!-- Services -->
+			</Group>
 
-				<A href="/info/services">Services</A>
+			<Group title="INFO">
+				<A href="/auth/login">My Profile</A>
+
+				<A href="/info/docs">Docs</A>
 				<A href="/info/calendar">Calendar</A>
 				<A href="/info/downloads">Download Center</A>
-
-				<!-- {#if session}
-				{:else}
-					<A href="/auth/login">Login / Register</A>
-				{/if} -->
 			</Group>
 
 			<div class="relative mb-10 w-80">
@@ -40,6 +37,7 @@
 					<li>
 						<p>Leave a comment</p>
 					</li>
+					<A href="/member">Members</A>
 				</ul>
 			</div>
 			<Group title="LANGUAGE / СМЕНИТЬ ЯЗЫК / 更改语言">

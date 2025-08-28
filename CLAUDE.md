@@ -15,7 +15,7 @@ Feavel Docs is a modern, full-stack blogging platform built with:
 
 ## Development Commands
 
-### Essential Development Commands
+### Essential Development Commands for bun
 
 ```bash
 # Development server
@@ -23,22 +23,6 @@ bun run dev
 
 # Type checking
 bun run check
-
-
-# Run all tests
-bun test
-
-# Run unit tests
-bun run test:unit
-
-# Run E2E tests
-bun run test:e2e
-
-# Production build
-bun run build
-
-# Preview production build
-bun run preview
 ```
 
 ### Project Structure
