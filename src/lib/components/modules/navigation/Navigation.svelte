@@ -1,9 +1,7 @@
 <script lang="ts">
 	import A from './NavLink.svelte';
 	import Group from './NavigationGroup.svelte';
-	import LangSwitch from '$lib/components/modules/LangSwitch.svelte';
 	import { mostUsedTags } from '$lib/stores/mostUsedTags';
-	import { m } from '$lib/paraglide/messages.js';
 </script>
 
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
@@ -20,15 +18,19 @@
 				<!-- Services -->
 			</Group>
 
-			<Group title="INFO">
+			<Group title="COMMUNITY">
+				<A href="/member/chat">Chat</A>
+				<A href="/member">Members</A>
 				<A href="/auth/login">My Profile</A>
+			</Group>
 
+			<Group title="RESOURCES">
 				<A href="/info/docs">Docs</A>
 				<A href="/info/calendar">Calendar</A>
 				<A href="/info/downloads">Download Center</A>
 			</Group>
 
-			<div class="relative mb-10 w-80">
+			<!-- <div class="relative mb-10 w-80">
 				<h1 class="absolute top-0 right-0 text-xs">Contact</h1>
 				<ul class="list">
 					<li>
@@ -39,12 +41,10 @@
 					</li>
 					<A href="/member">Members</A>
 				</ul>
-			</div>
+			</div> -->
+			<!-- 
 			<Group title="LANGUAGE / СМЕНИТЬ ЯЗЫК / 更改语言">
-				<div class="child:bg-transparent flex flex-row gap-2">
-					<LangSwitch />
-				</div>
-			</Group>
+			</Group> -->
 		</div>
 	</div>
 </div>

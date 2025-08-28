@@ -5,6 +5,7 @@
 	import HamburgerMenu from '$lib/components/modules/HamburgerMenu.svelte';
 	import Feavel from '$lib/components/modules/Feavel.svelte';
 	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
+	import LangSwitch from '$lib/components/modules/LangSwitch.svelte';
 
 	let { children, data } = $props();
 
@@ -22,7 +23,10 @@
 	<header class="fixed top-0 z-50 w-full px-4 pt-2 pb-1 lg:px-14 lg:pt-10">
 		<div class="flex items-center justify-between">
 			<Feavel />
-			<HamburgerMenu />
+			<div class="flex items-center gap-2">
+				<LangSwitch />
+				<HamburgerMenu />
+			</div>
 		</div>
 	</header>
 
