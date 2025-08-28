@@ -6,6 +6,7 @@
 	import Feavel from '$lib/components/modules/Feavel.svelte';
 	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
 	import LangSwitch from '$lib/components/modules/LangSwitch.svelte';
+	import CloudBackground from '$lib/components/modules/CloudBackground.svelte';
 
 	let { children, data } = $props();
 
@@ -32,6 +33,7 @@
 
 	<main class="mx-auto min-h-dvh pt-20">
 		{@render children()}
+		<CloudBackground />
 	</main>
 </div>
 

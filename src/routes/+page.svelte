@@ -1,5 +1,4 @@
 <script lang="ts">
-	import CloudBackground from '$lib/components/modules/CloudBackground.svelte';
 	import { modalProp } from '$lib/components/modules/HamburgerModalProp';
 </script>
 
@@ -11,6 +10,6 @@
 <button
 	onclick={modalProp.open}
 	class="fixed top-0 h-screen w-full self-center object-cover object-center"
+	aria-label="Open menu"
 >
-	<CloudBackground />
 </button>

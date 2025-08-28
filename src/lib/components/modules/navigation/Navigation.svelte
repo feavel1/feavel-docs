@@ -19,32 +19,16 @@
 			</Group>
 
 			<Group title="COMMUNITY">
-				<A href="/member/chat">Chat</A>
 				<A href="/member">Members</A>
 				<A href="/auth/login">My Profile</A>
+				<A href="/member/chat">Chat</A>
 			</Group>
 
 			<Group title="RESOURCES">
-				<A href="/info/docs">Docs</A>
-				<A href="/info/calendar">Calendar</A>
-				<A href="/info/downloads">Download Center</A>
+				<A href="/resources/calendar">Calendar</A>
+				<A href="/resources/docs">Docs</A>
+				<A href="/resources/downloads">Download Center</A>
 			</Group>
-
-			<!-- <div class="relative mb-10 w-80">
-				<h1 class="absolute top-0 right-0 text-xs">Contact</h1>
-				<ul class="list">
-					<li>
-						<p>FEAVEL DOCS</p>
-					</li>
-					<li>
-						<p>Leave a comment</p>
-					</li>
-					<A href="/member">Members</A>
-				</ul>
-			</div> -->
-			<!-- 
-			<Group title="LANGUAGE / СМЕНИТЬ ЯЗЫК / 更改语言">
-			</Group> -->
 		</div>
 	</div>
 </div>
