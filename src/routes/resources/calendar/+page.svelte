@@ -1,163 +1,96 @@
 <script lang="ts">
-	// See resources/docs/Calendar.md for docs
+	import EventCalendar from '$lib/components/modules/calendar/EventCalendar.svelte';
+	import type { Tables } from '$lib/types/database.types';
 
-	import {
-		Calendar,
-		TimeGrid,
-		Interaction,
-		DayGrid,
-		List,
-		ResourceTimeline,
-		ResourceTimeGrid
-	} from '@event-calendar/core';
-
-	let plugins = [TimeGrid, Interaction, DayGrid, List, ResourceTimeline, ResourceTimeGrid];
-
-	let options = {
-		view: 'timeGridWeek',
-		height: '800px',
-		headerToolbar: {
-			start: 'prev,next today',
-			center: 'title',
-			end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek resourceTimeGridWeek,resourceTimelineWeek'
+	// Mock data that fits the current Supabase events table structure
+	let mockEvents: Tables<'events'>[] = [
+		{
+			id: '1',
+			title: 'Studio Reservation',
+			description: 'Reservation for music recording session',
+			duration: '[2025-09-15 10:00:00,2025-09-15 12:00:00)',
+			event_type: 'reservation',
+			status: 'approved',
+			studio_id: 1,
+			service_id: 101,
+			user_id: 'user-123',
+			is_public: false,
+			metadata: { equipment: ['microphone', 'headphones'] } as any,
+			created_at: '2025-09-01T09:00:00Z',
+			updated_at: '2025-09-01T09:00:00Z'
 		},
-		resources: [
-			{ id: 1, title: 'Resource A' },
-			{ id: 2, title: 'Resource B' }
-		],
-		scrollTime: '09:00:00',
-		events: createEvents(),
-		views: {
-			timeGridWeek: { pointer: true },
-			resourceTimeGridWeek: { pointer: true },
-			resourceTimelineWeek: {
-				pointer: true,
-				slotMinTime: '09:00',
-				slotMaxTime: '21:00',
-				slotWidth: 80,
-				resources: [
-					{ id: 1, title: 'Resource A' },
-					{ id: 2, title: 'Resource B' },
-					{ id: 3, title: 'Resource C' },
-					{ id: 4, title: 'Resource D' },
-					{ id: 5, title: 'Resource E' },
-					{ id: 6, title: 'Resource F' },
-					{ id: 7, title: 'Resource G' },
-					{ id: 8, title: 'Resource H' },
-					{
-						id: 9,
-						title: 'Resource I',
-						children: [
-							{ id: 10, title: 'Resource J' },
-							{ id: 11, title: 'Resource K' },
-							{
-								id: 12,
-								title: 'Resource L',
-								children: [
-									{ id: 13, title: 'Resource M' },
-									{ id: 14, title: 'Resource N' },
-									{ id: 15, title: 'Resource O' }
-								]
-							}
-						]
-					}
-				]
-			}
+		{
+			id: '2',
+			title: 'Seminar: Music Production Basics',
+			description: 'Introduction to music production techniques',
+			duration: '[2025-09-16 14:00:00,2025-09-16 16:00:00)',
+			event_type: 'seminar',
+			status: 'pending',
+			studio_id: 2,
+			service_id: 102,
+			user_id: 'user-456',
+			is_public: true,
+			metadata: { capacity: 20 } as any,
+			created_at: '2025-09-02T10:30:00Z',
+			updated_at: '2025-09-02T10:30:00Z'
 		},
-		dayMaxEvents: true,
-		nowIndicator: true,
-		selectable: true
-	};
-
-	function createEvents() {
-		let days = [];
-		for (let i = 0; i < 7; ++i) {
-			let day = new Date();
-			let diff = i - day.getDay();
-			day.setDate(day.getDate() + diff);
-			days[i] = day.getFullYear() + '-' + _pad(day.getMonth() + 1) + '-' + _pad(day.getDate());
+		{
+			id: '3',
+			title: 'Studio Maintenance',
+			description: 'Regular equipment maintenance and calibration',
+			duration: '[2025-09-17 09:00:00,2025-09-17 11:00:00)',
+			event_type: 'availability',
+			status: 'approved',
+			studio_id: 1,
+			service_id: null,
+			user_id: null,
+			is_public: false,
+			metadata: { maintenance_type: 'equipment' } as any,
+			created_at: '2025-09-03T11:15:00Z',
+			updated_at: '2025-09-03T11:15:00Z'
+		},
+		{
+			id: '4',
+			title: 'Private Lesson: Guitar Techniques',
+			description: 'One-on-one guitar lesson',
+			duration: '[2025-09-18 15:00:00,2025-09-18 16:00:00)',
+			event_type: 'reservation',
+			status: 'approved',
+			studio_id: 3,
+			service_id: 103,
+			user_id: 'user-789',
+			is_public: false,
+			metadata: { skill_level: 'intermediate' } as any,
+			created_at: '2025-09-04T14:20:00Z',
+			updated_at: '2025-09-04T14:20:00Z'
+		},
+		{
+			id: '5',
+			title: 'Open House Event',
+			description: 'Studio open house for prospective clients',
+			duration: '[2025-09-20 12:00:00,2025-09-20 16:00:00)',
+			event_type: 'seminar',
+			status: 'approved',
+			studio_id: 1,
+			service_id: null,
+			user_id: null,
+			is_public: true,
+			metadata: { refreshments: true } as any,
+			created_at: '2025-09-05T16:45:00Z',
+			updated_at: '2025-09-05T16:45:00Z'
 		}
+	];
 
-		return [
-			{ start: days[0] + ' 00:00', end: days[0] + ' 09:00', resourceId: 1, display: 'background' },
-			{ start: days[1] + ' 12:00', end: days[1] + ' 14:00', resourceId: 2, display: 'background' },
-			{ start: days[2] + ' 17:00', end: days[2] + ' 24:00', resourceId: 1, display: 'background' },
-			{
-				start: days[0] + ' 10:00',
-				end: days[0] + ' 14:00',
-				resourceId: 1,
-				title: 'The calendar can display background and regular events',
-				color: '#FE6B64'
-			},
-			{
-				start: days[1] + ' 16:00',
-				end: days[2] + ' 08:00',
-				resourceId: 2,
-				title: 'An event may span to another day',
-				color: '#B29DD9'
-			},
-			{
-				start: days[2] + ' 09:00',
-				end: days[2] + ' 13:00',
-				resourceId: 2,
-				title:
-					'Events can be assigned to resources and the calendar has the resources view built-in',
-				color: '#779ECB'
-			},
-			{
-				start: days[3] + ' 14:00',
-				end: days[3] + ' 20:00',
-				resourceId: 1,
-				title: '',
-				color: '#FE6B64'
-			},
-			{
-				start: days[3] + ' 15:00',
-				end: days[3] + ' 18:00',
-				resourceId: 1,
-				title: 'Overlapping events are positioned properly',
-				color: '#779ECB'
-			},
-			{
-				start: days[5] + ' 10:00',
-				end: days[5] + ' 16:00',
-				resourceId: 2,
-				title: { html: 'You have complete control over the <i><b>display</b></i> of events…' },
-				color: '#779ECB'
-			},
-			{
-				start: days[5] + ' 14:00',
-				end: days[5] + ' 19:00',
-				resourceId: 2,
-				title: '…and you can drag and drop the events!',
-				color: '#FE6B64'
-			},
-			{
-				start: days[5] + ' 18:00',
-				end: days[5] + ' 21:00',
-				resourceId: 2,
-				title: '',
-				color: '#B29DD9'
-			},
-			{
-				start: days[1],
-				end: days[3],
-				resourceId: 1,
-				title: 'All-day events can be displayed at the top',
-				color: '#B29DD9',
-				allDay: true
-			}
-		];
-	}
-
-	function _pad(num: any) {
-		let norm = Math.floor(Math.abs(num));
-		return (norm < 10 ? '0' : '') + norm;
+	// Handle event click
+	function handleEventClick(event: Tables<'events'>) {
+		console.log('Event clicked:', event);
+		// You can implement navigation or a modal here
 	}
 </script>
 
-<div class="h-full p-10 pt-10">
-	<!-- <button class="btn mb-3">Change slot duration</button> -->
-
-	<Calendar {plugins} {options} />
+<div class="p-6">
+	<h1 class="text-2xl font-bold mb-6">Event Calendar</h1>
+	<div class="bg-white rounded-lg shadow p-4">
+		<EventCalendar events={mockEvents} onEventClick={handleEventClick} />
+	</div>
 </div>

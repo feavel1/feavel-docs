@@ -18,14 +18,14 @@ calendar modules: src/lib/components/modules/calendar/
 - Made service.description jsonb to support current text editor
 - Created direct relationship between services and events (one-to-many: one service can have multiple events, each event belongs to one service)
 
-<!-- 3. Calendar Implementation
+3. Calendar component Implementation
 
-- Keep the existing EventCalendar component for detailed views
-- Implement a simpler availability calendar using shadcn-svelte components for
-  studio owners
-- Create both studio-specific and unified public calendar views
+- Create an EventCalendar component for detailed views (there is a demo in calendar/+page.svelte.demo)
+- mock some data that will fit current supabase events table
+- propose changes for database or
+- Add the component to +page.svelte with mock data
 
-4. Reservation Workflow
+<!-- 4. Reservation Workflow
 
 - Implement a request/approval system for reservations
 - Allow automatic confirmation for free events
