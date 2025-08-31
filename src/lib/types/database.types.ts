@@ -337,6 +337,7 @@ export type Database = {
           id: number
           name: string
           price: number
+          service_type: string
           status: Database["public"]["Enums"]["status"] | null
         }
         Insert: {
@@ -349,6 +350,7 @@ export type Database = {
           id: number
           name: string
           price: number
+          service_type?: string
           status?: Database["public"]["Enums"]["status"] | null
         }
         Update: {
@@ -361,6 +363,7 @@ export type Database = {
           id?: number
           name?: string
           price?: number
+          service_type?: string
           status?: Database["public"]["Enums"]["status"] | null
         }
         Relationships: [
@@ -371,6 +374,81 @@ export type Database = {
             referencedRelation: "studios"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      events: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          title: string
+          description: string | null
+          start_time: string
+          end_time: string
+          time_range: unknown | null
+          event_type: string
+          status: string
+          service_id: number | null
+          studio_id: number
+          user_id: string | null
+          is_public: boolean | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          title: string
+          description?: string | null
+          start_time: string
+          end_time: string
+          event_type: string
+          status?: string
+          service_id?: number | null
+          studio_id: number
+          user_id?: string | null
+          is_public?: boolean | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          title?: string
+          description?: string | null
+          start_time?: string
+          end_time?: string
+          time_range?: unknown | null
+          event_type?: string
+          status?: string
+          service_id?: number | null
+          studio_id?: number
+          user_id?: string | null
+          is_public?: boolean | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
         ]
       }
       services_category: {
