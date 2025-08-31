@@ -3,9 +3,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Eye, Heart, Plus, Search, Clock } from '@lucide/svelte';
-	import MultiTagSelect from '$lib/components/modules/MultiTagSelect.svelte';
-	import SingleSelect from '$lib/components/modules/SingleSelect.svelte';
-	import PostCard from '$lib/components/modules/PostCard.svelte';
+	import MultiTagSelect from '$lib/components/modules/interactive/MultiTagSelect.svelte';
+	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
+	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
 	import { getPostLikes } from '$lib/utils/posts';
 
 	interface Post {

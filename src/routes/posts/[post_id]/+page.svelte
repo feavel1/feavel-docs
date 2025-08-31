@@ -3,7 +3,9 @@
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import { Editor, CommentSection, LikeButton } from '$lib/components/modules';
+	import Editor from '$lib/components/modules/content/Editor.svelte';
+	import CommentSection from '$lib/components/modules/content/CommentSection.svelte';
+	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 	import { getAvatarUrl } from '$lib/utils/user';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 

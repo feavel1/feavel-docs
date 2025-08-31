@@ -20,9 +20,9 @@
 
 			<Group title="COMMUNITY">
 				<A href="/member">Members</A>
-				<A href="/studios">Chat</A>
+				<A href="/studio">Studios</A>
 				<A href="/auth/login">My Profile</A>
-				<A href="/member/chat">Chat</A>
+				<A href="/messages">Messages</A>
 			</Group>
 
 			<Group title="RESOURCES">

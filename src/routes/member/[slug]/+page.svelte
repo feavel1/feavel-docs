@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProfileCard } from '$lib/components/modules';
+	import ProfileCard from '$lib/components/modules/cards/ProfileCard.svelte';
 
 	const { data: propsData } = $props();
 	const { userProfile, isOwnProfile, supabase } = propsData;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ServiceCard from '$lib/components/modules/ServiceCard.svelte';
+	import ServiceCard from '$lib/components/modules/cards/ServiceCard.svelte';
 
 	interface Service {
 		id: number;

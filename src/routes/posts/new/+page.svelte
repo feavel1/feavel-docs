@@ -5,7 +5,8 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
 	import { ArrowLeft, Save, Eye } from '@lucide/svelte';
-	import { Editor, MultiTagSelect } from '$lib/components/modules';
+	import Editor from '$lib/components/modules/content/Editor.svelte';
+	import MultiTagSelect from '$lib/components/modules/interactive/MultiTagSelect.svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';

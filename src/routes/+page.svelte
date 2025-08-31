@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { modalProp } from '$lib/components/modules/HamburgerModalProp';
+	import { modalProp } from '$lib/components/modules/navigation/HamburgerModalProp';
 </script>
 
 <svelte:head>

@@ -2,11 +2,11 @@
 	import '../app.css';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
-	import HamburgerMenu from '$lib/components/modules/HamburgerMenu.svelte';
-	import Feavel from '$lib/components/modules/Feavel.svelte';
+	import HamburgerMenu from '$lib/components/modules/navigation/HamburgerMenu.svelte';
+	import Feavel from '$lib/components/modules/layout/Feavel.svelte';
 	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
-	import LangSwitch from '$lib/components/modules/LangSwitch.svelte';
-	import CloudBackground from '$lib/components/modules/CloudBackground.svelte';
+	import LangSwitch from '$lib/components/modules/layout/LangSwitch.svelte';
+	import CloudBackground from '$lib/components/modules/layout/CloudBackground.svelte';
 
 	let { children, data } = $props();
 

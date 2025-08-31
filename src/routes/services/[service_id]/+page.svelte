@@ -4,23 +4,6 @@
 	import { ArrowLeft, Calendar, User, Phone } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
-	interface Service {
-		id: number;
-		name: string;
-		price: number;
-		description: any;
-		cover_url?: string;
-		highlights: string[];
-		service_type: string;
-		status: string;
-		created_at: string;
-		created_by: number;
-		studios: {
-			name: string;
-			description: string;
-			contact_phone: number;
-		};
-	}
 
 	let { data } = $props();
 	let { service, session } = data;
@@ -64,7 +47,7 @@
 					<div class="mb-6 flex items-center gap-4 text-muted-foreground">
 						<div class="flex items-center gap-2">
 							<User class="h-4 w-4" />
-							<span>{service.studios.name}</span>
+							<span>{service.studios[0]?.name}</span>
 						</div>
 						<div class="flex items-center gap-2">
 							<Calendar class="h-4 w-4" />
@@ -141,18 +124,18 @@
 					<div class="flex-shrink-0">
 						<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
 							<span class="text-lg font-medium text-gray-700">
-								{service.studios.name.charAt(0).toUpperCase()}
+								{service.studios[0]?.name.charAt(0).toUpperCase()}
 							</span>
 						</div>
 					</div>
 					<div class="flex-1">
-						<p class="font-medium">{service.studios.name}</p>
+						<p class="font-medium">{service.studios[0]?.name}</p>
 						<p class="mb-2 text-sm text-muted-foreground">
-							{service.studios.description}
+							{service.studios[0]?.description}
 						</p>
 						<div class="flex items-center gap-2 text-sm">
 							<Phone class="h-4 w-4" />
-							<span>{service.studios.contact_phone}</span>
+							<span>{service.studios[0]?.contact_phone}</span>
 						</div>
 					</div>
 				</div>
