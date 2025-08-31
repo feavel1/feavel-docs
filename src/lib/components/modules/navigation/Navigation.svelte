@@ -20,6 +20,7 @@
 
 			<Group title="COMMUNITY">
 				<A href="/member">Members</A>
+				<A href="/studios">Chat</A>
 				<A href="/auth/login">My Profile</A>
 				<A href="/member/chat">Chat</A>
 			</Group>

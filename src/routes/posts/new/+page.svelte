@@ -163,10 +163,6 @@
 			isUploading = false;
 		}
 	}
-
-	function handleBack() {
-		goto('/posts');
-	}
 </script>
 
 <svelte:head>
@@ -177,7 +173,7 @@
 <div class="container mx-auto max-w-4xl px-4 py-8">
 	<!-- Header -->
 	<div class="mb-6 flex items-center justify-between">
-		<Button variant="ghost" onclick={handleBack}>
+		<Button variant="ghost" href="/posts">
 			<ArrowLeft class="mr-2 h-4 w-4" />
 			Back to Posts
 		</Button>
@@ -208,12 +204,13 @@
 							bind:value={postTitle}
 							placeholder="Enter your post title..."
 							required
+							class="mt-2"
 						/>
 					</div>
 
 					<div>
 						<Label for="cover">Cover Image (optional)</Label>
-						<div class="space-y-2">
+						<div class="mt-2 space-y-2">
 							<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
 							{#if coverPreview}
 								<div class="mt-2">
@@ -292,6 +289,7 @@
 							id="new-tag"
 							placeholder="Type tag name and press Enter"
 							onkeydown={handleAddTag}
+							class="mt-2"
 						/>
 					</div>
 
