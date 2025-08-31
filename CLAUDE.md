@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Feavel Docs is a modern, full-stack blogging platform built with:
 
 - **Frontend**: SvelteKit 5 with TypeScript and Svelte 5 runes
-- **Backend**: Supabase (PostgreSQL, Auth, Storage) `src/lib/types/database.types.ts`
+- **Backend**: Supabase (PostgreSQL, Auth, Storage) `src/lib/types/database.types.ts (read-only)`
 - **UI**: shadcn-svelte components with Tailwind CSS
 - **Editor**: Editor.js with advanced plugins
 - **i18n**: Paraglide.js for internationalization (EN, CN, RU)

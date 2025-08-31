@@ -2,20 +2,21 @@ Setup:
 main calendar page: src/routes/resources/calendar/+page.svelte
 calendar modules: src/lib/components/modules/calendar/
 
-1. Database Schema Design
+1. Database Schema Design (COMPLETED)
 
-- Create events table to store all calendar events
-- Add fields for event type (reservation, availability, seminar, etc.)
-- Include status field for approval workflow (pending, approved, rejected, canceled)
-- Link events to services and studios
-- Use PostgreSQL range types (tstzrange) for efficient time-based queries
+- Created events table with PostgreSQL range types (tstzrange) as a single duration column
+- Added exclusion constraints to prevent overlapping events for the same studio
+- Added fields for event type (reservation, availability, seminar, etc.)
+- Included status field for approval workflow (pending, approved, rejected, canceled)
+- Linked events to services and studios
+- Eliminated separate start_time and end_time columns in favor of a single duration column
 
-2. Service Integration
+2. Service Integration (COMPLETED)
 
-- Create a new services table to support reservation types based on the older service table.
-- Add a field to distinguish between single download, reservation, and package delivery services
-- new service.description should be jsonb to support current text editor
-- Create relationships between services and events (create a new table)
+- Created a new services_v2 table to support reservation types
+- Added a field to distinguish between single download, reservation, and package delivery services
+- Made service.description jsonb to support current text editor
+- Created direct relationship between services and events (one-to-many: one service can have multiple events, each event belongs to one service)
 
 <!-- 3. Calendar Implementation
 
