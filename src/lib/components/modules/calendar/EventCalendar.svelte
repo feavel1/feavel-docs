@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { Calendar, TimeGrid, Interaction, DayGrid, List } from '@event-calendar/core';
+	import {
+		Calendar,
+		TimeGrid,
+		Interaction,
+		DayGrid,
+		List,
+		ResourceTimeline,
+		ResourceTimeGrid
+	} from '@event-calendar/core';
 	import type { Tables } from '$lib/types/database.types';
 
 	// Define the component props
@@ -9,7 +17,7 @@
 	}>();
 
 	// Calendar plugins
-	let plugins = [TimeGrid, Interaction, DayGrid, List];
+	let plugins = [TimeGrid, Interaction, DayGrid, List, ResourceTimeline, ResourceTimeGrid];
 
 	// Helper function to parse PostgreSQL range type
 	function parseRange(duration: unknown): { start: string; end: string } {
@@ -35,17 +43,32 @@
 		};
 	}
 
-	// Convert Supabase events to calendar events
+	// Convert Supabase events to calendar events with resource support
 	let calendarEvents = $derived(
 		events.map((event: Tables<'events'>) => {
 			const { start, end } = parseRange(event.duration);
+
+			// Determine color based on event type
+			let color = '#779ECB'; // Default color
+			switch (event.event_type) {
+				case 'reservation':
+					color = '#FE6B64';
+					break;
+				case 'seminar':
+					color = '#B29DD9';
+					break;
+				case 'availability':
+					color = '#779ECB';
+					break;
+			}
 
 			return {
 				id: event.id,
 				title: event.title,
 				start: start,
 				end: end,
-				// You can add more properties based on event data
+				resourceId: event.studio_id,
+				color: color,
 				extendedProps: {
 					description: event.description,
 					event_type: event.event_type,
@@ -57,6 +80,38 @@
 		})
 	);
 
+	// Define hierarchical resources based on studios
+	let resources = $derived([
+		{ id: 1, title: 'Studio A' },
+		{ id: 2, title: 'Studio B' },
+		{ id: 3, title: 'Studio C' },
+		{
+			id: 4,
+			title: 'Main Studios',
+			children: [
+				{ id: 5, title: 'Studio D' },
+				{ id: 6, title: 'Studio E' },
+				{
+					id: 7,
+					title: 'Premium Studios',
+					children: [
+						{ id: 8, title: 'Studio F' },
+						{ id: 9, title: 'Studio G' },
+						{
+							id: 10,
+							title: 'VIP Studios',
+							children: [
+								{ id: 11, title: 'Studio H' },
+								{ id: 12, title: 'Studio I' },
+								{ id: 13, title: 'Studio J' }
+							]
+						}
+					]
+				}
+			]
+		}
+	]);
+
 	// Handle event click
 	function handleEventClick(info: any) {
 		if (!onEventClick) return;
@@ -67,15 +122,26 @@
 
 	// Calendar options
 	let options = $derived({
-		view: 'timeGridWeek',
+		view: 'resourceTimeGridWeek',
 		height: '800px',
 		headerToolbar: {
 			start: 'prev,next today',
 			center: 'title',
-			end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+			end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek resourceTimeGridWeek,resourceTimelineWeek'
 		},
+		resources: resources,
 		scrollTime: '09:00:00',
 		events: calendarEvents,
+		views: {
+			timeGridWeek: { pointer: true },
+			resourceTimeGridWeek: { pointer: true },
+			resourceTimelineWeek: {
+				pointer: true,
+				slotMinTime: '09:00',
+				slotMaxTime: '21:00',
+				slotWidth: 80
+			}
+		},
 		dayMaxEvents: true,
 		nowIndicator: true,
 		selectable: true,

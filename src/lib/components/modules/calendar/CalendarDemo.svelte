@@ -1,6 +1,4 @@
 <script lang="ts">
-	// See resources/docs/Calendar.md for docs
-
 	import {
 		Calendar,
 		TimeGrid,
@@ -12,62 +10,6 @@
 	} from '@event-calendar/core';
 
 	let plugins = [TimeGrid, Interaction, DayGrid, List, ResourceTimeline, ResourceTimeGrid];
-
-	let options = {
-		view: 'timeGridWeek',
-		height: '800px',
-		headerToolbar: {
-			start: 'prev,next today',
-			center: 'title',
-			end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek resourceTimeGridWeek,resourceTimelineWeek'
-		},
-		resources: [
-			{ id: 1, title: 'Resource A' },
-			{ id: 2, title: 'Resource B' }
-		],
-		scrollTime: '09:00:00',
-		events: createEvents(),
-		views: {
-			timeGridWeek: { pointer: true },
-			resourceTimeGridWeek: { pointer: true },
-			resourceTimelineWeek: {
-				pointer: true,
-				slotMinTime: '09:00',
-				slotMaxTime: '21:00',
-				slotWidth: 80,
-				resources: [
-					{ id: 1, title: 'Resource A' },
-					{ id: 2, title: 'Resource B' },
-					{ id: 3, title: 'Resource C' },
-					{ id: 4, title: 'Resource D' },
-					{ id: 5, title: 'Resource E' },
-					{ id: 6, title: 'Resource F' },
-					{ id: 7, title: 'Resource G' },
-					{ id: 8, title: 'Resource H' },
-					{
-						id: 9,
-						title: 'Resource I',
-						children: [
-							{ id: 10, title: 'Resource J' },
-							{ id: 11, title: 'Resource K' },
-							{
-								id: 12,
-								title: 'Resource L',
-								children: [
-									{ id: 13, title: 'Resource M' },
-									{ id: 14, title: 'Resource N' },
-									{ id: 15, title: 'Resource O' }
-								]
-							}
-						]
-					}
-				]
-			}
-		},
-		dayMaxEvents: true,
-		nowIndicator: true,
-		selectable: true
-	};
 
 	function createEvents() {
 		let days = [];
@@ -154,6 +96,62 @@
 		let norm = Math.floor(Math.abs(num));
 		return (norm < 10 ? '0' : '') + norm;
 	}
+
+	let options = {
+		view: 'timeGridWeek',
+		height: '800px',
+		headerToolbar: {
+			start: 'prev,next today',
+			center: 'title',
+			end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek resourceTimeGridWeek,resourceTimelineWeek'
+		},
+		resources: [
+			{ id: 1, title: 'Resource A' },
+			{ id: 2, title: 'Resource B' }
+		],
+		scrollTime: '09:00:00',
+		events: createEvents(),
+		views: {
+			timeGridWeek: { pointer: true },
+			resourceTimeGridWeek: { pointer: true },
+			resourceTimelineWeek: {
+				pointer: true,
+				slotMinTime: '09:00',
+				slotMaxTime: '21:00',
+				slotWidth: 80,
+				resources: [
+					{ id: 1, title: 'Resource A' },
+					{ id: 2, title: 'Resource B' },
+					{ id: 3, title: 'Resource C' },
+					{ id: 4, title: 'Resource D' },
+					{ id: 5, title: 'Resource E' },
+					{ id: 6, title: 'Resource F' },
+					{ id: 7, title: 'Resource G' },
+					{ id: 8, title: 'Resource H' },
+					{
+						id: 9,
+						title: 'Resource I',
+						children: [
+							{ id: 10, title: 'Resource J' },
+							{ id: 11, title: 'Resource K' },
+							{
+								id: 12,
+								title: 'Resource L',
+								children: [
+									{ id: 13, title: 'Resource M' },
+									{ id: 14, title: 'Resource N' },
+									{ id: 15, title: 'Resource O' }
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		dayMaxEvents: true,
+		nowIndicator: true,
+		selectable: true
+	};
 </script>
 
 <div class="h-full p-10 pt-10">
