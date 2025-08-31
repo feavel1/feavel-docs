@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { Search } from '@lucide/svelte';
-	import { MultiTagSelect } from '$lib/components/modules';
 	import type { Tag } from '$lib/types/posts';
+	import MultiTagSelect from '../interactive/MultiTagSelect.svelte';
 
 	interface Props {
 		tags: Tag[];
