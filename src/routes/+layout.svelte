@@ -5,6 +5,7 @@
 	import HamburgerMenu from '$lib/components/modules/navigation/HamburgerMenu.svelte';
 	import Feavel from '$lib/components/modules/layout/Feavel.svelte';
 	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
+	import { updateMostUsedCategories } from '$lib/stores/mostUsedCategories';
 	import LangSwitch from '$lib/components/modules/layout/LangSwitch.svelte';
 	import CloudBackground from '$lib/components/modules/layout/CloudBackground.svelte';
 
@@ -12,6 +13,9 @@
 
 	// Initialize the most used tags store with data from the server
 	updateMostUsedTags(data.mostUsedTags || []);
+	
+	// Initialize the most used categories store with data from the server
+	updateMostUsedCategories(data.mostUsedCategories || []);
 </script>
 
 <svelte:head>

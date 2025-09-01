@@ -41,6 +41,7 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 		session,
 		user,
 		userProfile: data.userProfile,
-		mostUsedTags: data.mostUsedTags
+		mostUsedTags: data.mostUsedTags,
+		mostUsedCategories: data.mostUsedCategories
 	};
 };

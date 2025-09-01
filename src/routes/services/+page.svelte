@@ -1,5 +1,11 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import ServiceCard from '$lib/components/modules/cards/ServiceCard.svelte';
+	import { Input } from '$lib/components/ui/input';
+	import { Search, Clock, DollarSign } from '@lucide/svelte';
+	import MultiCategorySelect from '$lib/components/modules/interactive/MultiCategorySelect.svelte';
+	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
+	import type { ServiceCategory } from '$lib/utils/serviceCategories';
 
 	interface Service {
 		id: number;
@@ -10,15 +16,81 @@
 		service_type: string;
 		status: string;
 		created_at: string;
+		services_category_rel?: Array<{
+			services_category: {
+				category_name: string;
+			};
+		}>;
 	}
 
-	let { data } = $props();
-	let { services } = data;
+	interface PageData {
+		services: Service[];
+		categories: ServiceCategory[];
+	}
+
+	let { data }: { data: PageData } = $props();
+	let { services, categories } = data;
 
 	let searchQuery = $state('');
+	let selectedCategories = $state<string[]>([]);
+	let sortBy = $state<'newest' | 'price_low' | 'price_high'>('newest');
+
+	// Define sort options for SingleSelect component
+	let options = $state([
+		{ value: 'newest', label: 'Newest', icon: Clock },
+		{ value: 'price_low', label: 'Price: Low to High', icon: DollarSign },
+		{ value: 'price_high', label: 'Price: High to Low', icon: DollarSign }
+	]);
+
+	// Initialize selectedCategories and sortBy from URL parameters
+	let urlCategories = $derived(page.url.searchParams.get('categories'));
+	let urlSort = $derived(page.url.searchParams.get('sort'));
+
+	$effect(() => {
+		if (urlCategories) {
+			selectedCategories = urlCategories.split(',').map((category) => decodeURIComponent(category.trim()));
+		} else {
+			selectedCategories = [];
+		}
+
+		if (urlSort && ['newest', 'price_low', 'price_high'].includes(urlSort)) {
+			sortBy = urlSort as 'newest' | 'price_low' | 'price_high';
+		} else {
+			sortBy = 'newest';
+		}
+	});
+
+	$effect(() => {
+		// Update URL when selectedCategories or sortBy change
+		const newUrl = new URL(page.url);
+
+		// Update categories parameter
+		if (selectedCategories.length > 0) {
+			const newCategoriesParam = selectedCategories.map((category) => encodeURIComponent(category)).join(',');
+			newUrl.searchParams.set('categories', newCategoriesParam);
+		} else {
+			newUrl.searchParams.delete('categories');
+		}
+
+		// Update sort parameter
+		if (sortBy !== 'newest') {
+			newUrl.searchParams.set('sort', sortBy);
+		} else {
+			newUrl.searchParams.delete('sort');
+		}
+
+		history.replaceState(null, '', newUrl.toString());
+	});
 
 	let filteredServices = $derived.by(() => {
 		let filtered = [...services]; // Create a copy to avoid mutating original
+
+		// Filter by categories
+		if (selectedCategories.length > 0) {
+			filtered = filtered.filter((service: Service) =>
+				service.services_category_rel?.some((rel) => selectedCategories.includes(rel.services_category.category_name))
+			);
+		}
 
 		// Filter by search query
 		if (searchQuery) {
@@ -29,8 +101,22 @@
 			);
 		}
 
+		// Sort services
+		filtered.sort((a, b) => {
+			switch (sortBy) {
+				case 'price_low':
+					return a.price - b.price;
+				case 'price_high':
+					return b.price - a.price;
+				case 'newest':
+				default:
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+			}
+		});
+
 		return filtered;
 	});
+
 </script>
 
 <svelte:head>
@@ -45,14 +131,24 @@
 		<p class="text-muted-foreground">Explore our range of professional services</p>
 	</div>
 
-	<!-- Search -->
-	<div class="mb-6 max-w-md">
-		<input
-			type="text"
-			placeholder="Search services..."
-			bind:value={searchQuery}
-			class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
-		/>
+	<!-- Search, Filters, and Sorting -->
+	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div class="relative max-w-md flex-1">
+			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+			<Input placeholder="Search services..." bind:value={searchQuery} class="pl-10" />
+		</div>
+
+		<div class="flex flex-wrap items-center gap-3">
+			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
+
+			<MultiCategorySelect
+				{categories}
+				bind:selectedCategories
+				placeholder="Filter by categories..."
+				label=""
+				showSearch={false}
+			/>
+		</div>
 	</div>
 
 	<!-- Services Grid -->
@@ -91,6 +187,8 @@
 			<p class="text-muted-foreground">
 				{#if searchQuery}
 					No services match your search criteria.
+				{:else if selectedCategories.length > 0}
+					No services found with the selected categories.
 				{:else}
 					No services are currently available.
 				{/if}

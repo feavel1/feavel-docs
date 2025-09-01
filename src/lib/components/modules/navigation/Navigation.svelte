@@ -2,6 +2,7 @@
 	import A from './NavLink.svelte';
 	import Group from './NavigationGroup.svelte';
 	import { mostUsedTags } from '$lib/stores/mostUsedTags';
+	import { mostUsedCategories } from '$lib/stores/mostUsedCategories';
 </script>
 
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
@@ -14,8 +15,10 @@
 			</Group>
 
 			<Group title="SERVICES">
-				<A href="/services">Services</A>
-				<!-- Services -->
+				<A href="/services">All Services</A>
+				{#each $mostUsedCategories.categories as category}
+					<A href="/services?categories={category}">{category.toLocaleUpperCase()}</A>
+				{/each}
 			</Group>
 
 			<Group title="COMMUNITY">
