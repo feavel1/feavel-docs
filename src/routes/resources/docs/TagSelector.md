@@ -17,7 +17,6 @@ The post management system has been refactored to use a more interconnected arch
 #### **API Endpoints**
 
 - **`/api/posts`**: Handles POST (create), PUT (update), DELETE (delete) operations
-- **`/api/tags`**: Provides tag data for the application
 - **Utility Functions**: Uses existing utility functions for tag operations
 
 ### **Client-Side Improvements**
