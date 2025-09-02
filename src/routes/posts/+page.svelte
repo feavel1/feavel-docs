@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Eye, Heart, Plus, Search, Clock } from '@lucide/svelte';
-	import MultiTagSelect from '$lib/components/modules/interactive/MultiTagSelect.svelte';
+	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
 	import { getPostLikes } from '$lib/utils/posts';
@@ -149,12 +149,15 @@
 		<div class="flex flex-wrap items-center gap-3">
 			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
 
-			<MultiTagSelect
-				{tags}
-				bind:selectedTags
+			<MultiSelect
+				items={tags}
+				bind:selectedItems={selectedTags}
+				itemNameProperty="tag_name"
 				placeholder="Filter by tags..."
 				label=""
 				showSearch={false}
+				searchPlaceholder="Search tags..."
+				emptyMessage="No tags found."
 			/>
 		</div>
 	</div>

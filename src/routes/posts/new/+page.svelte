@@ -6,7 +6,7 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { ArrowLeft, Save, Eye } from '@lucide/svelte';
 	import Editor from '$lib/components/modules/content/Editor.svelte';
-	import MultiTagSelect from '$lib/components/modules/interactive/MultiTagSelect.svelte';
+	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
@@ -294,12 +294,15 @@
 						/>
 					</div>
 
-					<MultiTagSelect
-						tags={$availableTags}
-						bind:selectedTags
+					<MultiSelect
+						items={$availableTags}
+						bind:selectedItems={selectedTags}
+						itemNameProperty="tag_name"
 						placeholder="Select tags..."
 						label="Available Tags"
 						showSearch={true}
+						searchPlaceholder="Search tags..."
+						emptyMessage="No tags found."
 					/>
 				</CardContent>
 			</Card>

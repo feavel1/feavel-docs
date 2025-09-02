@@ -3,7 +3,7 @@
 	import ServiceCard from '$lib/components/modules/cards/ServiceCard.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Search, Clock, DollarSign } from '@lucide/svelte';
-	import MultiCategorySelect from '$lib/components/modules/interactive/MultiCategorySelect.svelte';
+	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import type { ServiceCategory } from '$lib/utils/serviceCategories';
 
@@ -130,12 +130,15 @@
 		<div class="flex flex-wrap items-center gap-3">
 			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
 
-			<MultiCategorySelect
-				{categories}
-				bind:selectedCategories
+			<MultiSelect
+				items={categories}
+				bind:selectedItems={selectedCategories}
+				itemNameProperty="category_name"
 				placeholder="Filter by categories..."
 				label=""
 				showSearch={false}
+				searchPlaceholder="Search categories..."
+				emptyMessage="No categories found."
 			/>
 		</div>
 	</div>

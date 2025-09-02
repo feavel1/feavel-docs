@@ -1,18 +1,9 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { Search } from '@lucide/svelte';
-	import type { Tag } from '$lib/types/posts';
-	import MultiTagSelect from '../interactive/MultiTagSelect.svelte';
+	import MultiSelect from '../interactive/MultiSelect.svelte';
 
-	interface Props {
-		tags: Tag[];
-		searchQuery: string;
-		selectedTags: string[];
-		onSearchChange: (query: string) => void;
-		onTagsChange: (tags: string[]) => void;
-	}
-
-	let { tags, searchQuery, selectedTags }: Props = $props();
+	let { tags, searchQuery, selectedTags } = $props();
 </script>
 
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -22,12 +13,15 @@
 	</div>
 
 	<div class="w-[300px]">
-		<MultiTagSelect
-			{tags}
-			bind:selectedTags
+		<MultiSelect
+			items={tags}
+			bind:selectedItems={selectedTags}
+			itemNameProperty="tag_name"
 			placeholder="Filter by tags..."
 			label=""
 			showSearch={false}
+			searchPlaceholder="Search tags..."
+			emptyMessage="No tags found."
 		/>
 	</div>
 </div>
