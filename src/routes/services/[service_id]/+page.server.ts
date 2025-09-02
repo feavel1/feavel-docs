@@ -25,7 +25,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			status,
 			created_at,
 			created_by,
-			studios!inner(name, description, contact_phone)
+			studios!services_v2_created_by_fkey(name, description, contact_phone),
+			services_category_rel(
+				services_category!inner(category_name)
+			)
 		`
 		)
 		.eq('id', service_id)

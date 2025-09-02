@@ -16,6 +16,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			service_type,
 			status,
 			created_at,
+			created_by,
+			studios!services_v2_created_by_fkey(name),
 			services_category_rel(
 				services_category!inner(category_name)
 			)

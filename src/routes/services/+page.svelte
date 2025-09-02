@@ -7,24 +7,8 @@
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import type { ServiceCategory } from '$lib/utils/serviceCategories';
 
-	interface Service {
-		id: number;
-		name: string;
-		price: number;
-		cover_url?: string;
-		highlights: string[];
-		service_type: string;
-		status: string;
-		created_at: string;
-		services_category_rel?: Array<{
-			services_category: {
-				category_name: string;
-			};
-		}>;
-	}
-
 	interface PageData {
-		services: Service[];
+		services: any[];
 		categories: ServiceCategory[];
 	}
 
@@ -91,8 +75,8 @@
 
 		// Filter by categories
 		if (selectedCategories.length > 0) {
-			filtered = filtered.filter((service: Service) =>
-				service.services_category_rel?.some((rel) =>
+			filtered = filtered.filter((service: any) =>
+				service.services_category_rel?.some((rel: any) =>
 					selectedCategories.includes(rel.services_category.category_name)
 				)
 			);
@@ -101,14 +85,14 @@
 		// Filter by search query
 		if (searchQuery) {
 			filtered = filtered.filter(
-				(service: Service) =>
+				(service: any) =>
 					service.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 					service.service_type?.toLowerCase().includes(searchQuery.toLowerCase())
 			);
 		}
 
 		// Sort services
-		filtered.sort((a, b) => {
+		filtered.sort((a: any, b: any) => {
 			switch (sortBy) {
 				case 'price_low':
 					return a.price - b.price;

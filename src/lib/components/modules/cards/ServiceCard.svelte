@@ -18,12 +18,27 @@
 				category_name: string;
 			};
 		}>;
+		studios?: Array<{
+			name: string;
+		}> | {
+			name: string;
+		};
 	}
 
 	let { service }: { service: Service } = $props();
 
+	// Helper function to get studio name regardless of data structure
+function getStudioName(studios: Service['studios']): string | undefined {
+	if (!studios) return undefined;
+	if (Array.isArray(studios)) {
+		return studios[0]?.name;
+	}
+	return studios.name;
+}
+
 	// Derived values for better performance
 	let tags = $derived(getServiceTags(service));
+	let formattedDate = $derived(new Date(service.created_at).toLocaleDateString());
 
 	function formatPrice(price: number): string {
 		return new Intl.NumberFormat('en-US', {
@@ -43,8 +58,22 @@
 			/>
 		{/if}
 		<CardHeader>
-			<div class="flex items-start justify-between">
-				<CardTitle>{service.name}</CardTitle>
+			<CardTitle class="line-clamp-1 text-lg leading-tight">{service.name}</CardTitle>
+
+			<div class="mt-3 flex items-center justify-between">
+				<div class="flex items-center gap-2">
+					<div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+						<span class="text-xs font-medium text-gray-700">
+							{getStudioName(service.studios)?.charAt(0)?.toUpperCase() || 'S'}
+						</span>
+					</div>
+					<div class="text-sm">
+							<div class="font-medium">
+								{getStudioName(service.studios) || 'Unknown Studio'}
+							</div>
+						<div class="text-xs text-muted-foreground">{formattedDate}</div>
+					</div>
+				</div>
 				<Badge variant="secondary">{service.service_type}</Badge>
 			</div>
 		</CardHeader>
@@ -82,7 +111,7 @@
 			{/if}
 		</CardContent>
 		<CardFooter class="flex justify-between">
-			<span class="text-sm text-muted-foreground"> Added </span>
+			<span class="text-sm text-muted-foreground">Added {formattedDate}</span>
 			<Button
 				size="sm"
 				onclick={(e) => {

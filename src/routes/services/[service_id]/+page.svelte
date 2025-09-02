@@ -3,9 +3,38 @@
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { ArrowLeft, Calendar, User, Phone } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
+	import { getServiceTags } from '$lib/utils/serviceCategories';
 
 	let { data } = $props();
 	let { service, session } = data;
+
+	// Helper functions to get studio data regardless of data structure
+	function getStudioName(studios: any) {
+		if (!studios) return undefined;
+		if (Array.isArray(studios)) {
+			return studios[0]?.name;
+		}
+		return studios.name;
+	}
+
+	function getStudioDescription(studios: any) {
+		if (!studios) return undefined;
+		if (Array.isArray(studios)) {
+			return studios[0]?.description;
+		}
+		return studios.description;
+	}
+
+	function getStudioContactPhone(studios: any) {
+		if (!studios) return undefined;
+		if (Array.isArray(studios)) {
+			return studios[0]?.contact_phone;
+		}
+		return studios.contact_phone;
+	}
+
+	// Derived values
+	let tags = $derived(service ? getServiceTags(service) : []);
 
 	function handleOrderService() {
 		if (!session) {
@@ -46,7 +75,7 @@
 					<div class="mb-6 flex items-center gap-4 text-muted-foreground">
 						<div class="flex items-center gap-2">
 							<User class="h-4 w-4" />
-							<span>{service.studios[0]?.name}</span>
+							<span>{getStudioName(service.studios) || 'Unknown Studio'}</span>
 						</div>
 						<div class="flex items-center gap-2">
 							<Calendar class="h-4 w-4" />
@@ -74,6 +103,21 @@
 					{service.service_type}
 				</span>
 			</div>
+
+			{#if tags.length > 0}
+				<div class="mb-6 flex flex-wrap gap-2">
+					{#each tags as tag}
+						<Button
+							variant="outline"
+							size="sm"
+							href={`/services?categories=${encodeURIComponent(tag)}`}
+							class="h-7 px-3 text-xs"
+						>
+							{tag}
+						</Button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Service Content -->
@@ -84,9 +128,49 @@
 			<CardContent>
 				{#if service.description}
 					<div class="prose prose-lg max-w-none">
-						<!-- For now, we'll display the JSON description as a string -->
-						<!-- In a real implementation, you might want to render this as rich content -->
-						<p>{JSON.stringify(service.description)}</p>
+						{#if typeof service.description === 'string'}
+							<p>{@html service.description}</p>
+						{:else if typeof service.description === 'object'}
+							<!-- Handle Editor.js JSON content -->
+							{@const contentBlocks = service.description}
+							{#if contentBlocks?.blocks}
+								{#each contentBlocks.blocks as block}
+									{#if block.type === 'paragraph'}
+										<p>{@html block.data?.text || ''}</p>
+									{:else if block.type === 'header'}
+										{#if block.data?.level === 1}
+											<h1>{@html block.data?.text || ''}</h1>
+										{:else if block.data?.level === 2}
+											<h2>{@html block.data?.text || ''}</h2>
+										{:else if block.data?.level === 3}
+											<h3>{@html block.data?.text || ''}</h3>
+										{:else}
+											<h4>{@html block.data?.text || ''}</h4>
+										{/if}
+									{:else if block.type === 'list'}
+										{#if block.data?.style === 'ordered'}
+											<ol>
+												{#each block.data?.items as item}
+													<li>{@html item || ''}</li>
+												{/each}
+											</ol>
+										{:else}
+											<ul>
+												{#each block.data?.items as item}
+													<li>{@html item || ''}</li>
+												{/each}
+											</ul>
+										{/if}
+									{:else}
+										<p>{@html JSON.stringify(block.data) || ''}</p>
+									{/if}
+								{/each}
+							{:else}
+								<p>{@html JSON.stringify(service.description)}</p>
+							{/if}
+						{:else}
+							<p>{@html JSON.stringify(service.description)}</p>
+						{/if}
 					</div>
 				{:else}
 					<p class="text-muted-foreground">No description available.</p>
@@ -95,22 +179,28 @@
 		</Card>
 
 		<!-- Highlights -->
-		{#if service.highlights && service.highlights.length > 0}
-			<Card class="mb-8">
-				<CardHeader>
-					<h2 class="text-2xl font-semibold">Highlights</h2>
-				</CardHeader>
-				<CardContent>
-					<ul class="space-y-2">
-						{#each service.highlights as highlight}
-							<li class="flex items-start">
-								<span class="mr-2">•</span>
-								<span>{highlight}</span>
-							</li>
-						{/each}
-					</ul>
-				</CardContent>
-			</Card>
+		{#if service.highlights}
+			{@const highlightsArray =
+				typeof service.highlights === 'string'
+					? JSON.parse(service.highlights)
+					: service.highlights}
+			{#if Array.isArray(highlightsArray) && highlightsArray.length > 0}
+				<Card class="mb-8">
+					<CardHeader>
+						<h2 class="text-2xl font-semibold">Highlights</h2>
+					</CardHeader>
+					<CardContent>
+						<ul class="space-y-2">
+							{#each highlightsArray as highlight}
+								<li class="flex items-start">
+									<span class="mr-2">•</span>
+									<span>{highlight}</span>
+								</li>
+							{/each}
+						</ul>
+					</CardContent>
+				</Card>
+			{/if}
 		{/if}
 
 		<!-- Studio Info -->
@@ -119,25 +209,31 @@
 				<h3 class="text-lg font-semibold">About the Studio</h3>
 			</CardHeader>
 			<CardContent>
-				<div class="flex items-center gap-4">
-					<div class="flex-shrink-0">
-						<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
-							<span class="text-lg font-medium text-gray-700">
-								{service.studios[0]?.name.charAt(0).toUpperCase()}
-							</span>
+				{#if service.studios}
+					<div class="flex items-center gap-4">
+						<div class="flex-shrink-0">
+							<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
+								<span class="text-lg font-medium text-gray-700">
+									{getStudioName(service.studios)?.charAt(0)?.toUpperCase() || 'S'}
+								</span>
+							</div>
+						</div>
+						<div class="flex-1">
+							<p class="font-medium">{getStudioName(service.studios)}</p>
+							<p class="mb-2 text-sm text-muted-foreground">
+								{getStudioDescription(service.studios) || 'No description available'}
+							</p>
+							<div class="flex items-center gap-2 text-sm">
+								<Phone class="h-4 w-4" />
+								<span>
+									{getStudioContactPhone(service.studios) || 'No contact phone available'}
+								</span>
+							</div>
 						</div>
 					</div>
-					<div class="flex-1">
-						<p class="font-medium">{service.studios[0]?.name}</p>
-						<p class="mb-2 text-sm text-muted-foreground">
-							{service.studios[0]?.description}
-						</p>
-						<div class="flex items-center gap-2 text-sm">
-							<Phone class="h-4 w-4" />
-							<span>{service.studios[0]?.contact_phone}</span>
-						</div>
-					</div>
-				</div>
+				{:else}
+					<p class="text-muted-foreground">Studio information not available</p>
+				{/if}
 			</CardContent>
 		</Card>
 	{:else}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils.ts';
+	import { cn } from '$lib/utils';
 	import { Menubar as MenubarPrimitive } from 'bits-ui';
 	import type { ComponentProps } from 'svelte';
 
