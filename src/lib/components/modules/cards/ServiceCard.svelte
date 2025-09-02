@@ -18,9 +18,7 @@
 				category_name: string;
 			};
 		}>;
-		studios?: Array<{
-			name: string;
-		}> | {
+		studios?: {
 			name: string;
 		};
 	}
@@ -28,13 +26,13 @@
 	let { service }: { service: Service } = $props();
 
 	// Helper function to get studio name regardless of data structure
-function getStudioName(studios: Service['studios']): string | undefined {
-	if (!studios) return undefined;
-	if (Array.isArray(studios)) {
-		return studios[0]?.name;
+	function getStudioName(studios: Service['studios']): string | undefined {
+		if (!studios) return undefined;
+		if (Array.isArray(studios)) {
+			return studios[0]?.name;
+		}
+		return studios.name;
 	}
-	return studios.name;
-}
 
 	// Derived values for better performance
 	let tags = $derived(getServiceTags(service));
@@ -68,9 +66,9 @@ function getStudioName(studios: Service['studios']): string | undefined {
 						</span>
 					</div>
 					<div class="text-sm">
-							<div class="font-medium">
-								{getStudioName(service.studios) || 'Unknown Studio'}
-							</div>
+						<div class="font-medium">
+							{getStudioName(service.studios) || 'Unknown Studio'}
+						</div>
 						<div class="text-xs text-muted-foreground">{formattedDate}</div>
 					</div>
 				</div>

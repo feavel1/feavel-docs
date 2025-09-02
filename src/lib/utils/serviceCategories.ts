@@ -29,7 +29,9 @@ export function extractCategoryNamesFromRelations(relations: any[]): string[] {
  */
 export function getServiceTags(service: any): string[] {
 	if (!service) return [];
-	return service.services_category_rel?.map((rel: any) => rel.services_category.category_name) || [];
+	return (
+		service.services_category_rel?.map((rel: any) => rel.services_category.category_name) || []
+	);
 }
 
 /**
@@ -226,62 +228,4 @@ export async function getAllServiceCategories(supabase: SupabaseClient) {
 	serviceCategoriesCache = { data: categoryNames, timestamp: now };
 
 	return { data: categoryNames, error: null };
-}
-
-// Cache for most used categories
-let mostUsedCategoriesCache: { data: string[]; timestamp: number } | null = null;
-
-/**
- * Get the most used categories based on their frequency in services
- * Returns the top 5 most used categories ordered by frequency
- * Implements caching to improve performance
- */
-export async function getMostUsedCategories(supabase: SupabaseClient, limit: number = 5) {
-	// Check if we have valid cached data
-	const now = Date.now();
-	if (mostUsedCategoriesCache && now - mostUsedCategoriesCache.timestamp < CACHE_DURATION) {
-		return { data: mostUsedCategoriesCache.data, error: null };
-	}
-
-	// Get all categories with their usage counts
-	const { data, error } = await supabase
-		.from('services_category_rel')
-		.select(
-			`
-			category_id,
-			services_category(category_name)
-		`
-		)
-		.order('category_id');
-
-	if (error) {
-		console.error('Error fetching most used categories:', error);
-		return { data: [], error };
-	}
-
-	// Process the data to count occurrences and get top categories
-	const categoryCounts: { [key: string]: { name: string; count: number } } = {};
-
-	// Count occurrences of each category
-	data.forEach((item: any) => {
-		const categoryName = item.services_category?.category_name;
-		if (categoryName) {
-			if (categoryCounts[categoryName]) {
-				categoryCounts[categoryName].count++;
-			} else {
-				categoryCounts[categoryName] = { name: categoryName, count: 1 };
-			}
-		}
-	});
-
-	// Sort by count and take the top N
-	const sortedCategories = Object.values(categoryCounts)
-		.sort((a, b) => b.count - a.count)
-		.slice(0, limit)
-		.map((category) => category.name);
-
-	// Update cache
-	mostUsedCategoriesCache = { data: sortedCategories, timestamp: now };
-
-	return { data: sortedCategories, error: null };
 }
