@@ -48,7 +48,9 @@
 
 	$effect(() => {
 		if (urlCategories) {
-			selectedCategories = urlCategories.split(',').map((category) => decodeURIComponent(category.trim()));
+			selectedCategories = urlCategories
+				.split(',')
+				.map((category) => decodeURIComponent(category.trim()));
 		} else {
 			selectedCategories = [];
 		}
@@ -66,7 +68,9 @@
 
 		// Update categories parameter
 		if (selectedCategories.length > 0) {
-			const newCategoriesParam = selectedCategories.map((category) => encodeURIComponent(category)).join(',');
+			const newCategoriesParam = selectedCategories
+				.map((category) => encodeURIComponent(category))
+				.join(',');
 			newUrl.searchParams.set('categories', newCategoriesParam);
 		} else {
 			newUrl.searchParams.delete('categories');
@@ -88,7 +92,9 @@
 		// Filter by categories
 		if (selectedCategories.length > 0) {
 			filtered = filtered.filter((service: Service) =>
-				service.services_category_rel?.some((rel) => selectedCategories.includes(rel.services_category.category_name))
+				service.services_category_rel?.some((rel) =>
+					selectedCategories.includes(rel.services_category.category_name)
+				)
 			);
 		}
 
@@ -116,7 +122,6 @@
 
 		return filtered;
 	});
-
 </script>
 
 <svelte:head>

@@ -16,7 +16,7 @@
 	let { postId, postAuthorId, currentUserId, currentUser, supabase } = $props();
 
 	const COMMENT_LIMIT = 10;
-	
+
 	let comments = $state<PostComment[]>([]);
 	let loading = $state(false);
 	let loadingMore = $state(false);
@@ -88,7 +88,7 @@
 				comments = [newComment, ...comments];
 			}
 		}
-		
+
 		return newComment;
 	}
 
@@ -118,7 +118,7 @@
 		} else {
 			expandedComments.add(commentId);
 			expandedComments = new Set(expandedComments);
-			
+
 			const comment = findCommentById(comments, commentId);
 			if (comment && !comment.replies?.length) {
 				if (repliesCache.has(commentId)) {
@@ -151,7 +151,11 @@
 		return null;
 	}
 
-	function updateCommentReplies(commentsList: PostComment[], parentId: number, newReply: PostComment): PostComment[] {
+	function updateCommentReplies(
+		commentsList: PostComment[],
+		parentId: number,
+		newReply: PostComment
+	): PostComment[] {
 		return commentsList.map((comment) => {
 			if (comment.id === parentId) {
 				const updatedReplies = comment.replies ? [...comment.replies, newReply] : [newReply];
@@ -173,7 +177,10 @@
 		});
 	}
 
-	function updateCommentsWithEditedComment(commentsList: PostComment[], updatedComment: PostComment): PostComment[] {
+	function updateCommentsWithEditedComment(
+		commentsList: PostComment[],
+		updatedComment: PostComment
+	): PostComment[] {
 		return commentsList.map((comment) => {
 			if (comment.id === updatedComment.id) {
 				return updatedComment;
@@ -208,7 +215,11 @@
 			.filter((comment) => comment !== null) as PostComment[];
 	}
 
-	function updateCommentWithReplies(commentsList: PostComment[], targetId: number, updatedComment: PostComment): PostComment[] {
+	function updateCommentWithReplies(
+		commentsList: PostComment[],
+		targetId: number,
+		updatedComment: PostComment
+	): PostComment[] {
 		return commentsList.map((comment) => {
 			if (comment.id === targetId) {
 				return updatedComment;
@@ -241,60 +252,65 @@
 	</CardHeader>
 	<CardContent class="p-0">
 		{#if commentsVisible}
-		{#if currentUserId}
-			<CommentForm
-				parentId={undefined}
-				onSubmit={handleSubmitComment}
-				user={currentUser}
-				placeholder="Share your thoughts..."
-			/>
-		{:else}
-			<div class="py-4 text-center text-muted-foreground text-sm">
-				<p>Please log in to leave a comment.</p>
-			</div>
-		{/if}
+			{#if currentUserId}
+				<CommentForm
+					parentId={undefined}
+					onSubmit={handleSubmitComment}
+					user={currentUser}
+					placeholder="Share your thoughts..."
+				/>
+			{:else}
+				<div class="py-4 text-center text-sm text-muted-foreground">
+					<p>Please log in to leave a comment.</p>
+				</div>
+			{/if}
 
-		{#if loading && comments.length === 0}
-			<div class="flex justify-center py-6">
-				<Loader2 class="h-5 w-5 animate-spin" />
-			</div>
-		{:else if comments.length === 0}
-			<div class="py-6 text-center text-muted-foreground text-sm">
-				<MessageSquare class="mx-auto mb-3 h-8 w-8 opacity-50" />
-				<p>No comments yet. Be the first to share your thoughts!</p>
-			</div>
-		{:else}
-			<div class="space-y-4 pt-4">
-				{#each comments as comment (comment.id)}
-					<div class="border-0 border-b border-border pb-4 last:border-0 last:pb-0">
-						<CommentItem
-							{comment}
-							{currentUserId}
-							{postAuthorId}
-							{supabase}
-							{currentUser}
-							onReply={handleSubmitComment}
-							onEdit={handleEditComment}
-							onDelete={handleDeleteComment}
-							onToggleReplies={toggleReplies}
-							showReplies={expandedComments.has(comment.id)}
-							expandedComments={expandedComments}
-						/>
-					</div>
-				{/each}
+			{#if loading && comments.length === 0}
+				<div class="flex justify-center py-6">
+					<Loader2 class="h-5 w-5 animate-spin" />
+				</div>
+			{:else if comments.length === 0}
+				<div class="py-6 text-center text-sm text-muted-foreground">
+					<MessageSquare class="mx-auto mb-3 h-8 w-8 opacity-50" />
+					<p>No comments yet. Be the first to share your thoughts!</p>
+				</div>
+			{:else}
+				<div class="space-y-4 pt-4">
+					{#each comments as comment (comment.id)}
+						<div class="border-0 border-b border-border pb-4 last:border-0 last:pb-0">
+							<CommentItem
+								{comment}
+								{currentUserId}
+								{postAuthorId}
+								{supabase}
+								{currentUser}
+								onReply={handleSubmitComment}
+								onEdit={handleEditComment}
+								onDelete={handleDeleteComment}
+								onToggleReplies={toggleReplies}
+								showReplies={expandedComments.has(comment.id)}
+								{expandedComments}
+							/>
+						</div>
+					{/each}
 
-				{#if hasMore}
-					<div class="flex justify-center pt-4">
-						<Button variant="ghost" onclick={loadMoreComments} disabled={loadingMore} class="h-8 text-sm">
-							{#if loadingMore}
-								<Loader2 class="mr-2 h-3 w-3 animate-spin" />
-							{/if}
-							Load More Comments
-						</Button>
-					</div>
-				{/if}
-			</div>
-		{/if}
+					{#if hasMore}
+						<div class="flex justify-center pt-4">
+							<Button
+								variant="ghost"
+								onclick={loadMoreComments}
+								disabled={loadingMore}
+								class="h-8 text-sm"
+							>
+								{#if loadingMore}
+									<Loader2 class="mr-2 h-3 w-3 animate-spin" />
+								{/if}
+								Load More Comments
+							</Button>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</CardContent>
 </Card>

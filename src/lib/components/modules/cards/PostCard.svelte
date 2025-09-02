@@ -4,7 +4,14 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Edit, Eye, Heart, MessageCircle } from '@lucide/svelte';
 	import type { Post } from '$lib/types/posts';
-	import { getPostTags, formatDate, getPostViews, isPostOwner, getPostLikes, getPostComments } from '$lib/utils/posts';
+	import {
+		getPostTags,
+		formatDate,
+		getPostViews,
+		isPostOwner,
+		getPostLikes,
+		getPostComments
+	} from '$lib/utils/posts';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { getAvatarUrl } from '$lib/utils/user';
 
@@ -23,7 +30,9 @@
 	let comments = $derived(getPostComments(post));
 	let postViews = $derived(getPostViews(post));
 	let formattedDate = $derived(formatDate(post.created_at));
-	let avatarUrl = $derived(getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase));
+	let avatarUrl = $derived(
+		getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase)
+	);
 	let coverUrl = $derived(getPostCoverUrl(post.post_cover || '', supabase));
 </script>
 
@@ -38,14 +47,16 @@
 			/>
 		</div>
 	{:else}
-		<div class="aspect-video bg-gradient-to-r from-primary/10 to-secondary/10 flex items-center justify-center">
-			<div class="text-muted-foreground text-lg font-medium">No cover image</div>
+		<div
+			class="flex aspect-video items-center justify-center bg-gradient-to-r from-primary/10 to-secondary/10"
+		>
+			<div class="text-lg font-medium text-muted-foreground">No cover image</div>
 		</div>
 	{/if}
 
 	<CardHeader class="flex-shrink-0 pb-3">
 		<CardTitle class="line-clamp-1 text-lg leading-tight">{post.title}</CardTitle>
-		
+
 		<div class="mt-3 flex items-center justify-between">
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
@@ -58,10 +69,10 @@
 				</Avatar>
 				<div class="text-sm">
 					<div class="font-medium">{post.users?.username || 'Unknown'}</div>
-					<div class="text-muted-foreground text-xs">{formattedDate}</div>
+					<div class="text-xs text-muted-foreground">{formattedDate}</div>
 				</div>
 			</div>
-			
+
 			{#if isOwner}
 				<Button variant="ghost" size="sm" href="/posts/edit/{post.id}" class="h-8 w-8 p-0">
 					<Edit class="h-4 w-4" />
@@ -93,7 +104,7 @@
 		{/if}
 	</CardContent>
 
-	<CardFooter class="flex-shrink-0 flex items-center justify-between pt-0">
+	<CardFooter class="flex flex-shrink-0 items-center justify-between pt-0">
 		<div class="flex items-center gap-3 text-sm text-muted-foreground">
 			<span class="flex items-center gap-1">
 				<Eye class="h-4 w-4" />
@@ -108,7 +119,7 @@
 				{comments}
 			</span>
 		</div>
-		
+
 		<Button variant="outline" size="sm" href="/posts/{post.id}" class="h-8 px-3 text-sm">
 			Read More
 		</Button>

@@ -157,12 +157,12 @@ export async function compressImage(
 	return new Promise((resolve, reject) => {
 		const canvas = document.createElement('canvas');
 		const ctx = canvas.getContext('2d');
-		
+
 		if (!ctx) {
 			reject(new Error('Could not get canvas context'));
 			return;
 		}
-		
+
 		const img = new Image();
 
 		img.onload = () => {
@@ -292,7 +292,7 @@ export async function uploadPostCover(
 	try {
 		// Compress the image
 		const compressedFile = await compressImage(file);
-		
+
 		// Upload the file
 		const result = await uploadFile(supabase, path, {
 			file: compressedFile,
@@ -316,7 +316,7 @@ export async function uploadPostCover(
 // Utility to get full URL from filename for different file types
 export function getAvatarUrl(filename: string, supabase: SupabaseClient): string {
 	if (!filename) return '';
-	
+
 	try {
 		const path = StoragePath.avatars(filename);
 		const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
@@ -329,7 +329,7 @@ export function getAvatarUrl(filename: string, supabase: SupabaseClient): string
 
 export function getPostCoverUrl(filename: string, supabase: SupabaseClient): string {
 	if (!filename) return '';
-	
+
 	try {
 		const path = StoragePath.postCovers(filename);
 		const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);

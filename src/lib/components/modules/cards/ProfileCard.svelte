@@ -3,7 +3,11 @@
 	import type { SupabaseClient } from '@supabase/supabase-js';
 	import type { UserProfile } from '$lib/utils/user';
 
-	const { userProfile, supabase, isOwnProfile = false } = $props<{
+	const {
+		userProfile,
+		supabase,
+		isOwnProfile = false
+	} = $props<{
 		userProfile: UserProfile;
 		supabase: SupabaseClient;
 		isOwnProfile?: boolean;

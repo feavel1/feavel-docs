@@ -28,10 +28,14 @@
 
 		try {
 			if (file) {
-				const result = await uploadFile(supabase, `demo/${session?.user?.id || 'anonymous'}/${file.name}`, {
-					file,
-					bucket: 'storage'
-				});
+				const result = await uploadFile(
+					supabase,
+					`demo/${session?.user?.id || 'anonymous'}/${file.name}`,
+					{
+						file,
+						bucket: 'storage'
+					}
+				);
 
 				if (result) {
 					uploadedFile = result;

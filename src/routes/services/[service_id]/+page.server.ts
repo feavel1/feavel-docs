@@ -13,7 +13,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Fetch the service with related data
 	const { data: service, error: serviceError } = await locals.supabase
 		.from('services_v2')
-		.select(`
+		.select(
+			`
 			id,
 			name,
 			price,
@@ -25,7 +26,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			created_at,
 			created_by,
 			studios!inner(name, description, contact_phone)
-		`)
+		`
+		)
 		.eq('id', service_id)
 		.eq('enabled', true)
 		.single();

@@ -40,14 +40,18 @@
 			console.warn('Invalid category name provided to toggleCategory');
 			return;
 		}
-		
+
 		const sanitizedCategoryName = categoryName.trim();
-		
+
 		if (selectedCategories.includes(sanitizedCategoryName)) {
-			selectedCategories = selectedCategories.filter((category) => category !== sanitizedCategoryName);
+			selectedCategories = selectedCategories.filter(
+				(category) => category !== sanitizedCategoryName
+			);
 		} else {
 			// Validate that the category exists in the available categories
-			const categoryExists = categories.some(category => category.category_name === sanitizedCategoryName);
+			const categoryExists = categories.some(
+				(category) => category.category_name === sanitizedCategoryName
+			);
 			if (categoryExists) {
 				selectedCategories = [...selectedCategories, sanitizedCategoryName];
 			} else {

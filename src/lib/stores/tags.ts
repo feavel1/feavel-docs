@@ -32,19 +32,19 @@ export function addNewTag(tagName: string): boolean {
 
 	availableTags.update((tags) => {
 		// Check if tag already exists (case insensitive)
-		const exists = tags.some((tag) => 
-			tag.tag_name.toLowerCase() === sanitizedTagName.toLowerCase()
+		const exists = tags.some(
+			(tag) => tag.tag_name.toLowerCase() === sanitizedTagName.toLowerCase()
 		);
-		
+
 		if (!exists) {
 			// Add new tag with a unique ID
 			const newId = tags.length > 0 ? Math.max(...tags.map((t) => t.id)) + 1 : 1;
 			return [...tags, { id: newId, tag_name: sanitizedTagName }];
 		}
-		
+
 		return tags;
 	});
-	
+
 	return true;
 }
 
@@ -59,13 +59,14 @@ export function initializeTags(tagNames: string[]): void {
 	const validTags = tagNames
 		.filter(isValidTagName)
 		.map(sanitizeTagName)
-		.filter((tagName, index, arr) => 
-			arr.findIndex(t => t.toLowerCase() === tagName.toLowerCase()) === index
+		.filter(
+			(tagName, index, arr) =>
+				arr.findIndex((t) => t.toLowerCase() === tagName.toLowerCase()) === index
 		);
 
-	const tags = validTags.map((tagName, index) => ({ 
-		id: index + 1, 
-		tag_name: tagName 
+	const tags = validTags.map((tagName, index) => ({
+		id: index + 1,
+		tag_name: tagName
 	}));
 
 	availableTags.set(tags);
@@ -80,15 +81,13 @@ export function getTagNames(tags: Tag[]): string[] {
 // Helper function to check if a tag exists
 export function tagExists(tagName: string): boolean {
 	if (!isValidTagName(tagName)) return false;
-	
+
 	let exists = false;
 	const sanitizedTagName = sanitizeTagName(tagName);
-	
+
 	availableTags.subscribe((tags) => {
-		exists = tags.some((tag) => 
-			tag.tag_name.toLowerCase() === sanitizedTagName.toLowerCase()
-		);
+		exists = tags.some((tag) => tag.tag_name.toLowerCase() === sanitizedTagName.toLowerCase());
 	})();
-	
+
 	return exists;
 }

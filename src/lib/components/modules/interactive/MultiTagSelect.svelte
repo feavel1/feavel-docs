@@ -40,14 +40,14 @@
 			console.warn('Invalid tag name provided to toggleTag');
 			return;
 		}
-		
+
 		const sanitizedTagName = tagName.trim();
-		
+
 		if (selectedTags.includes(sanitizedTagName)) {
 			selectedTags = selectedTags.filter((tag) => tag !== sanitizedTagName);
 		} else {
 			// Validate that the tag exists in the available tags
-			const tagExists = tags.some(tag => tag.tag_name === sanitizedTagName);
+			const tagExists = tags.some((tag) => tag.tag_name === sanitizedTagName);
 			if (tagExists) {
 				selectedTags = [...selectedTags, sanitizedTagName];
 			} else {

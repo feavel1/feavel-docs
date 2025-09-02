@@ -52,13 +52,18 @@
 		<Textarea
 			bind:value={content}
 			{placeholder}
-			class="min-h-[60px] resize-none text-sm py-2 px-3"
+			class="min-h-[60px] resize-none px-3 py-2 text-sm"
 			onkeydown={handleKeyDown}
 			disabled={isSubmitting}
 		/>
 		<div class="flex items-center justify-between">
 			<p class="text-xs text-muted-foreground">Press Cmd+Enter to submit</p>
-			<Button onclick={handleSubmit} disabled={!content.trim() || isSubmitting} size="sm" class="h-7 text-xs px-3">
+			<Button
+				onclick={handleSubmit}
+				disabled={!content.trim() || isSubmitting}
+				size="sm"
+				class="h-7 px-3 text-xs"
+			>
 				{#if isSubmitting}
 					<Loader2 class="mr-1 h-3 w-3 animate-spin" />
 				{:else}

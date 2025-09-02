@@ -64,7 +64,7 @@ export function getPostComments(post: Post): number {
  */
 export function getReadingTime(content: string | any): number {
 	if (!content) return 1;
-	
+
 	// Handle Editor.js content structure
 	let text = '';
 	if (typeof content === 'object' && content.blocks) {
@@ -81,7 +81,7 @@ export function getReadingTime(content: string | any): number {
 	} else {
 		return 1;
 	}
-	
+
 	// Average reading speed: 200 words per minute
 	const wordsPerMinute = 200;
 	const wordCount = text.trim().split(/\s+/).length;

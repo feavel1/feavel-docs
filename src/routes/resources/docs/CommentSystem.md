@@ -23,6 +23,7 @@ Main component that handles the display and management of comments for a post.
 Users can now toggle the visibility of the comments section using the "Hide" button in the comment section header. When hidden, only the comment count is visible along with a "Show" button to restore the comments.
 
 **Implementation Details:**
+
 - Added `commentsVisible` state variable to control visibility
 - Added `toggleCommentsVisibility()` function to switch between states
 - Added Eye/EyeOff icons from Lucide Svelte for visual indication
@@ -136,30 +137,28 @@ let repliesCache = $state(new Map<number, PostComment[]>());
 
 // Modified toggleReplies to use cache
 async function toggleReplies(commentId: number) {
-    if (expandedComments.has(commentId)) {
-        // Just collapse, keep replies in cache
-        expandedComments.delete(commentId);
-    } else {
-        expandedComments.add(commentId);
-        // Load replies if not already loaded or cached
-        const comment = comments.find((c) => c.id === commentId);
-        if (comment) {
-            // Check if we have cached replies
-            if (repliesCache.has(commentId)) {
-                // Use cached replies
-                const cachedReplies = repliesCache.get(commentId);
-                comments = comments.map((c) => 
-                    c.id === commentId ? { ...c, replies: cachedReplies } : c
-                );
-            } else if (!comment.replies) {
-                // Fetch replies if not cached and not already loaded
-                const replies = await getCommentReplies(supabase, commentId);
-                // Cache the replies
-                repliesCache.set(commentId, replies);
-                comments = comments.map((c) => (c.id === commentId ? { ...c, replies } : c));
-            }
-        }
-    }
+	if (expandedComments.has(commentId)) {
+		// Just collapse, keep replies in cache
+		expandedComments.delete(commentId);
+	} else {
+		expandedComments.add(commentId);
+		// Load replies if not already loaded or cached
+		const comment = comments.find((c) => c.id === commentId);
+		if (comment) {
+			// Check if we have cached replies
+			if (repliesCache.has(commentId)) {
+				// Use cached replies
+				const cachedReplies = repliesCache.get(commentId);
+				comments = comments.map((c) => (c.id === commentId ? { ...c, replies: cachedReplies } : c));
+			} else if (!comment.replies) {
+				// Fetch replies if not cached and not already loaded
+				const replies = await getCommentReplies(supabase, commentId);
+				// Cache the replies
+				repliesCache.set(commentId, replies);
+				comments = comments.map((c) => (c.id === commentId ? { ...c, replies } : c));
+			}
+		}
+	}
 }
 ```
 

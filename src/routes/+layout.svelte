@@ -13,7 +13,7 @@
 
 	// Initialize the most used tags store with data from the server
 	updateMostUsedTags(data.mostUsedTags || []);
-	
+
 	// Initialize the most used categories store with data from the server
 	updateMostUsedCategories(data.mostUsedCategories || []);
 </script>

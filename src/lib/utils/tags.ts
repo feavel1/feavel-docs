@@ -62,9 +62,12 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 		// First, ensure all tags exist in the post_tags table
 		for (const tagName of tagNames) {
 			// Try to insert the tag (will fail if it already exists, which is fine)
-			await supabase.from('post_tags').upsert({ tag_name: tagName }, {
-				onConflict: 'tag_name'
-			});
+			await supabase.from('post_tags').upsert(
+				{ tag_name: tagName },
+				{
+					onConflict: 'tag_name'
+				}
+			);
 		}
 
 		// Get tag IDs
@@ -106,21 +109,22 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 			.from('posts_tags_rel')
 			.select('tag_id, post_tags(tag_name)')
 			.eq('post_id', postId);
-		
+
 		if (fetchError) {
 			console.error('Error fetching existing tag relationships:', fetchError);
 			return { error: fetchError };
 		}
-		
+
 		// Extract existing tag names
-		const existingTagNames = existingRelations?.map(rel => (rel as any).post_tags?.tag_name).filter(Boolean) || [];
-		
+		const existingTagNames =
+			existingRelations?.map((rel) => (rel as any).post_tags?.tag_name).filter(Boolean) || [];
+
 		// Find tags to add (in new list but not in existing)
-		const tagsToAdd = tagNames.filter(tagName => !existingTagNames.includes(tagName));
-		
+		const tagsToAdd = tagNames.filter((tagName) => !existingTagNames.includes(tagName));
+
 		// Find tags to remove (in existing but not in new list)
-		const tagsToRemove = existingTagNames.filter(tagName => !tagNames.includes(tagName));
-		
+		const tagsToRemove = existingTagNames.filter((tagName) => !tagNames.includes(tagName));
+
 		// Remove tags that are no longer needed
 		if (tagsToRemove.length > 0) {
 			// Get tag IDs for tags to remove
@@ -128,24 +132,24 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 				.from('post_tags')
 				.select('id')
 				.in('tag_name', tagsToRemove);
-			
+
 			if (tagsToRemoveData && tagsToRemoveData.length > 0) {
-				const tagIdsToRemove = tagsToRemoveData.map(tag => tag.id);
-				
+				const tagIdsToRemove = tagsToRemoveData.map((tag) => tag.id);
+
 				// Remove relationships for these tags
 				const { error: removeError } = await supabase
 					.from('posts_tags_rel')
 					.delete()
 					.eq('post_id', postId)
 					.in('tag_id', tagIdsToRemove);
-				
+
 				if (removeError) {
 					console.error('Error removing tag relationships:', removeError);
 					// Don't return here, continue with adding tags
 				}
 			}
 		}
-		
+
 		// Add new tags
 		if (tagsToAdd.length > 0) {
 			const result = await addTagsToPost(supabase, postId, tagsToAdd);
@@ -153,7 +157,7 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 				return result;
 			}
 		}
-		
+
 		return { error: null };
 	} catch (error) {
 		console.error('Error updating post tags:', error);
@@ -229,13 +233,17 @@ export async function getMostUsedTags(supabase: SupabaseClient, limit: number = 
  * @param tagNames Array of tag names to set for the post
  * @returns Object with error property (null if successful)
  */
-export async function updatePostTagsWithFunction(supabase: SupabaseClient, postId: number, tagNames: string[]) {
+export async function updatePostTagsWithFunction(
+	supabase: SupabaseClient,
+	postId: number,
+	tagNames: string[]
+) {
 	try {
 		const { error } = await supabase.rpc('update_post_tags', {
 			post_id_param: postId,
 			tag_names: tagNames
 		});
-		
+
 		return { error };
 	} catch (error) {
 		console.error('Error updating post tags via function:', error);

@@ -4,7 +4,6 @@
 	import { ArrowLeft, Calendar, User, Phone } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
-
 	let { data } = $props();
 	let { service, session } = data;
 
