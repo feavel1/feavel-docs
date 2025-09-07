@@ -10,7 +10,7 @@
 	import { getAvatarUrl } from '$lib/utils/user';
 	import Self from './CommentItem.svelte';
 	import CommentForm from './CommentForm.svelte';
-	import type { CommentFormData } from '$lib/types/comments';
+	import type { CommentFormData } from '$lib/utils/comments';
 
 	let {
 		comment,

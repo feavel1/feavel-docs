@@ -3,14 +3,14 @@
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Edit, Eye, Heart, MessageCircle } from '@lucide/svelte';
-	import type { Post } from '$lib/types/posts';
-	import {
+	import { 
 		getPostTags,
 		formatDate,
 		getPostViews,
 		isPostOwner,
 		getPostLikes,
-		getPostComments
+		getPostComments,
+		type Post
 	} from '$lib/utils/posts';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { getAvatarUrl } from '$lib/utils/user';

@@ -1,5 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { PostComment, CommentFormData } from '$lib/types/comments';
+import type { Tables } from '$lib/types/database.types';
+
+export interface CommentFormData {
+	content: string;
+	parent_id?: number;
+}
+
+export interface PostComment extends Tables<'post_comments'> {
+	replies?: PostComment[];
+	_reply_count?: number;
+}
 
 const COMMENT_FIELDS = `
 	*,

@@ -1,4 +1,27 @@
-import type { Post, PostFilters } from '$lib/types/posts';
+import type { Tables } from '$lib/types/database.types';
+
+export interface Post extends Tables<'posts'> {
+	users?: {
+		username: string;
+		avatar_url: string | null;
+	} | null;
+	posts_tags_rel?: {
+		post_tags: {
+			tag_name: string;
+		};
+	}[];
+	post_likes?: {
+		id: number;
+	}[];
+	post_comments?: {
+		id: number;
+	}[];
+}
+
+interface PostFilters {
+	selectedTags: string[];
+	searchQuery: string;
+}
 
 export function filterPosts(posts: Post[], filters: PostFilters): Post[] {
 	let filtered = posts;

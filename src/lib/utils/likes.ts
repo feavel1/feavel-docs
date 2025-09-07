@@ -1,5 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { PostLike } from '$lib/types/comments';
+import type { Tables } from '$lib/types/database.types';
+
+type PostLike = Tables<'post_likes'> & {
+	users: {
+		username: string;
+		avatar_url: string | null;
+	};
+};
 
 // Simple in-memory cache for like counts
 const likeCountCache = new Map<string, { count: number; timestamp: number }>();

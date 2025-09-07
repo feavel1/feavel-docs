@@ -7,9 +7,10 @@
 		createComment,
 		updateComment,
 		deleteComment,
-		getCommentReplies
+		getCommentReplies,
+		type PostComment,
+		type CommentFormData
 	} from '$lib/utils/comments';
-	import type { PostComment, CommentFormData } from '$lib/types/comments';
 	import CommentForm from './CommentForm.svelte';
 	import CommentItem from './CommentItem.svelte';
 
