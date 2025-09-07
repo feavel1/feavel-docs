@@ -15,7 +15,6 @@
 			</Group>
 
 			<Group title="SERVICES">
-				<A href="/services">All Services</A>
 				{#each $mostUsedCategories.categories as category}
 					<A href="/services?categories={category}">{category.toLocaleUpperCase()}</A>
 				{/each}

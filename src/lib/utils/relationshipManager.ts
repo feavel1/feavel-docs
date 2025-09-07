@@ -121,7 +121,7 @@ export async function addItemsToEntity(
 			);
 		}
 
-				// Get item IDs
+		// Get item IDs
 		const { data: itemData } = await supabase
 			.from(config.itemsTable)
 			.select(`id, ${config.itemNameColumn}`)

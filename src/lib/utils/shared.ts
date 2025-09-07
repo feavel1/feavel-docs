@@ -69,14 +69,10 @@ export async function getMostUsedItems(
 
 	return getCachedData<string[]>(cacheKey, async () => {
 		// Get all items with their usage counts
+		// Using proper Supabase relationship syntax with !inner join
 		const { data, error } = await supabase
 			.from(relationshipTable)
-			.select(
-				`
-				${foreignKey}(${nameField})
-			`
-			)
-			.order(foreignKey);
+			.select(`${foreignKey}!inner(${nameField})`);
 
 		if (error) {
 			console.error(`Error fetching most used items from ${relationshipTable}:`, error);
