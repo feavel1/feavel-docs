@@ -1,8 +1,32 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+	getAllItems,
+	getItemsForEntity,
+	addItemsToEntity,
+	removeItemsFromEntity,
+	updateEntityItems,
+	stringsToObjects,
+	cleanItemName,
+	isValidItemName,
+	extractNamesFromRelations
+} from '$lib/utils/relationshipManager';
 
 /**
  * Utility functions for service category handling
+ * Wrapper around generic relationship manager
  */
+
+// Configuration for service categories
+const categoryConfig = {
+	itemsTable: 'services_category',
+	relationsTable: 'services_category_rel',
+	itemIdColumn: 'category_id',
+	itemNameColumn: 'category_name',
+	entityIdColumn: 'service_id',
+	foreignTableName: 'services_category',
+	foreignTableAlias: 'services_category',
+	cacheKey: 'all_service_categories'
+};
 
 export interface ServiceCategory {
 	id: number;
@@ -13,14 +37,17 @@ export interface ServiceCategory {
  * Convert string categories to ServiceCategory objects for MultiCategorySelect component
  */
 export function stringCategoriesToObjects(categories: string[]): ServiceCategory[] {
-	return categories.map((category, index) => ({ id: index, category_name: category }));
+	return stringsToObjects(categories).map(item => ({
+		id: item.id,
+		category_name: item.name
+	}));
 }
 
 /**
  * Extract category names from service relationships
  */
 export function extractCategoryNamesFromRelations(relations: any[]): string[] {
-	return relations?.map((rel) => rel.services_category.category_name) || [];
+	return extractNamesFromRelations(relations, 'services_category.category_name');
 }
 
 /**
@@ -38,16 +65,19 @@ export function getServiceTags(service: any): string[] {
  * Validate and clean category names
  */
 export function cleanCategoryName(categoryName: string): string {
-	return categoryName.trim().toLowerCase().replace(/\s+/g, '-');
+	return cleanItemName(categoryName);
 }
 
 /**
  * Check if category name is valid
  */
 export function isValidCategoryName(categoryName: string): boolean {
-	return categoryName.trim().length > 0 && categoryName.trim().length <= 50;
+	return isValidItemName(categoryName);
 }
 
+/**
+ * Get all service categories
+ */
 export async function getServiceCategories(supabase: SupabaseClient) {
 	const { data, error } = await supabase
 		.from('services_category')
@@ -57,175 +87,45 @@ export async function getServiceCategories(supabase: SupabaseClient) {
 	return { data, error };
 }
 
+/**
+ * Get categories for a specific service
+ */
 export async function getServiceCategoriesForService(supabase: SupabaseClient, serviceId: number) {
-	const { data, error } = await supabase
-		.from('services_category_rel')
-		.select(
-			`
-			category_id,
-			services_category!inner(id, category_name)
-		`
-		)
-		.eq('service_id', serviceId);
-
-	return { data, error };
+	return getItemsForEntity(supabase, serviceId, categoryConfig);
 }
 
+/**
+ * Add categories to a service
+ */
 export async function addCategoriesToService(
 	supabase: SupabaseClient,
 	serviceId: number,
 	categoryNames: string[]
 ) {
-	try {
-		// First, ensure all categories exist in the services_category table
-		for (const categoryName of categoryNames) {
-			// Try to insert the category (will fail if it already exists, which is fine)
-			await supabase.from('services_category').upsert(
-				{ category_name: categoryName },
-				{
-					onConflict: 'category_name'
-				}
-			);
-		}
-
-		// Get category IDs
-		const { data: categoryData } = await supabase
-			.from('services_category')
-			.select('id, category_name')
-			.in('category_name', categoryNames);
-
-		if (categoryData && categoryData.length > 0) {
-			// Create relationships
-			const relationships = categoryData.map((category) => ({
-				service_id: serviceId,
-				category_id: category.id
-			}));
-
-			// Insert relationships (ignore duplicates)
-			const { error } = await supabase.from('services_category_rel').insert(relationships);
-
-			return { error };
-		}
-
-		return { error: null };
-	} catch (error) {
-		console.error('Error adding categories to service:', error);
-		return { error };
-	}
+	return addItemsToEntity(supabase, serviceId, categoryNames, categoryConfig);
 }
 
+/**
+ * Remove all categories from a service
+ */
 export async function removeCategoriesFromService(supabase: SupabaseClient, serviceId: number) {
-	const { error } = await supabase
-		.from('services_category_rel')
-		.delete()
-		.eq('service_id', serviceId);
-
-	return { error };
+	return removeItemsFromEntity(supabase, serviceId, categoryConfig);
 }
 
+/**
+ * Update categories for a service
+ */
 export async function updateServiceCategories(
 	supabase: SupabaseClient,
 	serviceId: number,
 	categoryNames: string[]
 ) {
-	try {
-		// Get existing category relationships for this service
-		const { data: existingRelations, error: fetchError } = await supabase
-			.from('services_category_rel')
-			.select('category_id, services_category(category_name)')
-			.eq('service_id', serviceId);
-
-		if (fetchError) {
-			console.error('Error fetching existing category relationships:', fetchError);
-			return { error: fetchError };
-		}
-
-		// Extract existing category names
-		const existingCategoryNames =
-			existingRelations
-				?.map((rel) => (rel as any).services_category?.category_name)
-				.filter(Boolean) || [];
-
-		// Find categories to add (in new list but not in existing)
-		const categoriesToAdd = categoryNames.filter(
-			(categoryName) => !existingCategoryNames.includes(categoryName)
-		);
-
-		// Find categories to remove (in existing but not in new list)
-		const categoriesToRemove = existingCategoryNames.filter(
-			(categoryName) => !categoryNames.includes(categoryName)
-		);
-
-		// Remove categories that are no longer needed
-		if (categoriesToRemove.length > 0) {
-			// Get category IDs for categories to remove
-			const { data: categoriesToRemoveData } = await supabase
-				.from('services_category')
-				.select('id')
-				.in('category_name', categoriesToRemove);
-
-			if (categoriesToRemoveData && categoriesToRemoveData.length > 0) {
-				const categoryIdsToRemove = categoriesToRemoveData.map((category) => category.id);
-
-				// Remove relationships for these categories
-				const { error: removeError } = await supabase
-					.from('services_category_rel')
-					.delete()
-					.eq('service_id', serviceId)
-					.in('category_id', categoryIdsToRemove);
-
-				if (removeError) {
-					console.error('Error removing category relationships:', removeError);
-					// Don't return here, continue with adding categories
-				}
-			}
-		}
-
-		// Add new categories
-		if (categoriesToAdd.length > 0) {
-			const result = await addCategoriesToService(supabase, serviceId, categoriesToAdd);
-			if (result.error) {
-				return result;
-			}
-		}
-
-		return { error: null };
-	} catch (error) {
-		console.error('Error updating service categories:', error);
-		return { error };
-	}
+	return updateEntityItems(supabase, serviceId, categoryNames, categoryConfig);
 }
 
-// Cache for service categories
-let serviceCategoriesCache: { data: string[]; timestamp: number } | null = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
 /**
- * Get all service categories
- * Implements caching to improve performance
+ * Get all service categories with caching
  */
 export async function getAllServiceCategories(supabase: SupabaseClient) {
-	// Check if we have valid cached data
-	const now = Date.now();
-	if (serviceCategoriesCache && now - serviceCategoriesCache.timestamp < CACHE_DURATION) {
-		return { data: serviceCategoriesCache.data, error: null };
-	}
-
-	const { data, error } = await supabase
-		.from('services_category')
-		.select('category_name')
-		.order('category_name');
-
-	if (error) {
-		console.error('Error fetching service categories:', error);
-		return { data: [], error };
-	}
-
-	// Extract category names
-	const categoryNames = data.map((item) => item.category_name).filter(Boolean);
-
-	// Update cache
-	serviceCategoriesCache = { data: categoryNames, timestamp: now };
-
-	return { data: categoryNames, error: null };
+	return getAllItems(supabase, categoryConfig);
 }
