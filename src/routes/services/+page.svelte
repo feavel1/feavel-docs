@@ -6,6 +6,7 @@
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import type { ServiceCategory } from '$lib/utils/serviceCategories';
+	import { filterServices } from '$lib/utils/services';
 
 	interface PageData {
 		services: any[];
@@ -71,25 +72,11 @@
 	});
 
 	let filteredServices = $derived.by(() => {
-		let filtered = [...services]; // Create a copy to avoid mutating original
-
-		// Filter by categories
-		if (selectedCategories.length > 0) {
-			filtered = filtered.filter((service: any) =>
-				service.services_category_rel?.some((rel: any) =>
-					selectedCategories.includes(rel.services_category.category_name)
-				)
-			);
-		}
-
-		// Filter by search query
-		if (searchQuery) {
-			filtered = filtered.filter(
-				(service: any) =>
-					service.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					service.service_type?.toLowerCase().includes(searchQuery.toLowerCase())
-			);
-		}
+		// Filter services using utility function
+		let filtered = filterServices(services, {
+			selectedCategories,
+			searchQuery
+		});
 
 		// Sort services
 		filtered.sort((a: any, b: any) => {

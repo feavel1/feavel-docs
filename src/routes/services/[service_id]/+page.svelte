@@ -79,7 +79,7 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<Calendar class="h-4 w-4" />
-							<span>{new Date(service.created_at).toLocaleDateString()}</span>
+							<span>{new Date(service.created_at || '').toLocaleDateString()}</span>
 						</div>
 					</div>
 				</div>
@@ -130,10 +130,10 @@
 					<div class="prose prose-lg max-w-none">
 						{#if typeof service.description === 'string'}
 							<p>{@html service.description}</p>
-						{:else if typeof service.description === 'object'}
+						{:else if typeof service.description === 'object' && service.description !== null}
 							<!-- Handle Editor.js JSON content -->
 							{@const contentBlocks = service.description}
-							{#if contentBlocks?.blocks}
+							{#if contentBlocks && 'blocks' in contentBlocks && Array.isArray(contentBlocks.blocks)}
 								{#each contentBlocks.blocks as block}
 									{#if block.type === 'paragraph'}
 										<p>{@html block.data?.text || ''}</p>

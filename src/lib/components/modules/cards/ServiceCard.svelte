@@ -3,40 +3,30 @@
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { getServiceTags } from '$lib/utils/serviceCategories';
-
-	interface Service {
-		id: number;
-		name: string;
-		price: number;
-		cover_url?: string;
-		highlights: string[];
-		service_type: string;
-		status: string;
-		created_at: string;
-		services_category_rel?: Array<{
-			services_category: {
-				category_name: string;
-			};
-		}>;
-		studios?: {
-			name: string;
-		};
-	}
+	import type { Service } from '$lib/utils/services';
 
 	let { service }: { service: Service } = $props();
 
 	// Helper function to get studio name regardless of data structure
 	function getStudioName(studios: Service['studios']): string | undefined {
 		if (!studios) return undefined;
+		// Handle both array and object formats
 		if (Array.isArray(studios)) {
-			return studios[0]?.name;
+			if (studios.length === 0) return undefined;
+			const firstStudio = studios[0];
+			if (!firstStudio || typeof firstStudio !== 'object') return undefined;
+			return firstStudio.name || undefined;
 		}
-		return studios.name;
+		// Handle object format
+		if (typeof studios === 'object') {
+			return (studios as any).name || undefined;
+		}
+		return undefined;
 	}
 
 	// Derived values for better performance
 	let tags = $derived(getServiceTags(service));
-	let formattedDate = $derived(new Date(service.created_at).toLocaleDateString());
+	let formattedDate = $derived(new Date(service.created_at || '').toLocaleDateString());
 
 	function formatPrice(price: number): string {
 		return new Intl.NumberFormat('en-US', {
@@ -97,7 +87,7 @@
 					{/each}
 				</div>
 			{/if}
-			{#if service.highlights && service.highlights.length > 0}
+			{#if service.highlights && Array.isArray(service.highlights) && service.highlights.length > 0}
 				<ul class="space-y-2">
 					{#each service.highlights as highlight}
 						<li class="flex items-start">
