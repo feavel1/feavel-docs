@@ -1,54 +1,8 @@
-/**
- * Utility functions for tag handling
- * Wrapper around generic relationship manager
- */
-
 import type { SupabaseClient } from '@supabase/supabase-js';
-import {
-	getAllItems,
-	getItemsForEntity,
-	addItemsToEntity,
-	removeItemsFromEntity,
-	updateEntityItems,
-	updateEntityItemsWithFunction,
-	stringsToObjects,
-	cleanItemName,
-	isValidItemName,
-	extractNamesFromRelations
-} from '$lib/utils/relationshipManager';
-
-// Configuration for tags
-const tagConfig = {
-	itemsTable: 'post_tags',
-	relationsTable: 'posts_tags_rel',
-	itemIdColumn: 'tag_id',
-	itemNameColumn: 'tag_name',
-	entityIdColumn: 'post_id',
-	foreignTableName: 'post_tags',
-	foreignTableAlias: 'post_tags',
-	cacheKey: 'all_tags'
-};
 
 export interface Tag {
 	id: number;
 	tag_name: string;
-}
-
-/**
- * Convert string tags to Tag objects for MultiTagSelect component
- */
-export function stringTagsToObjects(tags: string[]): Tag[] {
-	return stringsToObjects(tags).map(item => ({
-		id: item.id,
-		tag_name: item.name
-	}));
-}
-
-/**
- * Extract tag names from post relationships
- */
-export function extractTagNamesFromRelations(relations: any[]): string[] {
-	return extractNamesFromRelations(relations, 'post_tags.tag_name');
 }
 
 /**
@@ -67,66 +21,83 @@ export async function getTags(supabase: SupabaseClient) {
  * Get tags for a specific post
  */
 export async function getPostTags(supabase: SupabaseClient, postId: number) {
-	return getItemsForEntity(supabase, postId, tagConfig);
+	const { data, error } = await supabase
+		.from('posts_tags_rel')
+		.select('post_tags(tag_name)')
+		.eq('post_id', postId);
+
+	return { data, error };
 }
 
 /**
  * Add tags to a post
  */
 export async function addTagsToPost(supabase: SupabaseClient, postId: number, tagNames: string[]) {
-	return addItemsToEntity(supabase, postId, tagNames, tagConfig);
+	try {
+		// First, ensure all tags exist in the post_tags table
+		for (const tagName of tagNames) {
+			await supabase.from('post_tags').upsert(
+				{ tag_name: tagName },
+				{
+					onConflict: 'tag_name'
+				}
+			);
+		}
+
+		// Get tag IDs
+		const { data: tagData } = await supabase
+			.from('post_tags')
+			.select('id')
+			.in('tag_name', tagNames);
+
+		if (tagData && tagData.length > 0) {
+			// Create relationships
+			const relationships = tagData.map((tag: any) => ({
+				post_id: postId,
+				tag_id: tag.id
+			}));
+
+			// Insert relationships (ignore duplicates)
+			const { error } = await supabase.from('posts_tags_rel').insert(relationships);
+
+			return { error };
+		}
+
+		return { error: null };
+	} catch (error) {
+		console.error('Error adding tags to post:', error);
+		return { error };
+	}
 }
 
 /**
  * Remove all tags from a post
  */
 export async function removeTagsFromPost(supabase: SupabaseClient, postId: number) {
-	return removeItemsFromEntity(supabase, postId, tagConfig);
+	const { error } = await supabase
+		.from('posts_tags_rel')
+		.delete()
+		.eq('post_id', postId);
+
+	return { error };
 }
 
 /**
- * Update tags for a post
+ * Update tags for a post (add new, remove old)
  */
 export async function updatePostTags(supabase: SupabaseClient, postId: number, tagNames: string[]) {
-	return updateEntityItems(supabase, postId, tagNames, tagConfig);
-}
-
-/**
- * Update post tags using a database function for atomic operations
- * This function replaces all existing tags with the new set of tags
- */
-export async function updatePostTagsWithFunction(
-	supabase: SupabaseClient,
-	postId: number,
-	tagNames: string[]
-) {
-	return updateEntityItemsWithFunction(
-		supabase,
-		postId,
-		tagNames,
-		'update_post_tags',
-		'post_id_param',
-		'tag_names'
-	);
-}
-
-/**
- * Get all tags with caching
- */
-export async function getAllTags(supabase: SupabaseClient) {
-	return getAllItems(supabase, tagConfig);
-}
-
-/**
- * Validate and clean tag names
- */
-export function cleanTagName(tagName: string): string {
-	return cleanItemName(tagName);
-}
-
-/**
- * Check if tag name is valid
- */
-export function isValidTagName(tagName: string): boolean {
-	return isValidItemName(tagName);
+	try {
+		// Remove all existing tags first
+		await removeTagsFromPost(supabase, postId);
+		
+		// Add new tags
+		if (tagNames.length > 0) {
+			return await addTagsToPost(supabase, postId, tagNames);
+		}
+		
+		return { error: null };
+	} catch (error) {
+		console.error('Error updating post tags:', error);
+		return { error };
+	}
 }

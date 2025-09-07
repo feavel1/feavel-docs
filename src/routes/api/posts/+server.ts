@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { addTagsToPost, updatePostTagsWithFunction } from '$lib/utils/tags';
+import { addTagsToPost, updatePostTags } from '$lib/utils/tags';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { session } = await locals.safeGetSession();
@@ -110,8 +110,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Failed to update post' }, { status: 500 });
 		}
 
-		// Handle tags using the database function for atomic operations
-		const { error: tagError } = await updatePostTagsWithFunction(locals.supabase, id, tags || []);
+		// Handle tags using the updated function
+		const { error: tagError } = await updatePostTags(locals.supabase, id, tags || []);
 		if (tagError) {
 			console.error('Error updating tags:', tagError);
 			// Don't fail the entire request if tag update fails
@@ -138,8 +138,8 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Post ID is required' }, { status: 400 });
 		}
 
-		// Remove tags using the database function (pass empty array)
-		await updatePostTagsWithFunction(locals.supabase, id, []);
+		// Remove tags using the updated function (pass empty array)
+		await updatePostTags(locals.supabase, id, []);
 
 		// Delete the post
 		const { error: deleteError } = await locals.supabase

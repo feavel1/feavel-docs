@@ -9,8 +9,7 @@
 	import Editor from '$lib/components/modules/content/Editor.svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import { toast } from 'svelte-sonner';
-	import { extractTagNamesFromRelations } from '$lib/utils/tags';
-	import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
+		import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
 
 	interface Post {
 		id: string;
@@ -40,7 +39,7 @@
 	let postTitle = $state(post?.title || '');
 	let postCover = $state(post?.post_cover || '');
 	let selectedTags = $state<string[]>(
-		post?.posts_tags_rel ? extractTagNamesFromRelations(post.posts_tags_rel) : []
+		post?.posts_tags_rel ? post.posts_tags_rel.map(rel => rel.post_tags.tag_name) : []
 	);
 	let isPublic = $state(post?.public_visibility || false);
 	let isSubmitting = $state(false);

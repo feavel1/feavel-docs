@@ -1,6 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getTags } from '$lib/utils/tags';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { session } = await locals.safeGetSession();
@@ -30,8 +29,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, 'Post not found');
 	}
 
-	// Fetch available tags using utility function
-	const { data: tags, error: tagsError } = await getTags(locals.supabase);
+	// Fetch available tags directly from Supabase
+	const { data: tags, error: tagsError } = await locals.supabase
+		.from('post_tags')
+		.select('tag_name')
+		.order('tag_name');
 
 	if (tagsError) {
 		console.error('Error fetching tags:', tagsError);
