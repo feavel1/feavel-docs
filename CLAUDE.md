@@ -60,6 +60,14 @@ src/
 3. Client state management with Svelte 5 runes (`$state`, `$derived`)
 4. Utility functions in `src/lib/utils/` for data operations
 
+```ts
+import { Database, Tables, Enums } from "$lib/types/database.types.ts";
+// Before 😕
+let movie: Database['public']['Tables']['movies']['Row'] = // ...
+// After 😍
+let movie: Tables<'movies'>
+```
+
 ### Supabase Integration
 
 - Always use `event.locals.supabase` in server code (never create new clients)

@@ -1,12 +1,14 @@
-export interface PostComment {
-	id: number;
-	created_at: string;
-	updated_at: string;
-	post_id: number;
-	user_id: string;
-	parent_id?: number;
-	content: string;
-	is_deleted: boolean;
+import type { Tables } from '$lib/types/database.types';
+
+// Simplified types using the new Tables<> syntax for the base structures
+// Before: Complex manual type definitions
+// After: Clean, simplified types using Tables<'table_name'>
+export type PostCommentRow = Tables<'post_comments'>;
+export type PostLikeRow = Tables<'post_likes'>;
+
+// Extended interfaces that include relationships and computed properties
+// This maintains backward compatibility while leveraging the new type system
+export interface PostComment extends PostCommentRow {
 	users?: {
 		username: string;
 		avatar_url?: string;
@@ -16,11 +18,7 @@ export interface PostComment {
 	_reply_count?: number;
 }
 
-export interface PostLike {
-	id: number;
-	created_at: string;
-	post_id: number;
-	user_id: string;
+export interface PostLike extends PostLikeRow {
 	users?: {
 		username: string;
 		avatar_url?: string;
