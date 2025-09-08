@@ -1,6 +1,6 @@
 import type { Tables } from '$lib/types/database.types';
 
-export interface Post extends Tables<'posts'> {
+export type Post = Tables<'posts'> & {
 	users?: {
 		username: string;
 		avatar_url: string | null;
@@ -16,7 +16,7 @@ export interface Post extends Tables<'posts'> {
 	post_comments?: {
 		id: number;
 	}[];
-}
+};
 
 interface PostFilters {
 	selectedTags: string[];

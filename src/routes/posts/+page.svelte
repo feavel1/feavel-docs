@@ -8,28 +8,7 @@
 	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
 	import { getPostLikes } from '$lib/utils/posts';
 
-	interface Post {
-		id: string;
-		title: string;
-		content?: string;
-		content_v2?: any;
-		post_cover?: string;
-		post_views?: number;
-		created_at: string;
-		user_id: string;
-		public_visibility: boolean;
-		users?: {
-			username: string;
-			avatar_url?: string;
-		};
-		posts_tags_rel?: Array<{
-			post_tags: {
-				tag_name: string;
-			};
-		}>;
-		post_likes?: Array<any>;
-		post_comments?: Array<any>;
-	}
+	import type { Post } from '$lib/utils/posts';
 
 	let { data } = $props();
 	let { session, posts, tags, supabase } = data;

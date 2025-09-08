@@ -11,26 +11,7 @@
 	import { toast } from 'svelte-sonner';
 		import { availableTags, initializeTags, addNewTag } from '$lib/stores/tags';
 
-	interface Post {
-		id: string;
-		title: string;
-		content?: string;
-		content_v2?: any;
-		post_cover?: string;
-		post_views?: number;
-		created_at: string;
-		user_id: string;
-		public_visibility: boolean;
-		users?: {
-			username: string;
-			avatar_url?: string;
-		};
-		posts_tags_rel?: Array<{
-			post_tags: {
-				tag_name: string;
-			};
-		}>;
-	}
+	import type { Post } from '$lib/utils/posts';
 
 	let { data } = $props();
 	let { post, tags }: { post: Post; tags: string[] } = data;
