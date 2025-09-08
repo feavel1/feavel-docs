@@ -2,7 +2,7 @@
 	import ProfileCard from '$lib/components/modules/cards/ProfileCard.svelte';
 
 	const { data: propsData } = $props();
-	const { userProfiles, session, supabase } = propsData;
+	const { userProfilesWithStats, session, supabase } = propsData;
 </script>
 
 <div class="h-full pt-24">
@@ -15,10 +15,10 @@
 		</div>
 
 		<div class="mt-12">
-			{#if userProfiles.length > 0}
+			{#if userProfilesWithStats.length > 0}
 				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					{#each userProfiles as userProfile}
-						<ProfileCard {userProfile} {supabase} />
+					{#each userProfilesWithStats as userProfile}
+						<ProfileCard {userProfile} {supabase} stats={userProfile.stats} />
 					{/each}
 				</div>
 			{:else}

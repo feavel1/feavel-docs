@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { post_id } = params;
 
-	const { session } = await locals.safeGetSession();
+	const { session } = await parent();
 
 	if (!post_id) {
 		throw error(404, 'Post not found');

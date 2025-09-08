@@ -6,11 +6,13 @@
 	const {
 		userProfile,
 		supabase,
-		isOwnProfile = false
+		isOwnProfile = false,
+		stats = null
 	} = $props<{
 		userProfile: UserProfile;
 		supabase: SupabaseClient;
 		isOwnProfile?: boolean;
+		stats?: { posts: number; comments: number; likes: number } | null;
 	}>();
 
 	function handleImageError(event: Event) {
@@ -23,39 +25,63 @@
 	}
 </script>
 
-<div class="overflow-hidden rounded-lg bg-white shadow">
-	<div class="px-4 py-5 sm:p-6">
-		<div class="flex items-center">
-			<div class="flex-shrink-0">
-				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
+<div class="overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-indigo-300 transform hover:-translate-y-1">
+	<div class="p-6">
+		<div class="flex flex-col items-center text-center">
+			<!-- Avatar -->
+			<div class="relative mb-4">
+				<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 shadow-md ring-4 ring-white ring-opacity-50">
 					<img
-						class="h-12 w-12 rounded-full object-cover"
+						class="h-20 w-20 rounded-full object-cover border-2 border-white shadow-sm"
 						src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
 						alt={userProfile.full_name || userProfile.username}
 						onerror={handleImageError}
 					/>
-					<span class="text-lg font-medium text-gray-700" style="display: none;">
+					<span class="text-2xl font-bold text-gray-700" style="display: none;">
 						{(userProfile.full_name ?? userProfile.username ?? '').charAt(0).toUpperCase()}
 					</span>
 				</div>
 			</div>
-			<div class="ml-4 min-w-0 flex-1">
-				<p class="truncate text-sm font-medium text-gray-900">
+
+			<!-- User Info -->
+			<div class="mb-4 w-full">
+				<h3 class="text-lg font-bold text-gray-900 truncate">
 					{userProfile.full_name || userProfile.username}
-				</p>
-				<p class="truncate text-sm text-gray-500">@{userProfile.username}</p>
+				</h3>
+				<p class="text-sm text-indigo-600 font-medium truncate">@{userProfile.username}</p>
+				
 				{#if userProfile.description}
-					<p class="mt-1 line-clamp-2 text-sm text-gray-600">{userProfile.description}</p>
+					<p class="mt-2 text-sm text-gray-600 line-clamp-2">
+						{userProfile.description}
+					</p>
 				{/if}
 			</div>
-		</div>
-		<div class="mt-4">
+
+			<!-- Stats (if provided) -->
+			{#if stats}
+				<div class="grid grid-cols-3 gap-4 w-full mb-4">
+					<div class="flex flex-col items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+						<span class="text-lg font-bold text-gray-900">{stats.posts}</span>
+						<span class="text-xs text-gray-500">Posts</span>
+					</div>
+					<div class="flex flex-col items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+						<span class="text-lg font-bold text-gray-900">{stats.comments}</span>
+						<span class="text-xs text-gray-500">Comments</span>
+					</div>
+					<div class="flex flex-col items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+						<span class="text-lg font-bold text-gray-900">{stats.likes}</span>
+						<span class="text-xs text-gray-500">Likes</span>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Action Button -->
 			<a
 				href="/member/{userProfile.username}"
-				class="inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-3 py-2 text-sm leading-4 font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+				class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full transition-all duration-200 shadow-md hover:shadow-lg"
 			>
 				{#if isOwnProfile}
-					Your Profile
+					View Your Profile
 				{:else}
 					View Profile
 				{/if}

@@ -1,7 +1,8 @@
 import type { ServerLoad } from '@sveltejs/kit';
+import { getUserStats } from '$lib/utils/user';
 
-export const load: ServerLoad = async ({ locals }) => {
-	const { session } = await locals.safeGetSession();
+export const load: ServerLoad = async ({ locals, parent }) => {
+	const { session } = await parent();
 
 	// Fetch all public user profiles
 	const { data: userProfiles, error } = await locals.supabase
@@ -12,13 +13,24 @@ export const load: ServerLoad = async ({ locals }) => {
 	if (error) {
 		console.error('Error fetching user profiles:', error);
 		return {
-			userProfiles: [],
+			userProfilesWithStats: [],
 			session
 		};
 	}
 
+	// Fetch stats for each user
+	const userProfilesWithStats = userProfiles ? await Promise.all(
+		userProfiles.map(async (user) => {
+			const stats = await getUserStats(locals.supabase, user.id);
+			return {
+				...user,
+				stats
+			};
+		})
+	) : [];
+
 	return {
-		userProfiles: userProfiles || [],
+		userProfilesWithStats,
 		session
 	};
 };

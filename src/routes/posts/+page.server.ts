@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const { session } = await locals.safeGetSession();
+export const load: PageServerLoad = async ({ locals, parent }) => {
+	const { session } = await parent();
 
 	// Fetch posts with related data
 	const { data: posts, error: postsError } = await locals.supabase

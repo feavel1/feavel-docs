@@ -50,6 +50,44 @@ export async function isUsernameAvailable(
 	return !data && !error;
 }
 
+export async function getUserStats(
+	supabase: SupabaseClient,
+	userId: string
+): Promise<{ posts: number; comments: number; likes: number }> {
+	// Get posts count
+	const { count: postsCount } = await supabase
+		.from('posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('user_id', userId)
+		.eq('public_visibility', true);
+
+	// Get comments count
+	const { count: commentsCount } = await supabase
+		.from('post_comments')
+		.select('*', { count: 'exact', head: true })
+		.eq('user_id', userId)
+		.is('is_deleted', false);
+
+	// Get likes received count
+	const { count: likesCount } = await supabase
+		.from('post_likes')
+		.select('*', { count: 'exact', head: true })
+		.eq(
+			'post_likes.post_id',
+			supabase
+				.from('posts')
+				.select('id')
+				.eq('user_id', userId)
+				.eq('public_visibility', true)
+		);
+
+	return {
+		posts: postsCount || 0,
+		comments: commentsCount || 0,
+		likes: likesCount || 0
+	};
+}
+
 export function getAvatarUrl(
 	avatarUrl?: string | null,
 	username?: string,
