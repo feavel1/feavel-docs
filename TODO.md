@@ -5,19 +5,31 @@
 1. Make the public users page more functional
    - Add user statistics and activity indicators
 
+## Member Routes Structure
+
+2. Organize member routes for optimal user experience
+   - Create member profile viewing functionality
+   - Implement user dashboard with personalized content
+   - Add profile editing and settings management
+   - Implement user content management (posts, comments, etc.)
+   - Add user activity and analytics views
+   - Create user connections and messaging interfaces
+   - Implement notifications system for user activities
+   - Add user preferences and customization options
+
 ## Studio Management
 
-2. Make the public studios page
+3. Make the public studios page
    - Create studio listing page with cards
 
 ## Dashboards
 
-3. Make the dashboards for users and studios
+4. Make the dashboards for users and studios
    - Create user dashboard with profile management
    - Create studio dashboard with service management
    - Add analytics and statistics views
 
-4. Make the Apply for studio page
+5. Make the Apply for studio page
    - Create application form for new studios
    - Implement validation and submission logic
    - Add admin review workflow
