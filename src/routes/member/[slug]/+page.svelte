@@ -8,7 +8,14 @@
 	import { Heart, MessageCircle, FileText, Settings } from '@lucide/svelte';
 
 	const { data: propsData } = $props();
-	const { viewedUserProfile: userProfile, isOwnProfile, supabase, session, posts, stats } = propsData;
+	const {
+		viewedUserProfile: userProfile,
+		isOwnProfile,
+		supabase,
+		session,
+		posts,
+		stats
+	} = propsData;
 </script>
 
 <div class="container mx-auto px-4 py-8">

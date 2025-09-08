@@ -60,15 +60,19 @@ export const load: ServerLoad = async ({ params, locals, parent }) => {
 
 	const { count: likesReceivedCount, error: likesReceivedError } = await locals.supabase
 		.from('post_likes')
-		.select('*', { count: 'exact', head: true })
-		.eq(
-			'post_likes.post_id',
-			locals.supabase
-				.from('posts')
-				.select('id')
-				.eq('user_id', viewedUserProfile.id)
-				.eq('public_visibility', true)
-		);
+		.select(
+			`
+			id,
+			posts!inner (
+				id,
+				user_id,
+				public_visibility
+			)
+		`,
+			{ count: 'exact', head: true }
+		)
+		.eq('posts.user_id', viewedUserProfile.id)
+		.eq('posts.public_visibility', true);
 
 	if (postsError) {
 		console.error('Error fetching user posts:', postsError);

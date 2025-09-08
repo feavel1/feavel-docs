@@ -71,15 +71,19 @@ export async function getUserStats(
 	// Get likes received count
 	const { count: likesCount } = await supabase
 		.from('post_likes')
-		.select('*', { count: 'exact', head: true })
-		.eq(
-			'post_likes.post_id',
-			supabase
-				.from('posts')
-				.select('id')
-				.eq('user_id', userId)
-				.eq('public_visibility', true)
-		);
+		.select(
+			`
+			id,
+			posts!inner (
+				id,
+				user_id,
+				public_visibility
+			)
+		`,
+			{ count: 'exact', head: true }
+		)
+		.eq('posts.user_id', userId)
+		.eq('posts.public_visibility', true);
 
 	return {
 		posts: postsCount || 0,
