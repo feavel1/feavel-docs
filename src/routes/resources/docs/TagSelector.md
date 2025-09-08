@@ -10,8 +10,7 @@ The post management system has been refactored to use a more interconnected arch
 
 #### **Simplified Server Files**
 
-- **New Post**: `src/routes/posts/new/+page.server.ts` - Only handles authentication and tag loading
-- **Edit Post**: `src/routes/posts/edit/[id]/+page.server.ts` - Only handles authentication, post loading, and tag loading
+- **Post Detail**: `src/routes/posts/[post_id]/+page.server.ts` - Handles authentication, post loading, tag loading, and new post creation
 - **Removed Actions**: All form actions moved to client-side API calls
 
 #### **API Endpoints**
@@ -78,7 +77,9 @@ export function initializeTags(tagNames: string[]) {
 
 ### **Implementation in Components**
 
-#### **New Post Page**
+#### **Post Editor**
+
+The post editor (used for both new and existing posts) now uses the same pattern with the post detail page:
 
 ```svelte
 <script>
@@ -124,10 +125,6 @@ export function initializeTags(tagNames: string[]) {
 	showSearch={true}
 />
 ```
-
-#### **Edit Post Page**
-
-Uses the same pattern as the new post page, with additional pre-population of selected tags from the existing post.
 
 ## Implementation Details
 
@@ -178,40 +175,41 @@ The API endpoints leverage existing utility functions:
 
 ### **Client-Side Implementation**
 
-#### **New Post Page**
+#### **Post Editor**
+
+The post editor handles both creation and updating of posts:
 
 ```svelte
 async function handleSubmit() {
-	const response = await fetch('/api/posts', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			title: postTitle,
-			content: editorContent,
-			cover: postCover,
-			public_visibility: isPublic,
-			tags: selectedTags
-		})
-	});
-}
-```
-
-#### **Edit Post Page**
-
-```svelte
-async function handleSubmit() {
-	const response = await fetch('/api/posts', {
-		method: 'PUT',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			id: post?.id,
-			title: postTitle,
-			content: editorContent,
-			cover: postCover,
-			public_visibility: isPublic,
-			tags: selectedTags
-		})
-	});
+	// Determine if we're creating a new post or updating an existing one
+	if (isNewPost) {
+		// Create new post
+		const response = await fetch('/api/posts', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				title: postTitle,
+				content: editorContent,
+				cover: postCover,
+				public_visibility: isPublic,
+				tags: selectedTags
+			})
+		});
+	} else {
+		// Update existing post
+		const response = await fetch('/api/posts', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				id: post?.id,
+				title: postTitle,
+				content: editorContent,
+				cover: postCover,
+				public_visibility: isPublic,
+				tags: selectedTags
+			})
+		});
+	}
 }
 ```
 
@@ -249,6 +247,8 @@ async function handleSubmit() {
 
 The refactoring:
 
+- **Consolidates post creation and editing** into a single page component
+- **Removes redundant code** by eliminating the separate new post page
 - **Preserves all functionality** while improving reliability
 - **Uses existing utility functions** for tag operations
 - **Maintains backward compatibility** with existing data

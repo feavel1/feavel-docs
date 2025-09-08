@@ -41,7 +41,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			({ title, content, cover, public_visibility, tags } = body);
 		}
 
-		if (!title?.trim()) {
+		// For new posts, title can be null initially
+		// For updates, title is required
+		if (request.method === 'PUT' && !title?.trim()) {
 			return json({ error: 'Title is required' }, { status: 400 });
 		}
 
@@ -49,7 +51,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const { data: post, error: postError } = await locals.supabase
 			.from('posts')
 			.insert({
-				title: title.trim(),
+				title: title?.trim() || null,
 				content_v2: content || null,
 				post_cover: cover?.trim() || null,
 				public_visibility: public_visibility || false,
@@ -86,18 +88,48 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		const body = await request.json();
-		const { id, title, content, cover, public_visibility, tags } = body;
+		// Check if this is a multipart form request (for file uploads)
+		const contentType = request.headers.get('content-type') || '';
+		let id, title, content, cover, public_visibility, tags;
 
-		if (!id || !title?.trim()) {
-			return json({ error: 'Post ID and title are required' }, { status: 400 });
+		if (contentType.includes('multipart/form-data')) {
+			// Handle multipart form data (file upload)
+			const formData = await request.formData();
+			const jsonData = formData.get('data') as string;
+			const coverFile = formData.get('cover') as File | null;
+
+			if (!jsonData) {
+				return json({ error: 'Missing data' }, { status: 400 });
+			}
+
+			const parsedData = JSON.parse(jsonData);
+			id = parsedData.id;
+			title = parsedData.title;
+			content = parsedData.content;
+			cover = parsedData.cover;
+			public_visibility = parsedData.public_visibility;
+			tags = parsedData.tags;
+
+			// If we have a cover file, use the generated filename from the client
+			if (coverFile && cover) {
+				// cover already contains the generated filename from the client
+				// so we don't need to do anything here
+			}
+		} else {
+			// Handle regular JSON request
+			const body = await request.json();
+			({ id, title, content, cover, public_visibility, tags } = body);
+		}
+
+		if (!id) {
+			return json({ error: 'Post ID is required' }, { status: 400 });
 		}
 
 		// Update the post
 		const { error: postError } = await locals.supabase
 			.from('posts')
 			.update({
-				title: title.trim(),
+				title: title?.trim() || null,
 				content_v2: content || null,
 				post_cover: cover?.trim() || null,
 				public_visibility: public_visibility || false

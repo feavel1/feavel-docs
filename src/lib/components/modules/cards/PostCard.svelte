@@ -2,12 +2,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { Edit, Eye, Heart, MessageCircle } from '@lucide/svelte';
-	import { 
+	import { Eye, Heart, MessageCircle } from '@lucide/svelte';
+	import {
 		getPostTags,
 		formatDate,
 		getPostViews,
-		isPostOwner,
 		getPostLikes,
 		getPostComments,
 		type Post
@@ -17,15 +16,13 @@
 
 	interface Props {
 		post: Post;
-		userId?: string;
 		supabase: any;
 	}
 
-	let { post, userId, supabase }: Props = $props();
+	let { post, supabase }: Props = $props();
 
 	// Derived values for better performance
 	let tags = $derived(getPostTags(post));
-	let isOwner = $derived(isPostOwner(post, userId));
 	let likes = $derived(getPostLikes(post));
 	let comments = $derived(getPostComments(post));
 	let postViews = $derived(getPostViews(post));
@@ -72,12 +69,6 @@
 					<div class="text-xs text-muted-foreground">{formattedDate}</div>
 				</div>
 			</div>
-
-			{#if isOwner}
-				<Button variant="ghost" size="sm" href="/posts/edit/{post.id}" class="h-8 w-8 p-0">
-					<Edit class="h-4 w-4" />
-				</Button>
-			{/if}
 		</div>
 	</CardHeader>
 

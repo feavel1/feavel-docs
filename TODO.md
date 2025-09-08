@@ -1,11 +1,11 @@
 # Global TODO List
 
-## User Management
+## User Management (DONE)
 
 1. Make the public users page more functional
    - Add user statistics and activity indicators
 
-## Member Routes Structure
+## Member Routes Structure (DONE)
 
 2. Organize member routes for optimal user experience
    - Create member profile viewing functionality

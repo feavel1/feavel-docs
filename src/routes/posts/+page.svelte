@@ -11,7 +11,7 @@
 	import type { Post } from '$lib/utils/posts';
 
 	let { data } = $props();
-	let { session, posts, tags, supabase } = data;
+	let { session, posts, drafts, tags, supabase } = data;
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
@@ -112,10 +112,39 @@
 			<h1 class="text-3xl font-bold">Blog Posts</h1>
 			<p class="text-muted-foreground">Discover stories, ideas, and insights from our community</p>
 		</div>
-		<Button href="/posts/new" class="flex items-center gap-2">
-			<Plus class="h-4 w-4" />
-			New Post
-		</Button>
+		<div class="flex items-center gap-2">
+			{#if session && drafts && drafts.length > 0}
+				<div class="relative group">
+					<Button variant="outline" class="flex items-center gap-2">
+						<span>Drafts ({drafts.length})</span>
+					</Button>
+					<div class="absolute right-0 mt-1 w-64 rounded-md bg-popover p-2 shadow-lg z-10 hidden group-hover:block">
+						{#each drafts.slice(0, 5) as draft (draft.id)}
+							<a
+								href="/posts/{draft.id}"
+								class="block px-3 py-2 text-sm hover:bg-accent rounded cursor-pointer truncate"
+								title={draft.title}
+							>
+								{draft.title || 'Untitled Draft'}
+							</a>
+						{:else}
+							<div class="px-3 py-2 text-sm text-muted-foreground">
+								No drafts found
+							</div>
+						{/each}
+						{#if drafts.length > 5}
+							<div class="px-3 py-2 text-xs text-muted-foreground text-center border-t mt-1 pt-2">
+								+{drafts.length - 5} more drafts
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+			<Button href="/posts/new" class="flex items-center gap-2">
+				<Plus class="h-4 w-4" />
+				New Post
+			</Button>
+		</div>
 	</div>
 
 	<!-- Search, Filters, and Sorting -->
@@ -145,7 +174,7 @@
 	{#if filteredPosts.length > 0}
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each filteredPosts as post (post.id)}
-				<PostCard {post} userId={session?.user?.id} {supabase} />
+				<PostCard {post} {supabase} />
 			{/each}
 		</div>
 

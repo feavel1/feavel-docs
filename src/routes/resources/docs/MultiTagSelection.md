@@ -195,7 +195,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 ### 3. In Post Editor
 
 ```svelte
-<!-- src/routes/posts/new/+page.svelte -->
+<!-- src/routes/posts/[post_id]/+page.svelte -->
 <script lang="ts">
 	let selectedTags = $state<string[]>([]);
 

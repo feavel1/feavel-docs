@@ -12,7 +12,6 @@
 		viewedUserProfile: userProfile,
 		isOwnProfile,
 		supabase,
-		session,
 		posts,
 		stats
 	} = propsData;
@@ -93,7 +92,7 @@
 					{#if posts.length > 0}
 						<div class="grid gap-6 md:grid-cols-2">
 							{#each posts as post (post.id)}
-								<PostCard {post} userId={session?.user?.id} {supabase} />
+								<PostCard {post} {supabase} />
 							{/each}
 						</div>
 					{:else}
