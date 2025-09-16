@@ -24,6 +24,8 @@
 				const { default: SimpleImage } = await import('@editorjs/simple-image');
 				const { default: Checklist } = await import('@editorjs/checklist');
 				const { default: Marker } = await import('@editorjs/marker');
+				const { default: DragDrop } = await import('editorjs-drag-drop');
+				const { default: Undo } = await import('editorjs-undo');
 
 				editor = new EditorJS({
 					holder: editorEl,
@@ -40,6 +42,10 @@
 						inlineCode: InlineCode,
 						table: Table,
 						image: SimpleImage
+					},
+					onReady: () => {
+						new Undo({ editor });
+						new DragDrop(editor);
 					},
 					onChange: () => {
 						if (onChange && editor) {
