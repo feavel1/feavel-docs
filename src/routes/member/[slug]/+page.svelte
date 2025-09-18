@@ -1,11 +1,10 @@
 <script lang="ts">
 	import ProfileCard from '$lib/components/modules/cards/ProfileCard.svelte';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
-	import { Heart, MessageCircle, FileText, Settings } from '@lucide/svelte';
+	import { Settings } from '@lucide/svelte';
 
 	const { data: propsData } = $props();
 	const { viewedUserProfile: userProfile, isOwnProfile, supabase, posts, stats } = propsData;
@@ -17,11 +16,11 @@
 	</h1>
 
 	<!-- Profile Header with Stats -->
-	<div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+	<div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-4">
 		<!-- Profile Card -->
 		<div class="lg:col-span-1">
 			<div class="relative">
-				<ProfileCard {userProfile} {supabase} {isOwnProfile} />
+				<ProfileCard {userProfile} {supabase} {isOwnProfile} {stats} />
 				<!-- Verification badge placeholder -->
 				{#if false}
 					<!-- Replace with actual verification check when implemented -->
@@ -44,34 +43,10 @@
 					</Button>
 				</div>
 			{/if}
-
-			<!-- User Stats -->
-			<Card class="mt-6">
-				<CardHeader>
-					<CardTitle>Stats</CardTitle>
-				</CardHeader>
-				<CardContent class="grid grid-cols-3 gap-4">
-					<div class="flex flex-col items-center">
-						<FileText class="mb-1 h-6 w-6 text-muted-foreground" />
-						<span class="text-2xl font-bold">{stats.posts}</span>
-						<span class="text-sm text-muted-foreground">Posts</span>
-					</div>
-					<div class="flex flex-col items-center">
-						<MessageCircle class="mb-1 h-6 w-6 text-muted-foreground" />
-						<span class="text-2xl font-bold">{stats.comments}</span>
-						<span class="text-sm text-muted-foreground">Comments</span>
-					</div>
-					<div class="flex flex-col items-center">
-						<Heart class="mb-1 h-6 w-6 text-muted-foreground" />
-						<span class="text-2xl font-bold">{stats.likesReceived}</span>
-						<span class="text-sm text-muted-foreground">Likes</span>
-					</div>
-				</CardContent>
-			</Card>
 		</div>
 
 		<!-- Content Tabs -->
-		<div class="lg:col-span-2">
+		<div class="lg:col-span-3">
 			<Tabs value="posts" class="w-full">
 				<TabsList class="grid w-full grid-cols-3">
 					<TabsTrigger value="posts">Posts</TabsTrigger>
@@ -80,7 +55,7 @@
 				</TabsList>
 				<TabsContent value="posts" class="mt-6">
 					{#if posts.length > 0}
-						<div class="grid gap-6 md:grid-cols-2">
+						<div class="grid gap-6 md:grid-cols-3">
 							{#each posts as post (post.id)}
 								<PostCard {post} {supabase} />
 							{/each}

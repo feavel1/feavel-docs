@@ -1,5 +1,5 @@
 import type { ServerLoad } from '@sveltejs/kit';
-import { getUserStats } from '$lib/utils/user';
+import { getMultipleUserStats } from '$lib/utils/user';
 
 export const load: ServerLoad = async ({ locals, parent }) => {
 	const { session } = await parent();
@@ -18,17 +18,18 @@ export const load: ServerLoad = async ({ locals, parent }) => {
 		};
 	}
 
-	// Fetch stats for each user
+	// Fetch stats for all users in a single query
+	const userIds = userProfiles?.map(user => user.id) || [];
+	const userStatsMap = userIds.length > 0
+		? await getMultipleUserStats(locals.supabase, userIds)
+		: {};
+
+	// Combine user profiles with their stats
 	const userProfilesWithStats = userProfiles
-		? await Promise.all(
-				userProfiles.map(async (user) => {
-					const stats = await getUserStats(locals.supabase, user.id);
-					return {
-						...user,
-						stats
-					};
-				})
-			)
+		? userProfiles.map(user => ({
+				...user,
+				stats: userStatsMap[user.id] || { posts: 0, comments: 0, likes: 0 }
+			}))
 		: [];
 
 	return {

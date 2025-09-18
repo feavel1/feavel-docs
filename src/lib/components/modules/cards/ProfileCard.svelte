@@ -64,27 +64,25 @@
 					{userProfile.description}
 				</p>
 			{:else}
-				<p class="text-sm text-muted-foreground opacity-0">No description</p>
+				<p class="text-sm text-muted-foreground italic">No description available</p>
 			{/if}
 		</div>
 
-		<!-- Stats (if provided) -->
-		{#if stats}
-			<div class="mb-4 grid w-full grid-cols-3 gap-2">
-				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
-					<span class="text-lg font-bold text-foreground">{stats.posts}</span>
-					<span class="text-xs text-muted-foreground">Posts</span>
-				</div>
-				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
-					<span class="text-lg font-bold text-foreground">{stats.comments}</span>
-					<span class="text-xs text-muted-foreground">Comments</span>
-				</div>
-				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
-					<span class="text-lg font-bold text-foreground">{stats.likes}</span>
-					<span class="text-xs text-muted-foreground">Likes</span>
-				</div>
+		<!-- Stats -->
+		<div class="mb-4 grid w-full grid-cols-3 gap-2">
+			<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
+				<span class="text-lg font-bold text-foreground">{stats?.posts || 0}</span>
+				<span class="text-xs text-muted-foreground">Posts</span>
 			</div>
-		{/if}
+			<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
+				<span class="text-lg font-bold text-foreground">{stats?.comments || 0}</span>
+				<span class="text-xs text-muted-foreground">Comments</span>
+			</div>
+			<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
+				<span class="text-lg font-bold text-foreground">{stats?.likes || 0}</span>
+				<span class="text-xs text-muted-foreground">Likes</span>
+			</div>
+		</div>
 	</CardContent>
 
 	<CardFooter class="pt-0">

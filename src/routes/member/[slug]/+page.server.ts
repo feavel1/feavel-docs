@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
-import { getUserProfileByUsername } from '$lib/utils/user';
+import { getUserProfileByUsername, getUserStats } from '$lib/utils/user';
 import type { UserProfile } from '$lib/utils/user';
 
 export const load: ServerLoad = async ({ params, locals, parent }) => {
@@ -45,49 +45,11 @@ export const load: ServerLoad = async ({ params, locals, parent }) => {
 		.eq('public_visibility', true)
 		.order('created_at', { ascending: false });
 
-	// Get user statistics
-	const { count: postsCount, error: postsCountError } = await locals.supabase
-		.from('posts')
-		.select('*', { count: 'exact', head: true })
-		.eq('user_id', viewedUserProfile.id)
-		.eq('public_visibility', true);
-
-	const { count: commentsCount, error: commentsCountError } = await locals.supabase
-		.from('post_comments')
-		.select('*', { count: 'exact', head: true })
-		.eq('user_id', viewedUserProfile.id)
-		.is('is_deleted', false);
-
-	const { count: likesReceivedCount, error: likesReceivedError } = await locals.supabase
-		.from('post_likes')
-		.select(
-			`
-			id,
-			posts!inner (
-				id,
-				user_id,
-				public_visibility
-			)
-		`,
-			{ count: 'exact', head: true }
-		)
-		.eq('posts.user_id', viewedUserProfile.id)
-		.eq('posts.public_visibility', true);
+	// Get user statistics using the consolidated utility function
+	const stats = await getUserStats(locals.supabase, viewedUserProfile.id);
 
 	if (postsError) {
 		console.error('Error fetching user posts:', postsError);
-	}
-
-	if (postsCountError) {
-		console.error('Error fetching posts count:', postsCountError);
-	}
-
-	if (commentsCountError) {
-		console.error('Error fetching comments count:', commentsCountError);
-	}
-
-	if (likesReceivedError) {
-		console.error('Error fetching likes received count:', likesReceivedError);
 	}
 
 	return {
@@ -96,9 +58,9 @@ export const load: ServerLoad = async ({ params, locals, parent }) => {
 		session,
 		posts: posts || [],
 		stats: {
-			posts: postsCount || 0,
-			comments: commentsCount || 0,
-			likesReceived: likesReceivedCount || 0
+			posts: stats.posts,
+			comments: stats.comments,
+			likes: stats.likes
 		}
 	};
 };
