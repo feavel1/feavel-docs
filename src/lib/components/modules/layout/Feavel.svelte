@@ -1,4 +1,4 @@
-<a href="/" class="self-center fill-white sm:mr-5" aria-label="Home">
+<a href="/" class="self-center fill-primary sm:mr-5" aria-label="Home">
 	<svg
 		class="dark:fill-primary-50 h-5 w-24"
 		viewBox="0 0 3090 495"

@@ -4,11 +4,11 @@
 	let { href, children } = $props();
 </script>
 
-<li class="transition-all duration-200 hover:underline">
+<li class="">
 	<a
 		{href}
 		data-sveltekit-preload-data="hover"
-		class="text-foreground transition-colors hover:text-primary"
+		class="text-white transition-all duration-100 hover:text-gray-500 hover:underline"
 		onclick={modalProp.close}
 	>
 		{@render children?.()}
