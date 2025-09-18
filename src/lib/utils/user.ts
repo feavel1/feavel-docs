@@ -108,7 +108,7 @@ export async function getMultipleUserStats(
 	const statsMap: Record<string, { posts: number; comments: number; likes: number }> = {};
 
 	// Initialize all users with zero stats
-	userIds.forEach(userId => {
+	userIds.forEach((userId) => {
 		statsMap[userId] = { posts: 0, comments: 0, likes: 0 };
 	});
 
@@ -122,12 +122,12 @@ export async function getMultipleUserStats(
 	if (!postsError && postsData) {
 		// Count posts per user
 		const postsCount: Record<string, number> = {};
-		postsData.forEach(post => {
+		postsData.forEach((post) => {
 			postsCount[post.user_id] = (postsCount[post.user_id] || 0) + 1;
 		});
 
 		// Update stats map with post counts
-		Object.keys(postsCount).forEach(userId => {
+		Object.keys(postsCount).forEach((userId) => {
 			if (statsMap[userId]) {
 				statsMap[userId].posts = postsCount[userId];
 			}
@@ -144,12 +144,12 @@ export async function getMultipleUserStats(
 	if (!commentsError && commentsData) {
 		// Count comments per user
 		const commentsCount: Record<string, number> = {};
-		commentsData.forEach(comment => {
+		commentsData.forEach((comment) => {
 			commentsCount[comment.user_id] = (commentsCount[comment.user_id] || 0) + 1;
 		});
 
 		// Update stats map with comment counts
-		Object.keys(commentsCount).forEach(userId => {
+		Object.keys(commentsCount).forEach((userId) => {
 			if (statsMap[userId]) {
 				statsMap[userId].comments = commentsCount[userId];
 			}
@@ -165,9 +165,9 @@ export async function getMultipleUserStats(
 		.eq('public_visibility', true);
 
 	if (!userPostsError && userPosts && userPosts.length > 0) {
-		const postIds = userPosts.map(post => post.id);
+		const postIds = userPosts.map((post) => post.id);
 		const postToUserMap: Record<string, string> = {};
-		userPosts.forEach(post => {
+		userPosts.forEach((post) => {
 			postToUserMap[post.id] = post.user_id;
 		});
 
@@ -181,7 +181,7 @@ export async function getMultipleUserStats(
 			if (!likesError && likesData) {
 				// Group likes by post owner
 				const likesCount: Record<string, number> = {};
-				likesData.forEach(like => {
+				likesData.forEach((like) => {
 					const userId = postToUserMap[like.post_id];
 					if (userId) {
 						likesCount[userId] = (likesCount[userId] || 0) + 1;
@@ -189,7 +189,7 @@ export async function getMultipleUserStats(
 				});
 
 				// Update stats map with like counts
-				Object.keys(likesCount).forEach(userId => {
+				Object.keys(likesCount).forEach((userId) => {
 					if (statsMap[userId]) {
 						statsMap[userId].likes = likesCount[userId];
 					}

@@ -19,14 +19,13 @@ export const load: ServerLoad = async ({ locals, parent }) => {
 	}
 
 	// Fetch stats for all users in a single query
-	const userIds = userProfiles?.map(user => user.id) || [];
-	const userStatsMap = userIds.length > 0
-		? await getMultipleUserStats(locals.supabase, userIds)
-		: {};
+	const userIds = userProfiles?.map((user) => user.id) || [];
+	const userStatsMap =
+		userIds.length > 0 ? await getMultipleUserStats(locals.supabase, userIds) : {};
 
 	// Combine user profiles with their stats
 	const userProfilesWithStats = userProfiles
-		? userProfiles.map(user => ({
+		? userProfiles.map((user) => ({
 				...user,
 				stats: userStatsMap[user.id] || { posts: 0, comments: 0, likes: 0 }
 			}))
