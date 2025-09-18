@@ -201,6 +201,28 @@ export async function getMultipleUserStats(
 	return statsMap;
 }
 
+export async function updateUserProfile(
+	supabase: SupabaseClient,
+	userId: string,
+	data: Partial<{
+		full_name: string | null;
+		description: string | null;
+		birthday: string | null;
+	}>
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const { error } = await supabase.from('users').update(data).eq('id', userId);
+
+		if (error) {
+			return { success: false, error: error.message };
+		}
+
+		return { success: true };
+	} catch (error: any) {
+		return { success: false, error: error.message || 'Failed to update profile' };
+	}
+}
+
 export function getAvatarUrl(
 	avatarUrl?: string | null,
 	username?: string,
