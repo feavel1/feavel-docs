@@ -23,7 +23,7 @@
 			<Group title="COMMUNITY">
 				<A href="/member">Members</A>
 				<A href="/studio">Studios</A>
-				<A href="/auth/login">My Profile</A>
+				<A href="/member/dashboard">My Profile</A>
 				<A href="/messages">Messages</A>
 			</Group>
 

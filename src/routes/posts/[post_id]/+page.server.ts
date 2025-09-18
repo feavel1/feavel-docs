@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.order('tag_name');
 
 		if (!tagsError) {
-			tags = availableTags?.map(tag => tag.tag_name) || [];
+			tags = availableTags?.map((tag) => tag.tag_name) || [];
 		}
 
 		return {
@@ -124,7 +124,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.order('tag_name');
 
 		if (!tagsError) {
-			tags = availableTags?.map(tag => tag.tag_name) || [];
+			tags = availableTags?.map((tag) => tag.tag_name) || [];
 		}
 	}
 

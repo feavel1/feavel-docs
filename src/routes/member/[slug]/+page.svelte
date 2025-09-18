@@ -8,13 +8,7 @@
 	import { Heart, MessageCircle, FileText, Settings } from '@lucide/svelte';
 
 	const { data: propsData } = $props();
-	const {
-		viewedUserProfile: userProfile,
-		isOwnProfile,
-		supabase,
-		posts,
-		stats
-	} = propsData;
+	const { viewedUserProfile: userProfile, isOwnProfile, supabase, posts, stats } = propsData;
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -48,9 +42,9 @@
 			<!-- Settings Button for Own Profile -->
 			{#if isOwnProfile}
 				<div class="mt-4">
-					<Button href="/member/dashboard/settings" variant="outline" class="w-full">
+					<Button href="/member/dashboard" variant="outline" class="w-full">
 						<Settings class="mr-2 h-4 w-4" />
-						Profile Settings
+						Profile Dashboard
 					</Button>
 				</div>
 			{/if}

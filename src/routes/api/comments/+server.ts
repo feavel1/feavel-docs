@@ -1,6 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createComment, updateComment, deleteComment, type CommentFormData } from '$lib/utils/comments';
+import {
+	createComment,
+	updateComment,
+	deleteComment,
+	type CommentFormData
+} from '$lib/utils/comments';
 
 // Validation helpers
 const validateId = (id: any): number | null => {

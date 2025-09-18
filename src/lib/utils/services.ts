@@ -39,8 +39,8 @@ export function filterServices(services: Service[], filters: ServiceFilters): Se
 			(service) =>
 				service.name?.toLowerCase().includes(query) ||
 				service.service_type?.toLowerCase().includes(query) ||
-				(service.studios && 
-					(Array.isArray(service.studios) 
+				(service.studios &&
+					(Array.isArray(service.studios)
 						? service.studios[0]?.name?.toLowerCase().includes(query)
 						: service.studios.name?.toLowerCase().includes(query)))
 		);
@@ -50,7 +50,11 @@ export function filterServices(services: Service[], filters: ServiceFilters): Se
 }
 
 export function getServiceCategories(service: Service): string[] {
-	return service.services_category_rel?.map((rel: any) => rel.services_category?.category_name).filter(Boolean) || [];
+	return (
+		service.services_category_rel
+			?.map((rel: any) => rel.services_category?.category_name)
+			.filter(Boolean) || []
+	);
 }
 
 export function formatServicePrice(price: number): string {

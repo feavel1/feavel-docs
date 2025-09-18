@@ -27,13 +27,15 @@
 	}
 </script>
 
-<Card class="flex flex-col h-full transition-all hover:shadow-lg">
-	<CardHeader class="flex flex-col items-center text-center pb-4">
+<Card class="flex h-full flex-col transition-all hover:shadow-lg">
+	<CardHeader class="flex flex-col items-center pb-4 text-center">
 		<!-- Avatar -->
 		<div class="relative mb-4">
-			<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 shadow-md ring-4 ring-white dark:ring-gray-800 ring-opacity-50">
+			<div
+				class="ring-opacity-50 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 shadow-md ring-4 ring-white dark:ring-gray-800"
+			>
 				<img
-					class="h-20 w-20 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+					class="h-20 w-20 rounded-full border-2 border-white object-cover shadow-sm dark:border-gray-800"
 					src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
 					alt={userProfile.full_name || userProfile.username}
 					onerror={handleImageError}
@@ -46,17 +48,19 @@
 
 		<!-- User Info -->
 		<div class="w-full">
-			<h3 class="text-lg font-bold text-foreground truncate">
+			<h3 class="truncate text-lg font-bold text-foreground">
 				{userProfile.full_name || userProfile.username}
 			</h3>
-			<p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium truncate">@{userProfile.username}</p>
+			<p class="truncate text-sm font-medium text-indigo-600 dark:text-indigo-400">
+				@{userProfile.username}
+			</p>
 		</div>
 	</CardHeader>
 
-	<CardContent class="flex-grow flex flex-col justify-between pb-4">
-		<div class="mb-4 w-full min-h-[3rem]">
+	<CardContent class="flex flex-grow flex-col justify-between pb-4">
+		<div class="mb-4 min-h-[3rem] w-full">
 			{#if userProfile.description}
-				<p class="text-sm text-muted-foreground line-clamp-2">
+				<p class="line-clamp-2 text-sm text-muted-foreground">
 					{userProfile.description}
 				</p>
 			{:else}
@@ -66,16 +70,16 @@
 
 		<!-- Stats (if provided) -->
 		{#if stats}
-			<div class="grid grid-cols-3 gap-2 w-full mb-4">
-				<div class="flex flex-col items-center p-2 rounded-lg bg-muted/50">
+			<div class="mb-4 grid w-full grid-cols-3 gap-2">
+				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
 					<span class="text-lg font-bold text-foreground">{stats.posts}</span>
 					<span class="text-xs text-muted-foreground">Posts</span>
 				</div>
-				<div class="flex flex-col items-center p-2 rounded-lg bg-muted/50">
+				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
 					<span class="text-lg font-bold text-foreground">{stats.comments}</span>
 					<span class="text-xs text-muted-foreground">Comments</span>
 				</div>
-				<div class="flex flex-col items-center p-2 rounded-lg bg-muted/50">
+				<div class="flex flex-col items-center rounded-lg bg-muted/50 p-2">
 					<span class="text-lg font-bold text-foreground">{stats.likes}</span>
 					<span class="text-xs text-muted-foreground">Likes</span>
 				</div>
@@ -85,11 +89,7 @@
 
 	<CardFooter class="pt-0">
 		<!-- Action Button -->
-		<Button
-			variant="default"
-			href="/member/{userProfile.username}"
-			class="w-full"
-		>
+		<Button variant="default" href="/member/{userProfile.username}" class="w-full">
 			{#if isOwnProfile}
 				View Your Profile
 			{:else}

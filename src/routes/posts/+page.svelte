@@ -114,26 +114,26 @@
 		</div>
 		<div class="flex items-center gap-2">
 			{#if session && drafts && drafts.length > 0}
-				<div class="relative group">
+				<div class="group relative">
 					<Button variant="outline" class="flex items-center gap-2">
 						<span>Drafts ({drafts.length})</span>
 					</Button>
-					<div class="absolute right-0 mt-1 w-64 rounded-md bg-popover p-2 shadow-lg z-10 hidden group-hover:block">
+					<div
+						class="absolute right-0 z-10 mt-1 hidden w-64 rounded-md bg-popover p-2 shadow-lg group-hover:block"
+					>
 						{#each drafts.slice(0, 5) as draft (draft.id)}
 							<a
 								href="/posts/{draft.id}"
-								class="block px-3 py-2 text-sm hover:bg-accent rounded cursor-pointer truncate"
+								class="block cursor-pointer truncate rounded px-3 py-2 text-sm hover:bg-accent"
 								title={draft.title}
 							>
 								{draft.title || 'Untitled Draft'}
 							</a>
 						{:else}
-							<div class="px-3 py-2 text-sm text-muted-foreground">
-								No drafts found
-							</div>
+							<div class="px-3 py-2 text-sm text-muted-foreground">No drafts found</div>
 						{/each}
 						{#if drafts.length > 5}
-							<div class="px-3 py-2 text-xs text-muted-foreground text-center border-t mt-1 pt-2">
+							<div class="mt-1 border-t px-3 py-2 pt-2 text-center text-xs text-muted-foreground">
 								+{drafts.length - 5} more drafts
 							</div>
 						{/if}

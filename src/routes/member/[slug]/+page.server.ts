@@ -20,7 +20,7 @@ export const load: ServerLoad = async ({ params, locals, parent }) => {
 		if (!userProfile) {
 			throw error(404, 'User not found');
 		}
-		
+
 		viewedUserProfile = userProfile;
 	}
 

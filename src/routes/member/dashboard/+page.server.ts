@@ -3,7 +3,7 @@ import type { ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async ({ parent }) => {
 	const { session, userProfile } = await parent();
-	
+
 	// Check if user is logged in
 	if (!session) {
 		throw redirect(303, '/login');

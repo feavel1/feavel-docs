@@ -13,7 +13,9 @@ export interface ServiceCategory {
 export function getServiceTags(service: Service): string[] {
 	if (!service) return [];
 	return (
-		service.services_category_rel?.map((rel: any) => rel.services_category?.category_name).filter(Boolean) || []
+		service.services_category_rel
+			?.map((rel: any) => rel.services_category?.category_name)
+			.filter(Boolean) || []
 	);
 }
 

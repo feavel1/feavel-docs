@@ -19,15 +19,17 @@ export const load: ServerLoad = async ({ locals, parent }) => {
 	}
 
 	// Fetch stats for each user
-	const userProfilesWithStats = userProfiles ? await Promise.all(
-		userProfiles.map(async (user) => {
-			const stats = await getUserStats(locals.supabase, user.id);
-			return {
-				...user,
-				stats
-			};
-		})
-	) : [];
+	const userProfilesWithStats = userProfiles
+		? await Promise.all(
+				userProfiles.map(async (user) => {
+					const stats = await getUserStats(locals.supabase, user.id);
+					return {
+						...user,
+						stats
+					};
+				})
+			)
+		: [];
 
 	return {
 		userProfilesWithStats,

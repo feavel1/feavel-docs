@@ -9,10 +9,7 @@ export interface Tag {
  * Get all tags
  */
 export async function getTags(supabase: SupabaseClient) {
-	const { data, error } = await supabase
-		.from('post_tags')
-		.select('id, tag_name')
-		.order('tag_name');
+	const { data, error } = await supabase.from('post_tags').select('id, tag_name').order('tag_name');
 
 	return { data, error };
 }
@@ -74,10 +71,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
  * Remove all tags from a post
  */
 export async function removeTagsFromPost(supabase: SupabaseClient, postId: number) {
-	const { error } = await supabase
-		.from('posts_tags_rel')
-		.delete()
-		.eq('post_id', postId);
+	const { error } = await supabase.from('posts_tags_rel').delete().eq('post_id', postId);
 
 	return { error };
 }
@@ -89,12 +83,12 @@ export async function updatePostTags(supabase: SupabaseClient, postId: number, t
 	try {
 		// Remove all existing tags first
 		await removeTagsFromPost(supabase, postId);
-		
+
 		// Add new tags
 		if (tagNames.length > 0) {
 			return await addTagsToPost(supabase, postId, tagNames);
 		}
-		
+
 		return { error: null };
 	} catch (error) {
 		console.error('Error updating post tags:', error);

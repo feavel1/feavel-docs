@@ -32,7 +32,7 @@
 	// For new posts, redirect to the actual post URL after saving
 	let isNewPostCreated = $state(false);
 	let createdPostId = $state<string | null>(null);
-	
+
 	// Image upload functionality
 	let coverFile = $state<File | null>(null);
 	let coverPreview = $state<string>('');
@@ -63,7 +63,9 @@
 		editedContent = post?.content_v2 || null;
 		editedCover = post?.post_cover || '';
 		isPublic = post?.public_visibility || false;
-		selectedTags = post?.posts_tags_rel ? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name) : [];
+		selectedTags = post?.posts_tags_rel
+			? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name)
+			: [];
 		coverFile = null;
 		coverPreview = '';
 	}
@@ -96,7 +98,7 @@
 
 		try {
 			let coverFilename = editedCover;
-			
+
 			// Upload cover image if a file is selected
 			if (coverFile) {
 				const filename = await uploadPostCover(supabase, coverFile);
@@ -205,7 +207,7 @@
 					post.post_cover = coverFilename;
 					post.public_visibility = isPublic;
 					// Update tags in post data
-					post.posts_tags_rel = selectedTags.map(tag => ({
+					post.posts_tags_rel = selectedTags.map((tag) => ({
 						post_tags: { tag_name: tag }
 					}));
 					isEditing = false;
@@ -240,11 +242,15 @@
 	{#if post}
 		<!-- Post Header -->
 		<div class="mb-6">
-			<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex-1">
 					{#if isEditing}
-						<Input bind:value={editedTitle} class="text-3xl sm:text-4xl font-bold mb-3" placeholder="Post title" />
-						<div class="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
+						<Input
+							bind:value={editedTitle}
+							class="mb-3 text-3xl font-bold sm:text-4xl"
+							placeholder="Post title"
+						/>
+						<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 							<div class="flex items-center gap-1">
 								<User class="h-4 w-4" />
 								<span>{post.users?.username || 'Unknown'}</span>
@@ -259,8 +265,8 @@
 							</div>
 						</div>
 					{:else}
-						<h1 class="text-3xl sm:text-4xl font-bold mb-3">{post.title}</h1>
-						<div class="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
+						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">{post.title}</h1>
+						<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 							<div class="flex items-center gap-1">
 								<User class="h-4 w-4" />
 								<span>{post.users?.username || 'Unknown'}</span>
@@ -299,11 +305,7 @@
 				<div class="mb-6 space-y-3">
 					<Label for="cover">Cover Image (optional)</Label>
 					<div class="mt-2 space-y-2">
-						<Input 
-							type="file" 
-							accept="image/*" 
-							onchange={handleCoverFileSelect} 
-						/>
+						<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
 						{#if coverPreview}
 							<div class="mt-2">
 								<img
@@ -341,24 +343,22 @@
 						{/if}
 					</div>
 				</div>
-			{:else}
-				{#if post.post_cover}
-					<div class="mb-6 overflow-hidden rounded-lg">
-						<img
-							src={getPostCoverUrl(post.post_cover, supabase)}
-							alt={post.title}
-							class="h-48 w-full object-cover sm:h-64"
-						/>
-					</div>
-				{/if}
+			{:else if post.post_cover}
+				<div class="mb-6 overflow-hidden rounded-lg">
+					<img
+						src={getPostCoverUrl(post.post_cover, supabase)}
+						alt={post.title}
+						class="h-48 w-full object-cover sm:h-64"
+					/>
+				</div>
 			{/if}
 
 			{#if isEditing}
 				<div class="mb-6 space-y-4">
-					<div class="flex items-center justify-between p-4 rounded-lg border">
+					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
 							<h3 class="font-medium">Publishing Settings</h3>
-							<p class="text-sm text-muted-foreground mt-1">
+							<p class="mt-1 text-sm text-muted-foreground">
 								{isPublic
 									? 'This post will be visible to everyone.'
 									: 'This post will be saved as a draft.'}
@@ -373,7 +373,7 @@
 					<div class="space-y-2">
 						<Label>Tags</Label>
 						<MultiSelect
-							items={tags.map(tag => ({ id: tag, tag_name: tag }))}
+							items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
 							bind:selectedItems={selectedTags}
 							itemNameProperty="tag_name"
 							placeholder="Select tags..."
@@ -384,21 +384,19 @@
 						/>
 					</div>
 				</div>
-			{:else}
-				{#if post.posts_tags_rel && post.posts_tags_rel.length > 0}
-					<div class="mb-6 flex flex-wrap gap-2">
-						{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-							<Button
-								variant="outline"
-								size="sm"
-								href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-								class="h-6 px-2 text-xs"
-							>
-								{relation.post_tags.tag_name}
-							</Button>
-						{/each}
-					</div>
-				{/if}
+			{:else if post.posts_tags_rel && post.posts_tags_rel.length > 0}
+				<div class="mb-6 flex flex-wrap gap-2">
+					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
+						<Button
+							variant="outline"
+							size="sm"
+							href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+							class="h-6 px-2 text-xs"
+						>
+							{relation.post_tags.tag_name}
+						</Button>
+					{/each}
+				</div>
 			{/if}
 		</div>
 
@@ -407,21 +405,24 @@
 			<CardContent class="p-4 sm:p-6">
 				{#if isEditing}
 					<div class="prose prose-lg max-w-none">
-						<Editor content={editedContent} readOnly={false} onChange={handleContentChange} class="min-h-[500px]" />
+						<Editor
+							content={editedContent}
+							readOnly={false}
+							onChange={handleContentChange}
+							class="min-h-[500px]"
+						/>
+					</div>
+				{:else if post.content_v2}
+					<div class="prose prose-lg max-w-none">
+						<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
+					</div>
+				{:else if post.content}
+					<!-- Fallback for legacy content -->
+					<div class="prose prose-lg max-w-none">
+						{@html post.content}
 					</div>
 				{:else}
-					{#if post.content_v2}
-						<div class="prose prose-lg max-w-none">
-							<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
-						</div>
-					{:else if post.content}
-						<!-- Fallback for legacy content -->
-						<div class="prose prose-lg max-w-none">
-							{@html post.content}
-						</div>
-					{:else}
-						<p class="text-muted-foreground">No content available.</p>
-					{/if}
+					<p class="text-muted-foreground">No content available.</p>
 				{/if}
 			</CardContent>
 		</Card>
