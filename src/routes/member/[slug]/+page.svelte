@@ -12,10 +12,6 @@
 </script>
 
 <div class="container mx-auto px-4 py-8">
-	<div class="mb-6">
-		<a href="/member" class="text-sm text-indigo-600 hover:text-indigo-500"> ← Back to Members </a>
-	</div>
-
 	<h1 class="mb-6 text-3xl font-bold">
 		{isOwnProfile ? 'Your Profile' : `${userProfile.username}'s Profile`}
 	</h1>

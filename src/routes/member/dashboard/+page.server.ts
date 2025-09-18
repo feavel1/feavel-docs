@@ -1,17 +1,15 @@
-import { redirect } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
+import { getUserStats } from '$lib/utils/user';
 
-export const load: ServerLoad = async ({ parent }) => {
+export const load: ServerLoad = async ({ locals: { supabase }, parent }) => {
 	const { session, userProfile } = await parent();
 
-	// Check if user is logged in
-	if (!session) {
-		throw redirect(303, '/login');
-	}
+	// Get user statistics using the utility function
+	const stats = await getUserStats(supabase, session.user.id);
 
-	// For the dashboard, we always use the current user's profile from parent
 	return {
 		userProfile,
+		stats,
 		session
 	};
 };
