@@ -8,6 +8,7 @@
 	import { updateMostUsedCategories } from '$lib/stores/mostUsedCategories';
 	import LangSwitch from '$lib/components/modules/layout/LangSwitch.svelte';
 	import CloudBackground from '$lib/components/modules/layout/CloudBackground.svelte';
+	import ModeSwitcher from '$lib/components/modules/layout/ModeSwitcher.svelte';
 
 	let { children, data } = $props();
 
@@ -29,6 +30,7 @@
 		<div class="flex items-center justify-between">
 			<Feavel />
 			<div class="flex items-center gap-2">
+				<ModeSwitcher />
 				<LangSwitch />
 				<HamburgerMenu />
 			</div>
