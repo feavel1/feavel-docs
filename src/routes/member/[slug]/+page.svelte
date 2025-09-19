@@ -59,7 +59,7 @@
 									onclick={() => (window.location.href = '/member/dashboard')}
 								>
 									<Settings class="mr-2 h-4 w-4" />
-									Settings
+									Dashboard
 								</Button>
 							{/if}
 						</div>

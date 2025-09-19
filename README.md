@@ -152,21 +152,6 @@ posts_tags_rel (id, post_id, tag_id, created_at)
 - Create new tags while editing posts
 - Tags are automatically suggested based on content
 
-## 🧪 Testing
-
-### Run Tests
-
-```bash
-# Unit tests
-bun test
-
-# E2E tests
-bun run test:e2e
-
-# All tests
-bun run test
-```
-
 ### Test Coverage
 
 - Component testing with Vitest
