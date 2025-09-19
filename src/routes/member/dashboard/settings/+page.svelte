@@ -43,7 +43,6 @@
 	const form = superForm(formData, {
 		validators: zodClient(settingsSchema),
 		resetForm: false, // Don't reset form after submission
-		keepFocus: true, // Keep focus on the field after submission
 		onSubmit: () => {
 			submitting = true;
 		},
