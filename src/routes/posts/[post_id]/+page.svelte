@@ -1,14 +1,12 @@
 <script lang="ts" module>
 	import { z } from 'zod';
 
-	// Define a schema for Editor.js content blocks
 	const editorBlockSchema = z.object({
 		id: z.string().optional(),
 		type: z.string(),
 		data: z.record(z.any()).optional()
 	});
 
-	// Define the main post schema with nested data support
 	export const postSchema = z.object({
 		id: z.number().optional(),
 		title: z.string().max(200, { message: 'Title must be less than 200 characters' }).nullable(),
@@ -39,13 +37,11 @@
 	let { data } = $props();
 	let { post, session, supabase, tags = [], isNewPost = false, form: formData } = data;
 
-	// Initialize form with Superforms
 	const form = superForm(formData, {
 		validators: zodClient(postSchema),
-		dataType: 'json', // Allow nested data
-		resetForm: false, // Don't reset form after submission
+		dataType: 'json',
+		resetForm: false,
 		onResult: ({ result }) => {
-			// Focus on first error
 			if (result.type === 'failure' && form.errors && Object.keys(form.errors).length) {
 				requestAnimationFrame(() => {
 					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
@@ -54,7 +50,6 @@
 		},
 		onUpdated({ form }) {
 			if (form.message) {
-				// Display the message using a toast library
 				if (typeof form.message === 'string') {
 					toast.success(form.message);
 				} else if (form.message.text) {
@@ -64,26 +59,44 @@
 		}
 	});
 
-	// Form state
 	const { form: formValues, enhance, submitting } = form;
 
-	// Derived state for edit mode
 	let isEditing = $derived(isNewPost || (form.errors && Object.keys(form.errors).length > 0));
 
-	// For new posts, redirect to the actual post URL after saving
 	let isNewPostCreated = $state(false);
 
-	// Image upload functionality
 	let coverPreview = $state<string>('');
 
-	// Helper function to reset file state
-	function resetFileState() {
-		coverPreview = '';
-	}
+	// Consolidate editor data into a single object
+	let editorData = $derived({
+		title: $formValues.title || '',
+		content: $formValues.content,
+		cover: $formValues.post_cover || '',
+		isPublic: $formValues.public_visibility,
+		selectedTags: $formValues.tags,
+		coverPreview
+	});
+
+	// Consolidate event handlers into a single object
+	let eventHandlers = {
+		onEdit: handleEdit,
+		onTitleChange: (title: string) => { $formValues.title = title; },
+		onContentChange: (content: any) => {
+			if (isEditing) {
+				$formValues.content = content;
+			}
+		},
+		onCoverFileSelect: handleCoverFileSelect,
+		onCoverRemove: () => {
+			coverPreview = '';
+			$formValues.post_cover = null;
+		},
+		onPublicChange: (isPublic: boolean) => { $formValues.public_visibility = isPublic; }
+	};
+
 
 	function handleEdit() {
-		// Set isEditing to true to show the editor
-		// The form values are already initialized with the post data
+		// Show the editor
 	}
 
 	function handleCancel() {
@@ -93,19 +106,9 @@
 			return;
 		}
 		// Reset file state
-		resetFileState();
+		coverPreview = '';
 		// Reset form to initial values
 		form.reset();
-	}
-
-	function handleTitleChange(title: string) {
-		$formValues.title = title;
-	}
-
-	function handleContentChange(content: any) {
-		if (isEditing) {
-			$formValues.content = content;
-		}
 	}
 
 	async function handleCoverFileSelect(event: Event) {
@@ -150,19 +153,6 @@
 		}
 	}
 
-	function handleCoverRemove() {
-		resetFileState();
-		// Clear the cover from the form
-		$formValues.post_cover = null;
-	}
-
-	function handlePublicChange(publicStatus: boolean) {
-		$formValues.public_visibility = publicStatus;
-	}
-
-	
-	// The save functionality is now handled by the form action
-	// We can remove this function as it's no longer needed
 </script>
 
 <svelte:head>
@@ -185,19 +175,8 @@
 				{supabase}
 				{tags}
 				{isEditing}
-				editedTitle={$formValues.title || ''}
-				editedContent={$formValues.content}
-				editedCover={$formValues.post_cover || ''}
-				{coverPreview}
-				isPublic={$formValues.public_visibility}
-				selectedTags={$formValues.tags}
-				isSubmitting={$submitting}
-				onEdit={handleEdit}
-				onTitleChange={handleTitleChange}
-				onContentChange={handleContentChange}
-				onCoverFileSelect={handleCoverFileSelect}
-				onCoverRemove={handleCoverRemove}
-				onPublicChange={handlePublicChange}
+				editorData={editorData}
+				eventHandlers={eventHandlers}
 			/>
 
 			<!-- Save button for the form -->

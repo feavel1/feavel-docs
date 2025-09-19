@@ -13,13 +13,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		throw error(404, 'Post not found');
 	}
 
-	// Handle new post creation
 	if (post_id === 'new') {
 		if (!session) {
 			throw redirect(302, '/auth/login');
 		}
 
-		// Create initial form data for new post
 		const initialData = {
 			title: null,
 			content: null,
@@ -28,10 +26,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			tags: []
 		};
 
-		// Create form with Superforms
 		const form = await superValidate(initialData, zod(postSchema));
-
-		// Fetch available tags for editing
 		const tags = await fetchAllTags(locals.supabase);
 
 		return {
@@ -42,19 +37,16 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		};
 	}
 
-	// First, try to fetch the post without visibility restrictions to check ownership
 	const { data: postData, error: initialError } = await locals.supabase
 		.from('posts')
 		.select('user_id')
 		.eq('id', post_id)
 		.single();
 
-	// If we can't find the post at all, it doesn't exist
 	if (initialError || !postData) {
 		throw error(404, 'Post not found');
 	}
 
-	// Build the query for fetching the post with all related data
 	let postQuery = locals.supabase
 		.from('posts')
 		.select(
@@ -84,19 +76,16 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		)
 		.eq('id', post_id);
 
-	// If user is not the author, only show public posts
 	if (!session || session.user.id !== postData.user_id) {
 		postQuery = postQuery.eq('public_visibility', true);
 	}
 
-	// Fetch the post with related data
 	const { data: post, error: postError } = await postQuery.single();
 
 	if (postError || !post) {
 		throw error(404, 'Post not found');
 	}
 
-	// Only increment view count for public posts
 	if (post.public_visibility) {
 		await locals.supabase
 			.from('posts')
@@ -104,7 +93,6 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.eq('id', post_id);
 	}
 
-	// Prepare form data for existing post
 	const formData = {
 		id: post.id,
 		title: post.title,
@@ -114,10 +102,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		tags: post.posts_tags_rel ? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name) : []
 	};
 
-	// Create form with Superforms
 	const form = await superValidate(formData, zod(postSchema));
 
-	// Fetch available tags for editing if user is the author
 	let tags: string[] = [];
 	if (session && session.user.id === post.user_id) {
 		tags = await fetchAllTags(locals.supabase);
@@ -135,7 +121,6 @@ import { createPost, updatePost } from '$lib/utils/posts';
 import { uploadPostCover } from '$lib/utils/storage';
 
 export const actions: Actions = {
-	// Save post action
 	save: async ({ request, locals, params }) => {
 		const { post_id } = params;
 		const { session } = await locals.safeGetSession();
@@ -144,14 +129,12 @@ export const actions: Actions = {
 			return fail(401, { message: 'You must be logged in to save a post' });
 		}
 
-		// Validate form data
 		const form = await superValidate(request, zod(postSchema));
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		try {
-			// Handle post creation or update
 			if (post_id === 'new') {
 				const { post: createdPost, error } = await createPost(locals.supabase, session.user.id, {
 					title: form.data.title,
@@ -166,7 +149,6 @@ export const actions: Actions = {
 				}
 
 				if (createdPost) {
-					// Redirect to the new post page
 					throw redirect(302, `/posts/${createdPost.id}`);
 				}
 
@@ -202,7 +184,6 @@ export const actions: Actions = {
 		}
 	},
 
-	// Upload cover image action
 	uploadCover: async ({ request, locals }) => {
 		const { session } = await locals.safeGetSession();
 

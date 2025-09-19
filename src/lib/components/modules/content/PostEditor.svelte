@@ -11,19 +11,16 @@
 	import type { Post } from '$lib/utils/posts';
 	import type { SupabaseClient } from '@supabase/supabase-js';
 
-	interface Props {
-		post: Post;
-		session: any;
-		supabase: SupabaseClient;
-		tags: string[];
-		isEditing: boolean;
-		editedTitle: string;
-		editedContent: any;
-		editedCover: string;
+	interface EditorData {
+		title: string;
+		content: any;
+		cover: string;
 		isPublic: boolean;
 		selectedTags: string[];
 		coverPreview: string;
-		isSubmitting: boolean;
+	}
+
+	interface EventHandlers {
 		onEdit: () => void;
 		onTitleChange: (title: string) => void;
 		onContentChange: (content: any) => void;
@@ -32,31 +29,28 @@
 		onPublicChange: (isPublic: boolean) => void;
 	}
 
+	interface Props {
+		post: Post;
+		session: any;
+		supabase: SupabaseClient;
+		tags: string[];
+		isEditing: boolean;
+		editorData: EditorData;
+		eventHandlers: EventHandlers;
+	}
+
 	let {
 		post,
 		session,
 		supabase,
 		tags,
 		isEditing,
-		editedTitle,
-		editedContent,
-		editedCover,
-		isPublic,
-		selectedTags,
-		coverPreview,
-		onEdit,
-		onTitleChange,
-		onContentChange,
-		onCoverFileSelect,
-		onCoverRemove,
-		onPublicChange
+		editorData,
+		eventHandlers
 	}: Props = $props();
 
 	let isAuthor = $derived(post?.user_id === session?.user?.id);
 
-	function handleContentChange(data: any) {
-		onContentChange(data);
-	}
 </script>
 
 <div class="mb-6">
@@ -64,10 +58,10 @@
 		<div class="flex-1">
 			{#if isEditing}
 				<Input
-					bind:value={editedTitle}
+					bind:value={editorData.title}
 					class="mb-3 text-3xl font-bold sm:text-4xl"
 					placeholder="Post title"
-					onchange={(e) => onTitleChange((e.target as HTMLInputElement).value)}
+					onchange={(e) => eventHandlers.onTitleChange((e.target as HTMLInputElement).value)}
 				/>
 			{/if}
 			<h1 class={isEditing ? 'hidden' : 'mb-3 text-3xl font-bold sm:text-4xl'}>
@@ -89,7 +83,7 @@
 			</div>
 		</div>
 		{#if isAuthor && !isEditing}
-			<Button variant="outline" onclick={onEdit} size="sm">
+			<Button variant="outline" onclick={eventHandlers.onEdit} size="sm">
 				Edit
 			</Button>
 		{/if}
@@ -99,22 +93,22 @@
 		<div class="mb-6 space-y-3">
 			<Label for="cover">Cover Image (optional)</Label>
 			<div class="mt-2 space-y-2">
-				<Input type="file" accept="image/*" onchange={onCoverFileSelect} />
-				{#if coverPreview || editedCover}
+				<Input type="file" accept="image/*" onchange={eventHandlers.onCoverFileSelect} />
+				{#if editorData.coverPreview || editorData.cover}
 					<div class="mt-2">
 						<img
-							src={coverPreview || getPostCoverUrl(editedCover, supabase)}
-							alt={coverPreview ? 'Cover preview' : 'Cover image'}
+							src={editorData.coverPreview || getPostCoverUrl(editorData.cover, supabase)}
+							alt={editorData.coverPreview ? 'Cover preview' : 'Cover image'}
 							class="h-32 w-full rounded-md object-cover"
 						/>
 					</div>
 				{/if}
-				{#if coverPreview || editedCover}
+				{#if editorData.coverPreview || editorData.cover}
 					<Button
 						type="button"
 						variant="outline"
 						size="sm"
-						onclick={onCoverRemove}
+						onclick={eventHandlers.onCoverRemove}
 					>
 						Remove Cover
 					</Button>
@@ -137,14 +131,14 @@
 				<div>
 					<h3 class="font-medium">Publishing Settings</h3>
 					<p class="mt-1 text-sm text-muted-foreground">
-						{isPublic
+						{editorData.isPublic
 							? 'This post will be visible to everyone.'
 							: 'This post will be saved as a draft.'}
 					</p>
 				</div>
 				<div class="flex items-center gap-2">
 					<span class="text-sm text-muted-foreground">Draft</span>
-					<Switch bind:checked={isPublic} onchange={(e) => onPublicChange((e.target as HTMLInputElement).checked)} />
+					<Switch bind:checked={editorData.isPublic} onchange={(e) => eventHandlers.onPublicChange((e.target as HTMLInputElement).checked)} />
 					<span class="text-sm text-muted-foreground">Public</span>
 				</div>
 			</div>
@@ -152,7 +146,7 @@
 				<Label>Tags</Label>
 				<MultiSelect
 					items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-					bind:selectedItems={selectedTags}
+					bind:selectedItems={editorData.selectedTags}
 					itemNameProperty="tag_name"
 					placeholder="Select tags..."
 					label=""
@@ -184,15 +178,15 @@
 		{#if isEditing}
 			<div class="prose prose-lg max-w-none">
 				<Editor
-					content={editedContent}
+					content={editorData.content}
 					readOnly={false}
-					onChange={handleContentChange}
+					onChange={eventHandlers.onContentChange}
 					class="min-h-[500px]"
 				/>
 			</div>
 		{:else if post.content_v2}
 			<div class="prose prose-lg max-w-none">
-				<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
+				<Editor content={post.content_v2} readOnly={true} onChange={eventHandlers.onContentChange} />
 			</div>
 		{:else if post.content}
 			<!-- Fallback for legacy content -->
