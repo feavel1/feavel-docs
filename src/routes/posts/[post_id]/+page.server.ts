@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { fetchAllTags } from '$lib/utils/posts';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -39,7 +39,6 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 
 	// Handle existing post loading
-	// Fetch full post data with related information
 	const { data: post, error: postError } = await locals.supabase
 		.from('posts')
 		.select(
@@ -99,17 +98,23 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	};
 
 	const form = await superValidate(formData, zod(postSchema));
-
-	// Fetch tags only for post owner
-	let tags: string[] = [];
-	if (isOwner) {
-		tags = await fetchAllTags(locals.supabase);
-	}
+	const tags = isOwner ? await fetchAllTags(locals.supabase) : [];
 
 	return {
 		post,
 		form,
 		session,
-		tags
+		tags,
+		isNewPost: false
 	};
+};
+
+export const actions: Actions = {
+	default: async () => {
+		// Minimal boilerplate for form actions
+		// Implementation would go here
+		return {
+			success: true
+		};
+	}
 };

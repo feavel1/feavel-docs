@@ -44,7 +44,7 @@
 
 	let { data } = $props();
 	// Extract only necessary properties
-	const { post, session, supabase, tags = [], form: formData } = data;
+	const { post, session, supabase, tags = [], form: formData, isNewPost = false } = data;
 
 	// Initialize form with better error handling
 	const form = superForm(formData, {
@@ -117,39 +117,36 @@
 		Back to Posts
 	</Button>
 
-	{#if post}
+	{#if post || isNewPost}
 		<div class="mb-6">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex-1">
 					{#if canEdit}
-						<div class="relative">
-							<Input
-								bind:value={$formValues.title}
-								class="mb-3 pr-10 text-3xl font-bold sm:text-4xl"
-								placeholder="Post title"
-							/>
-							<span class="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
-								✎ Edit
-							</span>
-						</div>
+						<Input
+							bind:value={$formValues.title}
+							class="mb-3 text-3xl font-bold sm:text-4xl"
+							placeholder="Post title"
+						/>
 					{:else}
 						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">
-							{post.title}
+							{post?.title || 'New Post'}
 						</h1>
 					{/if}
 					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 						<div class="flex items-center gap-1">
 							<User class="h-4 w-4" />
-							<span>{post.users?.username || 'Unknown'}</span>
+							<span>{post?.users?.username || session?.user?.user_metadata?.username || 'Unknown'}</span>
 						</div>
-						<div class="flex items-center gap-1">
-							<Calendar class="h-4 w-4" />
-							<span>{new Date(post.created_at).toLocaleDateString()}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<Eye class="h-4 w-4" />
-							<span>{post.post_views || 0} views</span>
-						</div>
+						{#if post}
+							<div class="flex items-center gap-1">
+								<Calendar class="h-4 w-4" />
+								<span>{new Date(post.created_at).toLocaleDateString()}</span>
+							</div>
+							<div class="flex items-center gap-1">
+								<Eye class="h-4 w-4" />
+								<span>{post.post_views || 0} views</span>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -165,7 +162,7 @@
 						>
 							<img
 								src={coverPreview ||
-									($formValues.post_cover
+									($formValues.post_cover && post
 										? getPostCoverUrl($formValues.post_cover, supabase)
 										: '/placeholder-image.jpg')}
 								alt={coverPreview ? 'Cover preview' : 'Cover image'}
@@ -196,7 +193,7 @@
 							</Button>
 						{/if}
 					</div>
-				{:else if post.post_cover}
+				{:else if post?.post_cover}
 					<img
 						src={getPostCoverUrl(post.post_cover, supabase)}
 						alt={post.title}
@@ -235,7 +232,7 @@
 							emptyMessage="No tags found."
 						/>
 					</div>
-				{:else if post.posts_tags_rel?.length}
+				{:else if post?.posts_tags_rel?.length}
 					<div class="flex flex-wrap gap-2">
 						{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
 							<Button
@@ -247,6 +244,10 @@
 								{relation.post_tags.tag_name}
 							</Button>
 						{/each}
+					</div>
+				{:else}
+					<div class="flex flex-wrap gap-2">
+						<span class="text-sm text-muted-foreground">No tags</span>
 					</div>
 				{/if}
 			</div>
@@ -265,11 +266,11 @@
 								class="min-h-[500px]"
 							/>
 						</div>
-					{:else if post.content_v2}
+					{:else if post?.content_v2}
 						<div class="prose prose-lg max-w-none">
 							<Editor content={post.content_v2} readOnly={true} onChange={() => {}} />
 						</div>
-					{:else if post.content}
+					{:else if post?.content}
 						<!-- Fallback for legacy content -->
 						<div class="prose prose-lg max-w-none">
 							{@html post.content}
@@ -281,18 +282,20 @@
 			</form>
 		</Card>
 
-		<PostActions {post} {supabase} currentUserId={session?.user?.id} />
+		{#if post}
+			<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 
-		<PostAuthor {post} {supabase} />
+			<PostAuthor {post} {supabase} />
 
-		<!-- Comments Section -->
-		<CommentSection
-			postId={post.id}
-			postAuthorId={post.user_id}
-			currentUserId={session?.user?.id}
-			currentUser={session?.user}
-			{supabase}
-		/>
+			<!-- Comments Section -->
+			<CommentSection
+				postId={post.id}
+				postAuthorId={post.user_id}
+				currentUserId={session?.user?.id}
+				currentUser={session?.user}
+				{supabase}
+			/>
+		{/if}
 	{:else}
 		<div class="flex flex-col items-center justify-center py-12 text-center">
 			<div class="mb-4 rounded-full bg-muted p-4">
