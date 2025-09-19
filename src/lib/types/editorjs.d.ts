@@ -57,3 +57,13 @@ declare module '@editorjs/marker' {
 	const Marker: any;
 	export default Marker;
 }
+
+declare module 'editorjs-drag-drop' {
+	const DragDrop: any;
+	export default DragDrop;
+}
+
+declare module 'editorjs-undo' {
+	const Undo: any;
+	export default Undo;
+}

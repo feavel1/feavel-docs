@@ -1,9 +1,9 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { fetchAllTags } from '$lib/utils/posts';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { post_id } = params;
-
 	const { session } = await parent();
 
 	if (!post_id) {
@@ -35,15 +35,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 
 		// Fetch available tags for editing
-		let tags = [];
-		const { data: availableTags, error: tagsError } = await locals.supabase
-			.from('post_tags')
-			.select('tag_name')
-			.order('tag_name');
-
-		if (!tagsError) {
-			tags = availableTags?.map((tag) => tag.tag_name) || [];
-		}
+		const tags = await fetchAllTags(locals.supabase);
 
 		return {
 			post: newPost,
@@ -116,16 +108,9 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 
 	// Fetch available tags for editing if user is the author
-	let tags = [];
+	let tags: string[] = [];
 	if (session && session.user.id === post.user_id) {
-		const { data: availableTags, error: tagsError } = await locals.supabase
-			.from('post_tags')
-			.select('tag_name')
-			.order('tag_name');
-
-		if (!tagsError) {
-			tags = availableTags?.map((tag) => tag.tag_name) || [];
-		}
+		tags = await fetchAllTags(locals.supabase);
 	}
 
 	return {

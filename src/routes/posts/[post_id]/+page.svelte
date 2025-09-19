@@ -1,23 +1,17 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
-	import { ArrowLeft, Edit, Eye, Calendar, User } from '@lucide/svelte';
+	import { ArrowLeft, Eye } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import Editor from '$lib/components/modules/content/Editor.svelte';
 	import CommentSection from '$lib/components/modules/content/CommentSection.svelte';
-	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
-	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
-	import { getAvatarUrl } from '$lib/utils/user';
-	import { getPostCoverUrl, uploadPostCover, createPostFormData } from '$lib/utils/storage';
+	import PostEditor from '$lib/components/modules/content/PostEditor.svelte';
+	import PostActions from '$lib/components/modules/content/PostActions.svelte';
+	import PostAuthor from '$lib/components/modules/content/PostAuthor.svelte';
+	import { uploadPostCover } from '$lib/utils/storage';
+	import { createPost, updatePost } from '$lib/utils/posts';
 
 	let { data } = $props();
 	let { post, session, supabase, tags = [], isNewPost = false } = data;
-
-	let isAuthor = $derived(post?.user_id === session?.user?.id);
 	let isEditing = $state(isNewPost); // Automatically enter edit mode for new posts
 	let editedTitle = $state(post?.title || '');
 	let editedContent = $state(post?.content_v2 || null);
@@ -40,26 +34,6 @@
 	function resetFileState() {
 		coverFile = null;
 		coverPreview = '';
-	}
-
-	function handleCoverFileSelect(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
-
-		if (!file) return;
-
-		if (!file.type.startsWith('image/')) {
-			toast.error('Please select an image file');
-			return;
-		}
-
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error('File size must be less than 5MB');
-			return;
-		}
-
-		coverFile = file;
-		coverPreview = URL.createObjectURL(file);
 	}
 
 	function handleEdit() {
@@ -86,12 +60,50 @@
 		resetFileState();
 	}
 
-	function handleContentChange(data: any) {
+	function handleTitleChange(title: string) {
+		editedTitle = title;
+	}
+
+	function handleContentChange(content: any) {
 		if (isEditing) {
-			editedContent = data;
+			editedContent = content;
 		}
 	}
 
+	function handleCoverFileSelect(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+
+		if (!file) return;
+
+		if (!file.type.startsWith('image/')) {
+			toast.error('Please select an image file');
+			return;
+		}
+
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error('File size must be less than 5MB');
+			return;
+		}
+
+		coverFile = file;
+		coverPreview = URL.createObjectURL(file);
+	}
+
+	function handleCoverRemove() {
+		resetFileState();
+		if (!isNewPost) {
+			editedCover = post?.post_cover || '';
+		} else {
+			editedCover = '';
+		}
+	}
+
+	function handlePublicChange(publicStatus: boolean) {
+		isPublic = publicStatus;
+	}
+
+	
 	async function handleSave() {
 		// For new posts, title is not required initially but is required for saving
 		if (!editedTitle.trim() && !isNewPost) {
@@ -117,56 +129,71 @@
 			}
 
 			// Prepare post data
-			let postData: any = {
-				title: editedTitle,
-				content: editedContent,
-				cover: coverFilename,
-				public_visibility: isPublic,
-				tags: selectedTags
-			};
 
-			// Add ID for existing posts
-			if (!isNewPost && post?.id) {
-				postData.id = post.id;
-			}
+			// Handle post creation or update
+			if (isNewPost) {
+				if (!session) {
+					toast.error('You must be logged in to create a post');
+					isSubmitting = false;
+					return;
+				}
 
-			// Create form data using our utility
-			const requestData = await createPostFormData(postData, coverFile);
+				const { post: createdPost, error } = await createPost(supabase, session.user.id, {
+					title: editedTitle || null,
+					content: editedContent,
+					cover: coverFilename || null,
+					public_visibility: isPublic,
+					tags: selectedTags || []
+				});
 
-			// Determine HTTP method
-			const method = isNewPost ? 'POST' : 'PUT';
+				if (error) {
+					toast.error(error);
+					isSubmitting = false;
+					return;
+				}
 
-			// Prepare fetch options
-			const fetchOptions: RequestInit = {
-				method
-			};
-
-			// Set body and headers based on request type
-			if (requestData instanceof FormData) {
-				fetchOptions.body = requestData;
-			} else {
-				fetchOptions.headers = {
-					'Content-Type': 'application/json'
-				};
-				fetchOptions.body = requestData;
-			}
-
-			// Make the request
-			const response = await fetch('/api/posts', fetchOptions);
-			const result = await response.json();
-
-			if (response.ok) {
-				if (isNewPost) {
+				if (createdPost) {
 					toast.success('Post created successfully!');
 					isNewPostCreated = true;
-					createdPostId = result.postId || result.id;
+					createdPostId = String(createdPost.id);
 					// Redirect to the new post page
-					if (createdPostId) {
-						goto(`/posts/${createdPostId}`);
+					goto(`/posts/${createdPostId}`);
+				}
+			} else {
+				if (!session) {
+					toast.error('You must be logged in to update a post');
+					isSubmitting = false;
+					return;
+				}
+
+				if (!post?.id) {
+					toast.error('Post ID is missing');
+					isSubmitting = false;
+					return;
+				}
+
+				const { success, error } = await updatePost(
+					supabase,
+					session.user.id,
+					post.id,
+					{
+						title: editedTitle || null,
+						content: editedContent,
+						cover: coverFilename || null,
+						public_visibility: isPublic,
+						tags: selectedTags || []
 					}
-				} else {
-					toast.success('Post updated successfully!');
-					// Update the post data
+				);
+
+				if (!success) {
+					toast.error(error || 'Failed to update post');
+					isSubmitting = false;
+					return;
+				}
+
+				toast.success('Post updated successfully!');
+				// Update the post data
+				if (post) {
 					post.title = editedTitle;
 					post.content_v2 = editedContent;
 					post.post_cover = coverFilename;
@@ -175,14 +202,13 @@
 					post.posts_tags_rel = selectedTags.map((tag) => ({
 						post_tags: { tag_name: tag }
 					}));
-					isEditing = false;
 				}
-				// Clear file state after successful save
-				coverFile = null;
-				coverPreview = '';
-			} else {
-				toast.error(result.error || `Failed to ${isNewPost ? 'create' : 'update'} post`);
+				isEditing = false;
 			}
+
+			// Clear file state after successful save
+			coverFile = null;
+			coverPreview = '';
 		} catch (error) {
 			console.error(`Error ${isNewPost ? 'creating' : 'updating'} post:`, error);
 			toast.error(`Failed to ${isNewPost ? 'create' : 'update'} post`);
@@ -205,218 +231,32 @@
 	</Button>
 
 	{#if post}
-		<!-- Post Header -->
-		<div class="mb-6">
-			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-				<div class="flex-1">
-					{#if isEditing}
-						<Input
-							bind:value={editedTitle}
-							class="mb-3 text-3xl font-bold sm:text-4xl"
-							placeholder="Post title"
-						/>
-					{/if}
-					<h1 class={isEditing ? 'hidden' : 'mb-3 text-3xl font-bold sm:text-4xl'}>
-						{post.title}
-					</h1>
-					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-						<div class="flex items-center gap-1">
-							<User class="h-4 w-4" />
-							<span>{post.users?.username || 'Unknown'}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<Calendar class="h-4 w-4" />
-							<span>{new Date(post.created_at).toLocaleDateString()}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<Eye class="h-4 w-4" />
-							<span>{post.post_views || 0} views</span>
-						</div>
-					</div>
-				</div>
-				{#if isAuthor}
-					{#if isEditing}
-						<div class="flex gap-2">
-							<Button variant="outline" onclick={handleCancel} disabled={isSubmitting} size="sm">
-								Cancel
-							</Button>
-							<Button onclick={handleSave} disabled={isSubmitting} size="sm">
-								{isSubmitting ? 'Saving...' : 'Save'}
-							</Button>
-						</div>
-					{:else}
-						<Button variant="outline" onclick={handleEdit} size="sm">
-							<Edit class="mr-1.5 h-4 w-4" />
-							Edit
-						</Button>
-					{/if}
-				{/if}
-			</div>
+		<PostEditor
+			{post}
+			{session}
+			{supabase}
+			{tags}
+			{isEditing}
+			{editedTitle}
+			{editedContent}
+			{editedCover}
+			{isPublic}
+			{selectedTags}
+			{coverPreview}
+			{isSubmitting}
+			onEdit={handleEdit}
+			onCancel={handleCancel}
+			onSave={handleSave}
+			onTitleChange={handleTitleChange}
+			onContentChange={handleContentChange}
+			onCoverFileSelect={handleCoverFileSelect}
+			onCoverRemove={handleCoverRemove}
+			onPublicChange={handlePublicChange}
+		/>
 
-			{#if isEditing}
-				<div class="mb-6 space-y-3">
-					<Label for="cover">Cover Image (optional)</Label>
-					<div class="mt-2 space-y-2">
-						<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
-						{#if coverPreview || editedCover}
-							<div class="mt-2">
-								<img
-									src={coverPreview || getPostCoverUrl(editedCover, supabase)}
-									alt={coverPreview ? 'Cover preview' : 'Cover image'}
-									class="h-32 w-full rounded-md object-cover"
-								/>
-							</div>
-						{/if}
-						{#if coverFile || editedCover}
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onclick={() => {
-									resetFileState();
-									if (!isNewPost) {
-										editedCover = post?.post_cover || '';
-									} else {
-										editedCover = '';
-									}
-								}}
-							>
-								Remove Cover
-							</Button>
-						{/if}
-					</div>
-				</div>
-			{:else if post.post_cover}
-				<div class="mb-6 overflow-hidden rounded-lg">
-					<img
-						src={getPostCoverUrl(post.post_cover, supabase)}
-						alt={post.title}
-						class="h-48 w-full object-cover sm:h-64"
-					/>
-				</div>
-			{/if}
+		<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 
-			{#if isEditing}
-				<div class="mb-6 space-y-4">
-					<div class="flex items-center justify-between rounded-lg border p-4">
-						<div>
-							<h3 class="font-medium">Publishing Settings</h3>
-							<p class="mt-1 text-sm text-muted-foreground">
-								{isPublic
-									? 'This post will be visible to everyone.'
-									: 'This post will be saved as a draft.'}
-							</p>
-						</div>
-						<div class="flex items-center gap-2">
-							<span class="text-sm text-muted-foreground">Draft</span>
-							<Switch bind:checked={isPublic} />
-							<span class="text-sm text-muted-foreground">Public</span>
-						</div>
-					</div>
-					<div class="space-y-2">
-						<Label>Tags</Label>
-						<MultiSelect
-							items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-							bind:selectedItems={selectedTags}
-							itemNameProperty="tag_name"
-							placeholder="Select tags..."
-							label=""
-							showSearch={true}
-							searchPlaceholder="Search tags..."
-							emptyMessage="No tags found."
-						/>
-					</div>
-				</div>
-			{:else if post.posts_tags_rel?.length}
-				<div class="mb-6 flex flex-wrap gap-2">
-					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-						<Button
-							variant="outline"
-							size="sm"
-							href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-							class="h-6 px-2 text-xs"
-						>
-							{relation.post_tags.tag_name}
-						</Button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-
-		<!-- Post Content -->
-		<Card>
-			<CardContent class="p-4 sm:p-6">
-				{#if isEditing}
-					<div class="prose prose-lg max-w-none">
-						<Editor
-							content={editedContent}
-							readOnly={false}
-							onChange={handleContentChange}
-							class="min-h-[500px]"
-						/>
-					</div>
-				{:else if post.content_v2}
-					<div class="prose prose-lg max-w-none">
-						<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
-					</div>
-				{:else if post.content}
-					<!-- Fallback for legacy content -->
-					<div class="prose prose-lg max-w-none">
-						{@html post.content}
-					</div>
-				{:else}
-					<p class="text-muted-foreground">No content available.</p>
-				{/if}
-			</CardContent>
-		</Card>
-
-		<!-- Post Actions -->
-		<div class="mt-6 flex items-center justify-between">
-			<div class="flex items-center gap-4">
-				<LikeButton postId={post.id} {supabase} currentUserId={session?.user?.id} />
-			</div>
-		</div>
-
-		<!-- Author Info -->
-		<Card class="mt-6">
-			<CardHeader>
-				<h3 class="text-lg font-semibold">About the Author</h3>
-			</CardHeader>
-			<CardContent>
-				<div class="flex items-center gap-4">
-					<div class="flex-shrink-0">
-						<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
-							<img
-								class="h-12 w-12 rounded-full object-cover"
-								src={getAvatarUrl(post.users?.avatar_url, post.users?.username, supabase)}
-								alt={post.users?.full_name || post.users?.username}
-								onerror={(e) => {
-									const target = e.target as HTMLImageElement;
-									target.style.display = 'none';
-									const fallback = target.nextElementSibling as HTMLElement;
-									if (fallback) {
-										fallback.style.display = 'flex';
-									} else {
-										// If no fallback element, show the parent container
-										target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
-									}
-								}}
-							/>
-
-							<span class="text-lg font-medium text-gray-700" style="display: none;">
-								{(post.users?.full_name ?? post.users?.username ?? '').charAt(0).toUpperCase()}
-							</span>
-						</div>
-					</div>
-					<div>
-						<p class="font-medium">{post.users?.full_name || post.users?.username || 'Unknown'}</p>
-						<p class="text-sm text-muted-foreground">
-							Published on {new Date(post.created_at).toLocaleDateString()}
-						</p>
-					</div>
-				</div>
-			</CardContent>
-		</Card>
+		<PostAuthor {post} {supabase} />
 
 		<!-- Comments Section -->
 		<CommentSection
