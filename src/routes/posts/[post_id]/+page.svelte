@@ -28,7 +28,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowLeft, Eye, User, Calendar } from '@lucide/svelte';
-	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import CommentSection from '$lib/components/modules/content/CommentSection.svelte';
 	import PostActions from '$lib/components/modules/content/PostActions.svelte';
@@ -45,7 +44,7 @@
 
 	let { data } = $props();
 	// Extract only necessary properties
-	const { post, session, supabase, tags = [], isNewPost = false, form: formData } = data;
+	const { post, session, supabase, tags = [], form: formData } = data;
 
 	// Initialize form with better error handling
 	const form = superForm(formData, {
@@ -59,47 +58,20 @@
 				requestAnimationFrame(() => {
 					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
 				});
-
-				// Show error toast
-				if (result.data?.message) {
-					toast.error(result.data.message);
-				}
+			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				toast.success(form.message.text);
 			}
 		}
 	});
 
-	const { form: formValues, submitting } = form;
+	const { form: formValues, enhance } = form;
 
-	let isEditing = $state(isNewPost || (form.errors && Object.keys(form.errors).length > 0));
-	let forceEditing = $state(false);
-
-	$effect(() => {
-		isEditing = forceEditing || isNewPost || (form.errors && Object.keys(form.errors).length > 0);
-	});
-	let isAuthor = $derived(post?.user_id === session?.user?.id);
-
-	let isNewPostCreated = $state(false);
+	let canEdit = $derived(post?.user_id === session?.user?.id);
 
 	let coverPreview = $state<string>('');
-
-	function handleEdit() {
-		// Show the editor
-		forceEditing = true;
-	}
-
-	function handleCancel() {
-		// If we're canceling a new post that hasn't been saved, redirect to posts list
-		if (isNewPost && !isNewPostCreated) {
-			goto('/posts');
-			return;
-		}
-		// Reset editing state
-		forceEditing = false;
-		// Reset file state
-		coverPreview = '';
-		// Reset form to initial values
-		form.reset();
-	}
 
 	async function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -123,25 +95,13 @@
 		toast.info('Cover upload would be implemented in a full version');
 	}
 
-	function handleTitleChange(e: Event) {
-		const target = e.target as HTMLInputElement;
-		$formValues.title = target.value;
-	}
-
 	function handleContentChange(content: any) {
-		if (isEditing) {
-			$formValues.content = content;
-		}
+		$formValues.content = content;
 	}
 
 	function handleCoverRemove() {
 		coverPreview = '';
 		$formValues.post_cover = null;
-	}
-
-	function handlePublicChange(e: Event) {
-		const target = e.target as HTMLInputElement;
-		$formValues.public_visibility = target.checked;
 	}
 </script>
 
@@ -161,13 +121,17 @@
 		<div class="mb-6">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex-1">
-					{#if isEditing}
-						<Input
-							bind:value={$formValues.title}
-							class="mb-3 text-3xl font-bold sm:text-4xl"
-							placeholder="Post title"
-							onchange={handleTitleChange}
-						/>
+					{#if canEdit}
+						<div class="relative">
+							<Input
+								bind:value={$formValues.title}
+								class="mb-3 pr-10 text-3xl font-bold sm:text-4xl"
+								placeholder="Post title"
+							/>
+							<span class="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
+								✎ Edit
+							</span>
+						</div>
 					{:else}
 						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">
 							{post.title}
@@ -188,47 +152,61 @@
 						</div>
 					</div>
 				</div>
-				{#if isAuthor && !isEditing}
-					<Button variant="outline" onclick={handleEdit} size="sm">Edit</Button>
-				{/if}
 			</div>
 
-			{#if isEditing}
-				<div class="mb-6 space-y-3">
-					<Label for="cover">Cover Image (optional)</Label>
-					<div class="mt-2 space-y-2">
-						<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
-						{#if coverPreview || $formValues.post_cover}
-							<div class="mt-2">
-								<img
-									src={coverPreview ||
-										($formValues.post_cover
-											? getPostCoverUrl($formValues.post_cover, supabase)
-											: '')}
-									alt={coverPreview ? 'Cover preview' : 'Cover image'}
-									class="h-32 w-full rounded-md object-cover"
-								/>
+			<div class="mb-6 overflow-hidden rounded-lg">
+				{#if canEdit}
+					<div class="group relative">
+						<button
+							type="button"
+							class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
+							onclick={() => document.getElementById('cover-input')?.click()}
+							aria-label="Change cover image"
+						>
+							<img
+								src={coverPreview ||
+									($formValues.post_cover
+										? getPostCoverUrl($formValues.post_cover, supabase)
+										: '/placeholder-image.jpg')}
+								alt={coverPreview ? 'Cover preview' : 'Cover image'}
+								class="h-full w-full object-cover"
+							/>
+							<div
+								class="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<span class="text-lg font-medium text-white">Click to change cover</span>
 							</div>
-						{/if}
-						{#if coverPreview || $formValues.post_cover}
-							<Button type="button" variant="outline" size="sm" onclick={handleCoverRemove}>
+						</button>
+						<Input
+							type="file"
+							id="cover-input"
+							accept="image/*"
+							onchange={handleCoverFileSelect}
+							class="hidden"
+						/>
+						{#if $formValues.post_cover || coverPreview}
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								onclick={handleCoverRemove}
+								class="absolute top-2 right-2"
+							>
 								Remove Cover
 							</Button>
 						{/if}
 					</div>
-				</div>
-			{:else if post.post_cover}
-				<div class="mb-6 overflow-hidden rounded-lg">
+				{:else if post.post_cover}
 					<img
 						src={getPostCoverUrl(post.post_cover, supabase)}
 						alt={post.title}
 						class="h-48 w-full object-cover sm:h-64"
 					/>
-				</div>
-			{/if}
+				{/if}
+			</div>
 
-			{#if isEditing}
-				<div class="mb-6 space-y-4">
+			<div class="mb-6 space-y-4">
+				{#if canEdit}
 					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
 							<h3 class="font-medium">Publishing Settings</h3>
@@ -240,10 +218,7 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="text-sm text-muted-foreground">Draft</span>
-							<Switch
-								bind:checked={$formValues.public_visibility}
-								onchange={handlePublicChange}
-							/>
+							<Switch bind:checked={$formValues.public_visibility} />
 							<span class="text-sm text-muted-foreground">Public</span>
 						</div>
 					</div>
@@ -260,65 +235,51 @@
 							emptyMessage="No tags found."
 						/>
 					</div>
-				</div>
-			{:else if post.posts_tags_rel?.length}
-				<div class="mb-6 flex flex-wrap gap-2">
-					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-						<Button
-							variant="outline"
-							size="sm"
-							href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-							class="h-6 px-2 text-xs"
-						>
-							{relation.post_tags.tag_name}
-						</Button>
-					{/each}
-				</div>
-			{/if}
+				{:else if post.posts_tags_rel?.length}
+					<div class="flex flex-wrap gap-2">
+						{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
+							<Button
+								variant="outline"
+								size="sm"
+								href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+								class="h-6 px-2 text-xs"
+							>
+								{relation.post_tags.tag_name}
+							</Button>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Post Content -->
 		<Card>
-			<CardContent class="p-4 sm:p-6">
-				{#if isEditing}
-					<div class="prose prose-lg max-w-none">
-						<Editor
-							content={$formValues.content}
-							readOnly={false}
-							onChange={handleContentChange}
-							class="min-h-[500px]"
-						/>
-					</div>
-				{:else if post.content_v2}
-					<div class="prose prose-lg max-w-none">
-						<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
-					</div>
-				{:else if post.content}
-					<!-- Fallback for legacy content -->
-					<div class="prose prose-lg max-w-none">
-						{@html post.content}
-					</div>
-				{:else}
-					<p class="text-muted-foreground">No content available.</p>
-				{/if}
-			</CardContent>
-		</Card>
-
-		<!-- Action buttons for the form -->
-		{#if isEditing}
-			<div class="mt-4 flex justify-end gap-2">
-				<Button type="button" variant="outline" onclick={handleCancel} disabled={$submitting}>
-					Cancel
-				</Button>
-				<Button type="button" disabled={$submitting}>
-					{#if $submitting}
-						Saving...
+			<form method="POST" use:enhance>
+				<CardContent class="p-4 sm:p-6">
+					{#if canEdit}
+						<div class="prose prose-lg max-w-none">
+							<Editor
+								content={$formValues.content}
+								readOnly={false}
+								onChange={handleContentChange}
+								class="min-h-[500px]"
+							/>
+						</div>
+					{:else if post.content_v2}
+						<div class="prose prose-lg max-w-none">
+							<Editor content={post.content_v2} readOnly={true} onChange={() => {}} />
+						</div>
+					{:else if post.content}
+						<!-- Fallback for legacy content -->
+						<div class="prose prose-lg max-w-none">
+							{@html post.content}
+						</div>
 					{:else}
-						Save Post (Not Implemented)
+						<p class="text-muted-foreground">No content available.</p>
 					{/if}
-				</Button>
-			</div>
-		{/if}
+				</CardContent>
+			</form>
+		</Card>
 
 		<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 
