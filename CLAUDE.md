@@ -110,22 +110,35 @@ export const load = async ({ parent }) => {
 
 	const form = superForm(formData, {
 		validators: zodClient(settingsSchema),
-		resetForm: false
+		resetForm: false,
+		onResult: () => {
+			// Focus on first error
+			if (form.errors && Object.keys(form.errors).length) {
+				requestAnimationFrame(() => {
+					document.querySelector < HTMLElement > '[aria-invalid="true"]'?.focus();
+				});
+			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				toast.success(form.message.text);
+			}
+		}
 	});
 
-	const { form: formValues, enhance, submitting } = form;
+	const { form: formValues, enhance, submitting, message } = form;
 </script>
 
 <form method="POST" use:enhance>
 	<input bind:value={$formValues.full_name} />
 	<!-- Form fields -->
-	<button disabled={$submitting}>
-		{#if $submitting}
+	<button disabled={$submitting}
+		>{#if $submitting}
 			Saving...
 		{:else}
 			Save Changes
-		{/if}
-	</button>
+		{/if}</button
+	>
 </form>
 ```
 
