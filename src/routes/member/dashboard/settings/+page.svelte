@@ -35,13 +35,34 @@
 	import * as Form from '$lib/components/ui/form';
 	import { toast } from 'svelte-sonner';
 
-	const { data: propsData } = $props();
-	const { userProfile, session, supabase } = propsData;
+	// Extract data from props
+	const { data } = $props();
+	const { userProfile, session, supabase, form: formData } = data;
 
-	const form = superForm(propsData.form, {
-		validators: zodClient(settingsSchema)
+	// Initialize form with proper binding and submission handling
+	const form = superForm(formData, {
+		validators: zodClient(settingsSchema),
+		resetForm: false, // Don't reset form after submission
+		keepFocus: true, // Keep focus on the field after submission
+		onSubmit: () => {
+			submitting = true;
+		},
+		onResult: ({ result }) => {
+			submitting = false;
+			// Don't update form values with server data on success
+			if (result.type === 'success') {
+				// Just show the success message, keep current form values
+				return;
+			}
+		},
+		onError: () => {
+			submitting = false;
+		}
 	});
+
+	// Form state
 	const { form: formValues, enhance } = form;
+	let submitting = $state(false);
 
 	// Derive form message and errors
 	let message = $derived(form.message);
@@ -115,7 +136,13 @@
 				</Form.Field>
 
 				<div class="flex justify-end">
-					<Form.Button>Save Changes</Form.Button>
+					<Form.Button disabled={submitting}>
+						{#if submitting}
+							Saving...
+						{:else}
+							Save Changes
+						{/if}
+					</Form.Button>
 				</div>
 			</CardContent>
 		</Card>

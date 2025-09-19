@@ -14,17 +14,17 @@ export const load: PageServerLoad = async ({ parent }) => {
 		throw redirect(303, '/auth/login');
 	}
 
+	// Initialize form with user profile data
+	const formData = {
+		full_name: userProfile?.full_name ?? null,
+		description: userProfile?.description ?? null,
+		birthday: userProfile?.birthday ?? null
+	};
+
 	return {
 		userProfile,
 		session,
-		form: await superValidate(
-			{
-				full_name: userProfile?.full_name ?? null,
-				description: userProfile?.description ?? null,
-				birthday: userProfile?.birthday ?? null
-			},
-			zod(settingsSchema)
-		)
+		form: await superValidate(formData, zod(settingsSchema))
 	};
 };
 
