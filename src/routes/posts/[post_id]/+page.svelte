@@ -12,8 +12,7 @@
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import { getAvatarUrl } from '$lib/utils/user';
-	import { getPostCoverUrl } from '$lib/utils/storage';
-	import { uploadPostCover } from '$lib/utils/storage';
+	import { getPostCoverUrl, uploadPostCover, createPostFormData } from '$lib/utils/storage';
 
 	let { data } = $props();
 	let { post, session, supabase, tags = [], isNewPost = false } = data;
@@ -36,6 +35,12 @@
 	// Image upload functionality
 	let coverFile = $state<File | null>(null);
 	let coverPreview = $state<string>('');
+
+	// Helper function to reset file state
+	function resetFileState() {
+		coverFile = null;
+		coverPreview = '';
+	}
 
 	function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -66,8 +71,8 @@
 		selectedTags = post?.posts_tags_rel
 			? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name)
 			: [];
-		coverFile = null;
-		coverPreview = '';
+		// Reset file state
+		resetFileState();
 	}
 
 	function handleCancel() {
@@ -77,8 +82,8 @@
 			return;
 		}
 		isEditing = false;
-		coverFile = null;
-		coverPreview = '';
+		// Reset file state
+		resetFileState();
 	}
 
 	function handleContentChange(data: any) {
@@ -111,83 +116,43 @@
 				}
 			}
 
-			let response;
-			if (isNewPost) {
-				// For file uploads, we need to send as multipart form data
-				if (coverFile) {
-					const formData = new FormData();
-					formData.append(
-						'data',
-						JSON.stringify({
-							title: editedTitle,
-							content: editedContent,
-							cover: coverFilename,
-							public_visibility: isPublic,
-							tags: selectedTags
-						})
-					);
-					formData.append('cover', coverFile);
+			// Prepare post data
+			let postData: any = {
+				title: editedTitle,
+				content: editedContent,
+				cover: coverFilename,
+				public_visibility: isPublic,
+				tags: selectedTags
+			};
 
-					response = await fetch('/api/posts', {
-						method: 'POST',
-						body: formData
-					});
-				} else {
-					// Regular JSON request
-					response = await fetch('/api/posts', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({
-							title: editedTitle,
-							content: editedContent,
-							cover: coverFilename,
-							public_visibility: isPublic,
-							tags: selectedTags
-						})
-					});
-				}
-			} else {
-				// Update existing post
-				if (coverFile) {
-					const formData = new FormData();
-					formData.append(
-						'data',
-						JSON.stringify({
-							id: post?.id,
-							title: editedTitle,
-							content: editedContent,
-							cover: coverFilename,
-							public_visibility: isPublic,
-							tags: selectedTags
-						})
-					);
-					formData.append('cover', coverFile);
-
-					response = await fetch('/api/posts', {
-						method: 'PUT',
-						body: formData
-					});
-				} else {
-					// Regular JSON request
-					response = await fetch('/api/posts', {
-						method: 'PUT',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({
-							id: post?.id,
-							title: editedTitle,
-							content: editedContent,
-							cover: coverFilename,
-							public_visibility: isPublic,
-							tags: selectedTags
-						})
-					});
-				}
+			// Add ID for existing posts
+			if (!isNewPost && post?.id) {
+				postData.id = post.id;
 			}
 
+			// Create form data using our utility
+			const requestData = await createPostFormData(postData, coverFile);
+
+			// Determine HTTP method
+			const method = isNewPost ? 'POST' : 'PUT';
+
+			// Prepare fetch options
+			const fetchOptions: RequestInit = {
+				method
+			};
+
+			// Set body and headers based on request type
+			if (requestData instanceof FormData) {
+				fetchOptions.body = requestData;
+			} else {
+				fetchOptions.headers = {
+					'Content-Type': 'application/json'
+				};
+				fetchOptions.body = requestData;
+			}
+
+			// Make the request
+			const response = await fetch('/api/posts', fetchOptions);
 			const result = await response.json();
 
 			if (response.ok) {
@@ -250,37 +215,24 @@
 							class="mb-3 text-3xl font-bold sm:text-4xl"
 							placeholder="Post title"
 						/>
-						<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-							<div class="flex items-center gap-1">
-								<User class="h-4 w-4" />
-								<span>{post.users?.username || 'Unknown'}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Calendar class="h-4 w-4" />
-								<span>{new Date(post.created_at).toLocaleDateString()}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Eye class="h-4 w-4" />
-								<span>{post.post_views || 0} views</span>
-							</div>
-						</div>
-					{:else}
-						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">{post.title}</h1>
-						<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-							<div class="flex items-center gap-1">
-								<User class="h-4 w-4" />
-								<span>{post.users?.username || 'Unknown'}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Calendar class="h-4 w-4" />
-								<span>{new Date(post.created_at).toLocaleDateString()}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Eye class="h-4 w-4" />
-								<span>{post.post_views || 0} views</span>
-							</div>
-						</div>
 					{/if}
+					<h1 class={isEditing ? 'hidden' : 'mb-3 text-3xl font-bold sm:text-4xl'}>
+						{post.title}
+					</h1>
+					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+						<div class="flex items-center gap-1">
+							<User class="h-4 w-4" />
+							<span>{post.users?.username || 'Unknown'}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<Calendar class="h-4 w-4" />
+							<span>{new Date(post.created_at).toLocaleDateString()}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<Eye class="h-4 w-4" />
+							<span>{post.post_views || 0} views</span>
+						</div>
+					</div>
 				</div>
 				{#if isAuthor}
 					{#if isEditing}
@@ -306,19 +258,11 @@
 					<Label for="cover">Cover Image (optional)</Label>
 					<div class="mt-2 space-y-2">
 						<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
-						{#if coverPreview}
+						{#if coverPreview || editedCover}
 							<div class="mt-2">
 								<img
-									src={coverPreview}
-									alt="Cover preview"
-									class="h-32 w-full rounded-md object-cover"
-								/>
-							</div>
-						{:else if editedCover}
-							<div class="mt-2">
-								<img
-									src={getPostCoverUrl(editedCover, supabase)}
-									alt="Cover preview"
+									src={coverPreview || getPostCoverUrl(editedCover, supabase)}
+									alt={coverPreview ? 'Cover preview' : 'Cover image'}
 									class="h-32 w-full rounded-md object-cover"
 								/>
 							</div>
@@ -329,8 +273,7 @@
 								variant="outline"
 								size="sm"
 								onclick={() => {
-									coverFile = null;
-									coverPreview = '';
+									resetFileState();
 									if (!isNewPost) {
 										editedCover = post?.post_cover || '';
 									} else {
@@ -384,7 +327,7 @@
 						/>
 					</div>
 				</div>
-			{:else if post.posts_tags_rel && post.posts_tags_rel.length > 0}
+			{:else if post.posts_tags_rel?.length}
 				<div class="mb-6 flex flex-wrap gap-2">
 					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
 						<Button

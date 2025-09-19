@@ -313,6 +313,31 @@ export async function uploadPostCover(
 	}
 }
 
+// Utility for handling post form data with optional file uploads
+export async function createPostFormData(
+	data: {
+		id?: number;
+		title: string;
+		content: any;
+		cover?: string;
+		public_visibility: boolean;
+		tags: string[];
+	},
+	coverFile?: File | null
+): Promise<FormData | string> {
+	if (coverFile) {
+		const formData = new FormData();
+		formData.append(
+			'data',
+			JSON.stringify(data)
+		);
+		formData.append('cover', coverFile);
+		return formData;
+	} else {
+		return JSON.stringify(data);
+	}
+}
+
 // Utility to get full URL from filename for different file types
 export function getAvatarUrl(filename: string, supabase: SupabaseClient): string {
 	if (!filename) return '';
