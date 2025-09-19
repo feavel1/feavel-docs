@@ -1,3 +1,29 @@
+<script lang="ts" module>
+	import { z } from 'zod';
+
+	// Define a schema for Editor.js content blocks
+	const editorBlockSchema = z.object({
+		id: z.string().optional(),
+		type: z.string(),
+		data: z.record(z.any()).optional()
+	});
+
+	// Define the main post schema with nested data support
+	export const postSchema = z.object({
+		id: z.number().optional(),
+		title: z.string().max(200, { message: 'Title must be less than 200 characters' }).nullable(),
+		content: z.object({
+			blocks: z.array(editorBlockSchema),
+			version: z.string().optional()
+		}).nullable(),
+		post_cover: z.string().nullable(),
+		public_visibility: z.boolean(),
+		tags: z.array(z.string().min(1).max(30)).max(10)
+	});
+
+	export type PostSchema = typeof postSchema;
+</script>
+
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowLeft, Eye } from '@lucide/svelte';
@@ -7,46 +33,57 @@
 	import PostEditor from '$lib/components/modules/content/PostEditor.svelte';
 	import PostActions from '$lib/components/modules/content/PostActions.svelte';
 	import PostAuthor from '$lib/components/modules/content/PostAuthor.svelte';
-	import { uploadPostCover } from '$lib/utils/storage';
-	import { createPost, updatePost } from '$lib/utils/posts';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 
 	let { data } = $props();
-	let { post, session, supabase, tags = [], isNewPost = false } = data;
-	let isEditing = $state(isNewPost); // Automatically enter edit mode for new posts
-	let editedTitle = $state(post?.title || '');
-	let editedContent = $state(post?.content_v2 || null);
-	let editedCover = $state(post?.post_cover || '');
-	let isPublic = $state(post?.public_visibility || false);
-	let selectedTags = $state<string[]>(
-		post?.posts_tags_rel ? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name) : []
-	);
-	let isSubmitting = $state(false);
+	let { post, session, supabase, tags = [], isNewPost = false, form: formData } = data;
+
+	// Initialize form with Superforms
+	const form = superForm(formData, {
+		validators: zodClient(postSchema),
+		dataType: 'json', // Allow nested data
+		resetForm: false, // Don't reset form after submission
+		onResult: ({ result }) => {
+			// Focus on first error
+			if (result.type === 'failure' && form.errors && Object.keys(form.errors).length) {
+				requestAnimationFrame(() => {
+					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+				});
+			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				// Display the message using a toast library
+				if (typeof form.message === 'string') {
+					toast.success(form.message);
+				} else if (form.message.text) {
+					toast.success(form.message.text);
+				}
+			}
+		}
+	});
+
+	// Form state
+	const { form: formValues, enhance, submitting } = form;
+
+	// Derived state for edit mode
+	let isEditing = $derived(isNewPost || (form.errors && Object.keys(form.errors).length > 0));
 
 	// For new posts, redirect to the actual post URL after saving
 	let isNewPostCreated = $state(false);
-	let createdPostId = $state<string | null>(null);
 
 	// Image upload functionality
-	let coverFile = $state<File | null>(null);
 	let coverPreview = $state<string>('');
 
 	// Helper function to reset file state
 	function resetFileState() {
-		coverFile = null;
 		coverPreview = '';
 	}
 
 	function handleEdit() {
-		isEditing = true;
-		editedTitle = post?.title || '';
-		editedContent = post?.content_v2 || null;
-		editedCover = post?.post_cover || '';
-		isPublic = post?.public_visibility || false;
-		selectedTags = post?.posts_tags_rel
-			? post.posts_tags_rel.map((rel: any) => rel.post_tags.tag_name)
-			: [];
-		// Reset file state
-		resetFileState();
+		// Set isEditing to true to show the editor
+		// The form values are already initialized with the post data
 	}
 
 	function handleCancel() {
@@ -55,22 +92,23 @@
 			goto('/posts');
 			return;
 		}
-		isEditing = false;
 		// Reset file state
 		resetFileState();
+		// Reset form to initial values
+		form.reset();
 	}
 
 	function handleTitleChange(title: string) {
-		editedTitle = title;
+		$formValues.title = title;
 	}
 
 	function handleContentChange(content: any) {
 		if (isEditing) {
-			editedContent = content;
+			$formValues.content = content;
 		}
 	}
 
-	function handleCoverFileSelect(event: Event) {
+	async function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 
@@ -86,136 +124,45 @@
 			return;
 		}
 
-		coverFile = file;
 		coverPreview = URL.createObjectURL(file);
+
+		// Upload the cover image immediately
+		try {
+			const formData = new FormData();
+			formData.append('cover', file);
+
+			const response = await fetch('?/uploadCover', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (response.ok) {
+				const { coverFilename } = await response.json();
+				// Update the form value with the new cover filename
+				$formValues.post_cover = coverFilename;
+			} else {
+				const { message } = await response.json();
+				toast.error(message || 'Failed to upload cover image');
+			}
+		} catch (error) {
+			console.error('Error uploading cover image:', error);
+			toast.error('Failed to upload cover image');
+		}
 	}
 
 	function handleCoverRemove() {
 		resetFileState();
-		if (!isNewPost) {
-			editedCover = post?.post_cover || '';
-		} else {
-			editedCover = '';
-		}
+		// Clear the cover from the form
+		$formValues.post_cover = null;
 	}
 
 	function handlePublicChange(publicStatus: boolean) {
-		isPublic = publicStatus;
+		$formValues.public_visibility = publicStatus;
 	}
 
 	
-	async function handleSave() {
-		// For new posts, title is not required initially but is required for saving
-		if (!editedTitle.trim() && !isNewPost) {
-			toast.error('Title is required');
-			return;
-		}
-
-		isSubmitting = true;
-
-		try {
-			let coverFilename = editedCover;
-
-			// Upload cover image if a file is selected
-			if (coverFile) {
-				const filename = await uploadPostCover(supabase, coverFile);
-				if (filename) {
-					coverFilename = filename;
-				} else {
-					toast.error('Failed to upload cover image');
-					isSubmitting = false;
-					return;
-				}
-			}
-
-			// Prepare post data
-
-			// Handle post creation or update
-			if (isNewPost) {
-				if (!session) {
-					toast.error('You must be logged in to create a post');
-					isSubmitting = false;
-					return;
-				}
-
-				const { post: createdPost, error } = await createPost(supabase, session.user.id, {
-					title: editedTitle || null,
-					content: editedContent,
-					cover: coverFilename || null,
-					public_visibility: isPublic,
-					tags: selectedTags || []
-				});
-
-				if (error) {
-					toast.error(error);
-					isSubmitting = false;
-					return;
-				}
-
-				if (createdPost) {
-					toast.success('Post created successfully!');
-					isNewPostCreated = true;
-					createdPostId = String(createdPost.id);
-					// Redirect to the new post page
-					goto(`/posts/${createdPostId}`);
-				}
-			} else {
-				if (!session) {
-					toast.error('You must be logged in to update a post');
-					isSubmitting = false;
-					return;
-				}
-
-				if (!post?.id) {
-					toast.error('Post ID is missing');
-					isSubmitting = false;
-					return;
-				}
-
-				const { success, error } = await updatePost(
-					supabase,
-					session.user.id,
-					post.id,
-					{
-						title: editedTitle || null,
-						content: editedContent,
-						cover: coverFilename || null,
-						public_visibility: isPublic,
-						tags: selectedTags || []
-					}
-				);
-
-				if (!success) {
-					toast.error(error || 'Failed to update post');
-					isSubmitting = false;
-					return;
-				}
-
-				toast.success('Post updated successfully!');
-				// Update the post data
-				if (post) {
-					post.title = editedTitle;
-					post.content_v2 = editedContent;
-					post.post_cover = coverFilename;
-					post.public_visibility = isPublic;
-					// Update tags in post data
-					post.posts_tags_rel = selectedTags.map((tag) => ({
-						post_tags: { tag_name: tag }
-					}));
-				}
-				isEditing = false;
-			}
-
-			// Clear file state after successful save
-			coverFile = null;
-			coverPreview = '';
-		} catch (error) {
-			console.error(`Error ${isNewPost ? 'creating' : 'updating'} post:`, error);
-			toast.error(`Failed to ${isNewPost ? 'create' : 'update'} post`);
-		} finally {
-			isSubmitting = false;
-		}
-	}
+	// The save functionality is now handled by the form action
+	// We can remove this function as it's no longer needed
 </script>
 
 <svelte:head>
@@ -231,28 +178,44 @@
 	</Button>
 
 	{#if post}
-		<PostEditor
-			{post}
-			{session}
-			{supabase}
-			{tags}
-			{isEditing}
-			{editedTitle}
-			{editedContent}
-			{editedCover}
-			{isPublic}
-			{selectedTags}
-			{coverPreview}
-			{isSubmitting}
-			onEdit={handleEdit}
-			onCancel={handleCancel}
-			onSave={handleSave}
-			onTitleChange={handleTitleChange}
-			onContentChange={handleContentChange}
-			onCoverFileSelect={handleCoverFileSelect}
-			onCoverRemove={handleCoverRemove}
-			onPublicChange={handlePublicChange}
-		/>
+		<form method="POST" use:enhance>
+			<PostEditor
+				{post}
+				{session}
+				{supabase}
+				{tags}
+				{isEditing}
+				editedTitle={$formValues.title || ''}
+				editedContent={$formValues.content}
+				editedCover={$formValues.post_cover || ''}
+				{coverPreview}
+				isPublic={$formValues.public_visibility}
+				selectedTags={$formValues.tags}
+				isSubmitting={$submitting}
+				onEdit={handleEdit}
+				onTitleChange={handleTitleChange}
+				onContentChange={handleContentChange}
+				onCoverFileSelect={handleCoverFileSelect}
+				onCoverRemove={handleCoverRemove}
+				onPublicChange={handlePublicChange}
+			/>
+
+			<!-- Save button for the form -->
+			{#if isEditing}
+				<div class="mt-4 flex justify-end gap-2">
+					<Button type="button" variant="outline" onclick={handleCancel} disabled={$submitting}>
+						Cancel
+					</Button>
+					<Button type="submit" name="submit" disabled={$submitting}>
+						{#if $submitting}
+							Saving...
+						{:else}
+							Save Post
+						{/if}
+					</Button>
+				</div>
+			{/if}
+		</form>
 
 		<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 

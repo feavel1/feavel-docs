@@ -25,8 +25,6 @@
 		coverPreview: string;
 		isSubmitting: boolean;
 		onEdit: () => void;
-		onCancel: () => void;
-		onSave: () => void;
 		onTitleChange: (title: string) => void;
 		onContentChange: (content: any) => void;
 		onCoverFileSelect: (event: Event) => void;
@@ -46,10 +44,7 @@
 		isPublic,
 		selectedTags,
 		coverPreview,
-		isSubmitting,
 		onEdit,
-		onCancel,
-		onSave,
 		onTitleChange,
 		onContentChange,
 		onCoverFileSelect,
@@ -93,21 +88,10 @@
 				</div>
 			</div>
 		</div>
-		{#if isAuthor}
-			{#if isEditing}
-				<div class="flex gap-2">
-					<Button variant="outline" onclick={onCancel} disabled={isSubmitting} size="sm">
-						Cancel
-					</Button>
-					<Button onclick={onSave} disabled={isSubmitting} size="sm">
-						{isSubmitting ? 'Saving...' : 'Save'}
-					</Button>
-				</div>
-			{:else}
-				<Button variant="outline" onclick={onEdit} size="sm">
-					Edit
-				</Button>
-			{/if}
+		{#if isAuthor && !isEditing}
+			<Button variant="outline" onclick={onEdit} size="sm">
+				Edit
+			</Button>
 		{/if}
 	</div>
 
