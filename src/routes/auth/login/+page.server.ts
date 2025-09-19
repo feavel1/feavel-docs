@@ -1,6 +1,6 @@
 import type { PageServerLoad, Actions } from './$types';
 import { superValidate } from 'sveltekit-superforms';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { formSchema } from './schema';
 import { zod } from 'sveltekit-superforms/adapters';
 
@@ -25,11 +25,7 @@ export const actions: Actions = {
 			form.errors = { email: [error.message] };
 			return fail(400, { form });
 		}
-		// const user = data?.user;
-
-		// if (user) {
-		// 	throw redirect(303, `/member/${user.username}`);
-		// }
-		return { form };
+		// Redirect to member dashboard after successful login
+		throw redirect(303, '/member/dashboard');
 	}
 };
