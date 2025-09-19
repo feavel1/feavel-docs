@@ -2,8 +2,14 @@
 	import { z } from 'zod';
 
 	export const settingsSchema = z.object({
-		full_name: z.string().max(100, { message: 'Full name must be less than 100 characters' }).or(z.literal('')).nullable(),
-		description: z.string().max(500, { message: 'Description must be less than 500 characters' }).or(z.literal('')).nullable(),
+		full_name: z
+			.string()
+			.max(20, { message: 'Full name must be less than 100 characters' })
+			.nullable(),
+		description: z
+			.string()
+			.max(100, { message: 'Description must be less than 500 characters' })
+			.nullable(),
 		birthday: z.string().or(z.literal('')).nullable()
 	});
 
@@ -25,23 +31,37 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { LogOut, User, Shield } from '@lucide/svelte';
 	import { superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import * as Form from '$lib/components/ui/form';
-	
+	import { toast } from 'svelte-sonner';
+
 	const { data: propsData } = $props();
 	const { userProfile, session, supabase } = propsData;
 
 	const form = superForm(propsData.form, {
-		validators: zod(settingsSchema),
-		onResult: ({ result }) => {
-			if (result.type === 'success') {
-				console.log('Profile updated successfully!');
-			} else if (result.type === 'failure') {
-				console.log('Failed to update profile. Please try again.');
-			}
-		}
+		validators: zodClient(settingsSchema)
 	});
 	const { form: formValues, enhance } = form;
+
+	// Derive form message and errors
+	let message = $derived(form.message);
+	let errors = $derived(form.errors ?? {});
+
+	// Show toast when message changes
+	$effect(() => {
+		if ($message) {
+			toast.success($message);
+		}
+	});
+
+	// Focus on first error
+	$effect(() => {
+		if (Object.keys(errors).length) {
+			requestAnimationFrame(() => {
+				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+			});
+		}
+	});
 </script>
 
 <div class="space-y-6">
