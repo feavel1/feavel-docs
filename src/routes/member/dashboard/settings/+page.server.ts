@@ -52,10 +52,10 @@ export const actions: Actions = {
 		});
 
 		if (!result.success) {
-			return fail(500, { form });
+			return message(form, { type: 'error', text: 'Failed to update profile' }, { status: 500 });
 		}
 
 		// Return success message
-		return message(form, 'Profile updated successfully!');
+		return message(form, { type: 'success', text: 'Profile updated successfully!' });
 	}
 };

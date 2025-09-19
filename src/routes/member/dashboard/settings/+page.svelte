@@ -43,23 +43,24 @@
 	const form = superForm(formData, {
 		validators: zodClient(settingsSchema),
 		resetForm: false, // Don't reset form after submission
-		onResult: ({ result }) => {
-			// Show toast when message is present
-			if (result.type === 'success' && message) {
-				toast.success($message);
-			}
-
+		onResult: () => {
 			// Focus on first error
 			if (form.errors && Object.keys(form.errors).length) {
 				requestAnimationFrame(() => {
 					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
 				});
 			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				// Display the message using a toast library
+				toast.success(form.message.text);
+			}
 		}
 	});
 
 	// Form state
-	const { form: formValues, enhance, message, submitting } = form;
+	const { form: formValues, enhance, submitting } = form;
 </script>
 
 <div class="space-y-6">
