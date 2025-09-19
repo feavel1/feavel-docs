@@ -43,45 +43,23 @@
 	const form = superForm(formData, {
 		validators: zodClient(settingsSchema),
 		resetForm: false, // Don't reset form after submission
-		onSubmit: () => {
-			submitting = true;
-		},
 		onResult: ({ result }) => {
-			submitting = false;
-			// Don't update form values with server data on success
-			if (result.type === 'success') {
-				// Just show the success message, keep current form values
-				return;
+			// Show toast when message is present
+			if (result.type === 'success' && message) {
+				toast.success($message);
 			}
-		},
-		onError: () => {
-			submitting = false;
+
+			// Focus on first error
+			if (form.errors && Object.keys(form.errors).length) {
+				requestAnimationFrame(() => {
+					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+				});
+			}
 		}
 	});
 
 	// Form state
-	const { form: formValues, enhance } = form;
-	let submitting = $state(false);
-
-	// Derive form message and errors
-	let message = $derived(form.message);
-	let errors = $derived(form.errors ?? {});
-
-	// Show toast when message changes
-	$effect(() => {
-		if ($message) {
-			toast.success($message);
-		}
-	});
-
-	// Focus on first error
-	$effect(() => {
-		if (Object.keys(errors).length) {
-			requestAnimationFrame(() => {
-				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-			});
-		}
-	});
+	const { form: formValues, enhance, message, submitting } = form;
 </script>
 
 <div class="space-y-6">
@@ -135,8 +113,8 @@
 				</Form.Field>
 
 				<div class="flex justify-end">
-					<Form.Button disabled={submitting}>
-						{#if submitting}
+					<Form.Button disabled={$submitting}>
+						{#if $submitting}
 							Saving...
 						{:else}
 							Save Changes
