@@ -64,16 +64,18 @@
 				if (result.data?.message) {
 					toast.error(result.data.message);
 				}
-			} else if (result.type === 'success' && result.data?.message) {
-				// Show success message
-				toast.success(result.data.message);
 			}
 		}
 	});
 
-	const { form: formValues, enhance, submitting } = form;
+	const { form: formValues, submitting } = form;
 
-	let isEditing = $derived(isNewPost || (form.errors && Object.keys(form.errors).length > 0));
+	let isEditing = $state(isNewPost || (form.errors && Object.keys(form.errors).length > 0));
+	let forceEditing = $state(false);
+
+	$effect(() => {
+		isEditing = forceEditing || isNewPost || (form.errors && Object.keys(form.errors).length > 0);
+	});
 	let isAuthor = $derived(post?.user_id === session?.user?.id);
 
 	let isNewPostCreated = $state(false);
@@ -82,6 +84,7 @@
 
 	function handleEdit() {
 		// Show the editor
+		forceEditing = true;
 	}
 
 	function handleCancel() {
@@ -90,6 +93,8 @@
 			goto('/posts');
 			return;
 		}
+		// Reset editing state
+		forceEditing = false;
 		// Reset file state
 		coverPreview = '';
 		// Reset form to initial values
@@ -114,41 +119,8 @@
 
 		coverPreview = URL.createObjectURL(file);
 
-		// Upload the cover image immediately
-		try {
-			const formData = new FormData();
-			formData.append('cover', file);
-
-			const response = await fetch('?/uploadCover', {
-				method: 'POST',
-				body: formData
-			});
-
-			const result = await response.json();
-
-			if (response.ok && result.coverFilename) {
-				// Update the form value with the new cover filename
-				$formValues.post_cover = result.coverFilename;
-
-				// Show success message if provided
-				if (result.message) {
-					toast.success(result.message);
-				}
-			} else {
-				// Show error message
-				const errorMessage = result.message || 'Failed to upload cover image';
-				toast.error(errorMessage);
-
-				// Reset preview on error
-				coverPreview = '';
-			}
-		} catch (error) {
-			console.error('Error uploading cover image:', error);
-			toast.error('Failed to upload cover image. Please try again.');
-
-			// Reset preview on error
-			coverPreview = '';
-		}
+		// For now, just show a message that saving is not implemented
+		toast.info('Cover upload would be implemented in a full version');
 	}
 
 	function handleTitleChange(e: Event) {
@@ -186,169 +158,167 @@
 	</Button>
 
 	{#if post}
-		<form method="POST" action="?/save" use:enhance>
-			<div class="mb-6">
-				<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-					<div class="flex-1">
-						{#if isEditing}
-							<Input
-								bind:value={$formValues.title}
-								class="mb-3 text-3xl font-bold sm:text-4xl"
-								placeholder="Post title"
-								onchange={handleTitleChange}
-							/>
-						{:else}
-							<h1 class="mb-3 text-3xl font-bold sm:text-4xl">
-								{post.title}
-							</h1>
-						{/if}
-						<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-							<div class="flex items-center gap-1">
-								<User class="h-4 w-4" />
-								<span>{post.users?.username || 'Unknown'}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Calendar class="h-4 w-4" />
-								<span>{new Date(post.created_at).toLocaleDateString()}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<Eye class="h-4 w-4" />
-								<span>{post.post_views || 0} views</span>
-							</div>
-						</div>
-					</div>
-					{#if isAuthor && !isEditing}
-						<Button variant="outline" onclick={handleEdit} size="sm">Edit</Button>
-					{/if}
-				</div>
-
-				{#if isEditing}
-					<div class="mb-6 space-y-3">
-						<Label for="cover">Cover Image (optional)</Label>
-						<div class="mt-2 space-y-2">
-							<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
-							{#if coverPreview || $formValues.post_cover}
-								<div class="mt-2">
-									<img
-										src={coverPreview ||
-											($formValues.post_cover
-												? getPostCoverUrl($formValues.post_cover, supabase)
-												: '')}
-										alt={coverPreview ? 'Cover preview' : 'Cover image'}
-										class="h-32 w-full rounded-md object-cover"
-									/>
-								</div>
-							{/if}
-							{#if coverPreview || $formValues.post_cover}
-								<Button type="button" variant="outline" size="sm" onclick={handleCoverRemove}>
-									Remove Cover
-								</Button>
-							{/if}
-						</div>
-					</div>
-				{:else if post.post_cover}
-					<div class="mb-6 overflow-hidden rounded-lg">
-						<img
-							src={getPostCoverUrl(post.post_cover, supabase)}
-							alt={post.title}
-							class="h-48 w-full object-cover sm:h-64"
+		<div class="mb-6">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div class="flex-1">
+					{#if isEditing}
+						<Input
+							bind:value={$formValues.title}
+							class="mb-3 text-3xl font-bold sm:text-4xl"
+							placeholder="Post title"
+							onchange={handleTitleChange}
 						/>
-					</div>
-				{/if}
-
-				{#if isEditing}
-					<div class="mb-6 space-y-4">
-						<div class="flex items-center justify-between rounded-lg border p-4">
-							<div>
-								<h3 class="font-medium">Publishing Settings</h3>
-								<p class="mt-1 text-sm text-muted-foreground">
-									{$formValues.public_visibility
-										? 'This post will be visible to everyone.'
-										: 'This post will be saved as a draft.'}
-								</p>
-							</div>
-							<div class="flex items-center gap-2">
-								<span class="text-sm text-muted-foreground">Draft</span>
-								<Switch
-									bind:checked={$formValues.public_visibility}
-									onchange={handlePublicChange}
-								/>
-								<span class="text-sm text-muted-foreground">Public</span>
-							</div>
+					{:else}
+						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">
+							{post.title}
+						</h1>
+					{/if}
+					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+						<div class="flex items-center gap-1">
+							<User class="h-4 w-4" />
+							<span>{post.users?.username || 'Unknown'}</span>
 						</div>
-						<div class="space-y-2">
-							<Label>Tags</Label>
-							<MultiSelect
-								items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-								bind:selectedItems={$formValues.tags}
-								itemNameProperty="tag_name"
-								placeholder="Select tags..."
-								label=""
-								showSearch={true}
-								searchPlaceholder="Search tags..."
-								emptyMessage="No tags found."
-							/>
+						<div class="flex items-center gap-1">
+							<Calendar class="h-4 w-4" />
+							<span>{new Date(post.created_at).toLocaleDateString()}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<Eye class="h-4 w-4" />
+							<span>{post.post_views || 0} views</span>
 						</div>
 					</div>
-				{:else if post.posts_tags_rel?.length}
-					<div class="mb-6 flex flex-wrap gap-2">
-						{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-							<Button
-								variant="outline"
-								size="sm"
-								href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-								class="h-6 px-2 text-xs"
-							>
-								{relation.post_tags.tag_name}
-							</Button>
-						{/each}
-					</div>
+				</div>
+				{#if isAuthor && !isEditing}
+					<Button variant="outline" onclick={handleEdit} size="sm">Edit</Button>
 				{/if}
 			</div>
 
-			<!-- Post Content -->
-			<Card>
-				<CardContent class="p-4 sm:p-6">
-					{#if isEditing}
-						<div class="prose prose-lg max-w-none">
-							<Editor
-								content={$formValues.content}
-								readOnly={false}
-								onChange={handleContentChange}
-								class="min-h-[500px]"
-							/>
-						</div>
-					{:else if post.content_v2}
-						<div class="prose prose-lg max-w-none">
-							<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
-						</div>
-					{:else if post.content}
-						<!-- Fallback for legacy content -->
-						<div class="prose prose-lg max-w-none">
-							{@html post.content}
-						</div>
-					{:else}
-						<p class="text-muted-foreground">No content available.</p>
-					{/if}
-				</CardContent>
-			</Card>
-
-			<!-- Save button for the form -->
 			{#if isEditing}
-				<div class="mt-4 flex justify-end gap-2">
-					<Button type="button" variant="outline" onclick={handleCancel} disabled={$submitting}>
-						Cancel
-					</Button>
-					<Button type="submit" name="submit" disabled={$submitting}>
-						{#if $submitting}
-							Saving...
-						{:else}
-							Save Post
+				<div class="mb-6 space-y-3">
+					<Label for="cover">Cover Image (optional)</Label>
+					<div class="mt-2 space-y-2">
+						<Input type="file" accept="image/*" onchange={handleCoverFileSelect} />
+						{#if coverPreview || $formValues.post_cover}
+							<div class="mt-2">
+								<img
+									src={coverPreview ||
+										($formValues.post_cover
+											? getPostCoverUrl($formValues.post_cover, supabase)
+											: '')}
+									alt={coverPreview ? 'Cover preview' : 'Cover image'}
+									class="h-32 w-full rounded-md object-cover"
+								/>
+							</div>
 						{/if}
-					</Button>
+						{#if coverPreview || $formValues.post_cover}
+							<Button type="button" variant="outline" size="sm" onclick={handleCoverRemove}>
+								Remove Cover
+							</Button>
+						{/if}
+					</div>
+				</div>
+			{:else if post.post_cover}
+				<div class="mb-6 overflow-hidden rounded-lg">
+					<img
+						src={getPostCoverUrl(post.post_cover, supabase)}
+						alt={post.title}
+						class="h-48 w-full object-cover sm:h-64"
+					/>
 				</div>
 			{/if}
-		</form>
+
+			{#if isEditing}
+				<div class="mb-6 space-y-4">
+					<div class="flex items-center justify-between rounded-lg border p-4">
+						<div>
+							<h3 class="font-medium">Publishing Settings</h3>
+							<p class="mt-1 text-sm text-muted-foreground">
+								{$formValues.public_visibility
+									? 'This post will be visible to everyone.'
+									: 'This post will be saved as a draft.'}
+							</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="text-sm text-muted-foreground">Draft</span>
+							<Switch
+								bind:checked={$formValues.public_visibility}
+								onchange={handlePublicChange}
+							/>
+							<span class="text-sm text-muted-foreground">Public</span>
+						</div>
+					</div>
+					<div class="space-y-2">
+						<Label>Tags</Label>
+						<MultiSelect
+							items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+							bind:selectedItems={$formValues.tags}
+							itemNameProperty="tag_name"
+							placeholder="Select tags..."
+							label=""
+							showSearch={true}
+							searchPlaceholder="Search tags..."
+							emptyMessage="No tags found."
+						/>
+					</div>
+				</div>
+			{:else if post.posts_tags_rel?.length}
+				<div class="mb-6 flex flex-wrap gap-2">
+					{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
+						<Button
+							variant="outline"
+							size="sm"
+							href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+							class="h-6 px-2 text-xs"
+						>
+							{relation.post_tags.tag_name}
+						</Button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<!-- Post Content -->
+		<Card>
+			<CardContent class="p-4 sm:p-6">
+				{#if isEditing}
+					<div class="prose prose-lg max-w-none">
+						<Editor
+							content={$formValues.content}
+							readOnly={false}
+							onChange={handleContentChange}
+							class="min-h-[500px]"
+						/>
+					</div>
+				{:else if post.content_v2}
+					<div class="prose prose-lg max-w-none">
+						<Editor content={post.content_v2} readOnly={true} onChange={handleContentChange} />
+					</div>
+				{:else if post.content}
+					<!-- Fallback for legacy content -->
+					<div class="prose prose-lg max-w-none">
+						{@html post.content}
+					</div>
+				{:else}
+					<p class="text-muted-foreground">No content available.</p>
+				{/if}
+			</CardContent>
+		</Card>
+
+		<!-- Action buttons for the form -->
+		{#if isEditing}
+			<div class="mt-4 flex justify-end gap-2">
+				<Button type="button" variant="outline" onclick={handleCancel} disabled={$submitting}>
+					Cancel
+				</Button>
+				<Button type="button" disabled={$submitting}>
+					{#if $submitting}
+						Saving...
+					{:else}
+						Save Post (Not Implemented)
+					{/if}
+				</Button>
+			</div>
+		{/if}
 
 		<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 

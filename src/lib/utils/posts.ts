@@ -1,6 +1,6 @@
 import type { Tables } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updatePostTags } from './tags';
+import { updatePostTags, getTags } from './tags';
 import { uploadPostCover } from './storage';
 
 export type Post = Tables<'posts'> & {
@@ -278,20 +278,12 @@ export async function handlePostCoverUpload(
  * @returns Array of tag names
  */
 export async function fetchAllTags(supabase: SupabaseClient): Promise<string[]> {
-	try {
-		const { data: availableTags, error: tagsError } = await supabase
-			.from('post_tags')
-			.select('tag_name')
-			.order('tag_name');
+	const { data, error } = await getTags(supabase);
 
-		if (tagsError) {
-			console.error('Error fetching tags:', tagsError);
-			return [];
-		}
-
-		return availableTags?.map((tag) => tag.tag_name) || [];
-	} catch (error) {
+	if (error) {
 		console.error('Error fetching tags:', error);
 		return [];
 	}
+
+	return data?.map((tag: any) => tag.tag_name) || [];
 }
