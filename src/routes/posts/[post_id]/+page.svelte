@@ -44,7 +44,7 @@
 
 	let { data } = $props();
 	// Extract only necessary properties
-	const { post, session, supabase, tags = [], form: formData, isNewPost = false } = data;
+	const { post, session, supabase, tags = [], form: formData } = data;
 
 	// Initialize form with better error handling
 	const form = superForm(formData, {
@@ -69,7 +69,7 @@
 
 	const { form: formValues, enhance } = form;
 
-	let canEdit = $derived(isNewPost || (post?.user_id === session?.user?.id));
+	let canEdit = $derived(post?.user_id === session?.user?.id);
 
 	let coverPreview = $state<string>('');
 
@@ -117,25 +117,28 @@
 		Back to Posts
 	</Button>
 
-	{#if post || isNewPost}
+	{#if post}
 		<div class="mb-6">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex-1">
-					{#if canEdit}
-						<Input
-							bind:value={$formValues.title}
-							class="mb-3 text-3xl font-bold sm:text-4xl"
-							placeholder="Post title"
-						/>
-					{:else}
-						<h1 class="mb-3 text-3xl font-bold sm:text-4xl">
-							{post?.title || 'New Post'}
-						</h1>
-					{/if}
+					<input
+						bind:value={$formValues.title}
+						readonly={!canEdit}
+						class="mb-3 w-full border-0 p-0 text-3xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 sm:text-4xl"
+						class:cursor-text={canEdit}
+						class:cursor-default={!canEdit}
+						class:bg-transparent={!canEdit}
+						class:text-foreground={!canEdit}
+						placeholder="Your new post title..."
+					/>
 					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 						<div class="flex items-center gap-1">
 							<User class="h-4 w-4" />
-							<span>{post?.users?.username || session?.user?.user_metadata?.username || 'Unknown'}</span>
+							<span
+								>{post?.users?.username ||
+									session?.user?.user_metadata?.username ||
+									'Unknown'}</span
+							>
 						</div>
 						{#if post}
 							<div class="flex items-center gap-1">
@@ -152,8 +155,8 @@
 			</div>
 
 			<div class="mb-6 overflow-hidden rounded-lg">
-				{#if canEdit}
-					<div class="group relative">
+				<div class="group relative">
+					{#if canEdit}
 						<button
 							type="button"
 							class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
@@ -192,14 +195,16 @@
 								Remove Cover
 							</Button>
 						{/if}
-					</div>
-				{:else if post?.post_cover}
-					<img
-						src={getPostCoverUrl(post.post_cover, supabase)}
-						alt={post.title}
-						class="h-48 w-full object-cover sm:h-64"
-					/>
-				{/if}
+					{:else}
+						<img
+							src={post?.post_cover
+								? getPostCoverUrl(post.post_cover, supabase)
+								: '/placeholder-image.jpg'}
+							alt={post?.title || 'Cover image'}
+							class="h-48 w-full object-cover sm:h-64"
+						/>
+					{/if}
+				</div>
 			</div>
 
 			<div class="mb-6 space-y-4">
@@ -232,22 +237,22 @@
 							emptyMessage="No tags found."
 						/>
 					</div>
-				{:else if post?.posts_tags_rel?.length}
-					<div class="flex flex-wrap gap-2">
-						{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
-							<Button
-								variant="outline"
-								size="sm"
-								href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-								class="h-6 px-2 text-xs"
-							>
-								{relation.post_tags.tag_name}
-							</Button>
-						{/each}
-					</div>
 				{:else}
 					<div class="flex flex-wrap gap-2">
-						<span class="text-sm text-muted-foreground">No tags</span>
+						{#if post?.posts_tags_rel?.length}
+							{#each post.posts_tags_rel as relation (relation.post_tags.tag_name)}
+								<Button
+									variant="outline"
+									size="sm"
+									href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
+									class="h-6 px-2 text-xs"
+								>
+									{relation.post_tags.tag_name}
+								</Button>
+							{/each}
+						{:else}
+							<span class="text-sm text-muted-foreground">No tags</span>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -257,18 +262,14 @@
 		<Card>
 			<form method="POST" use:enhance>
 				<CardContent class="p-4 sm:p-6">
-					{#if canEdit}
+					{#if (canEdit || post?.content_v2) && (canEdit ? $formValues.content : post?.content_v2)}
 						<div class="prose prose-lg max-w-none">
 							<Editor
-								content={$formValues.content}
-								readOnly={false}
-								onChange={handleContentChange}
+								content={canEdit ? $formValues.content : post?.content_v2}
+								readOnly={!canEdit}
+								onChange={canEdit ? handleContentChange : () => {}}
 								class="min-h-[500px]"
 							/>
-						</div>
-					{:else if post?.content_v2}
-						<div class="prose prose-lg max-w-none">
-							<Editor content={post.content_v2} readOnly={true} onChange={() => {}} />
 						</div>
 					{:else if post?.content}
 						<!-- Fallback for legacy content -->

@@ -1,138 +1,90 @@
-/posts/[post_id] code simplification plan.
+Plan for Implementing Immediate Draft Creation for Posts
 
-Plan to Simplify PostEditor with Superforms and Click-to-Edit
+Core Concept:
 
-Analysis Summary
+Instead of handling "new" posts as a special case, create a minimal draft post immediately when the
+user wants to create a new post. This unifies the data flow for both new and existing posts.
 
-Based on your requirements, I can reduce the code significantly by:
+Implementation Steps:
 
-1. Moving logic to +page.server.ts with Superforms and Zod validation
-2. Implementing click-to-edit functionality with minimal JavaScript
-3. Using the same form framework approach as in settings
-4. Removing separate edit mode and edit button
-5. Keeping JavaScript minimal (only for Editor.js)
+1.  Modify the Load Function (+page.server.ts)
 
-Implementation Approach
+- Remove the special handling for post_id === 'new'
+- Add a new route handler for /posts/new that creates a draft post
+- Redirect from /posts/new to /posts/{new_post_id} after creation
 
-1. Schema Definition (+page.svelte module script)
+2.  Create Draft Post Handler
 
-### Schema Definition (in +page.svelte module script)
+When user navigates to /posts/new:
 
-```ts
-import { z } from 'zod';
+- Check if user is authenticated
+- Create minimal draft post in database using existing function from posts.ts
+- Redirect to /posts/{new_post_id} with 302 redirect
 
-export const settingsSchema = z.object({
-	full_name: z.string().max(100).nullable(),
-	description: z.string().max(500).nullable(),
-	birthday: z.string().or(z.literal('')).nullable()
-});
+3.  Simplified Post Loading
 
-export type SettingsSchema = typeof settingsSchema;
-```
+Main load function now only needs to handle loading existing posts:
 
-### Server-side Loading (+page.server.ts)
+- Fetch post data with all related information
+- Check permissions (simplified since we always have a real post)
+- Prepare form data with consistent structure
+- Fetch tags only when user can edit
 
-```ts
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { settingsSchema } from './+page.svelte';
+4.  Unified Actions
 
-export const load = async ({ parent }) => {
-	const { session, userProfile } = await parent();
+- Single save action that works for both new and existing posts
+- Single delete action that works from anywhere
+- Use existing utility functions from src/lib/utils/posts.ts
 
-	const formData = {
-		full_name: userProfile?.full_name ?? null,
-		description: userProfile?.description ?? null,
-		birthday: userProfile?.birthday ?? null
-	};
+5.  Client-Side Simplification
 
-	return {
-		userProfile,
-		session,
-		form: await superValidate(formData, zod(settingsSchema))
-	};
-};
-```
+- Remove "isNewPost" logic completely
+- Always treat as "editing an existing post"
+- Simplified permission checks based on server-provided data
+- Consistent data structure for all scenarios
 
-### Client-side Implementation (+page.svelte)
+Data Flow Structure:
 
-```svelte
-<script>
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { settingsSchema } from './+page.svelte';
+User clicks "New Post"
+→ Navigate to /posts/new
+→ Server creates minimal draft post
+→ Server redirects to /posts/{new_post_id}
+→ Normal post loading flow (now unified)
+→ Client receives consistent data structure
+→ User edits post normally
 
-	const { data } = $props();
-	const { form: formData } = data;
+File Changes Required:
 
-	const form = superForm(formData, {
-		validators: zodClient(settingsSchema),
-		resetForm: false,
-		onResult: () => {
-			// Focus on first error
-			if (form.errors && Object.keys(form.errors).length) {
-				requestAnimationFrame(() => {
-					document.querySelector < HTMLElement > '[aria-invalid="true"]'?.focus();
-				});
-			}
-		},
-		onUpdated({ form }) {
-			if (form.message) {
-				toast.success(form.message.text);
-			}
-		}
-	});
+A. Create new route handler:
 
-	const { form: formValues, enhance, submitting, message } = form;
-</script>
+Create /src/routes/posts/new/+page.server.ts:
 
-<form method="POST" use:enhance>
-	<input bind:value={$formValues.full_name} />
-	<!-- Form fields -->
-	<button disabled={$submitting}
-		>{#if $submitting}
-			Saving...
-		{:else}
-			Save Changes
-		{/if}</button
-	>
-</form>
-```
+- Handles GET requests only
+- Creates draft post for authenticated users
+- Redirects to new post URL
 
-2. Server Actions (+page.server.ts)
+B. Modify existing post handler:
 
-- Move all post creation/update logic to form actions
-- Use Superforms for validation and error handling
-- Handle file uploads in server actions
+Update /src/routes/posts/[post_id]/+page.server.ts:
 
-3. Client Implementation (+page.svelte)
+- Remove special "new" post handling
+- Simplify existing post loading logic
+- Implement complete actions for save/delete
 
-- Use single form with use:enhance for progressive enhancement
-- Implement click-to-edit directly on content elements
-- Remove separate edit state and handler functions
-- Use Form.Field components for structured form handling
+C. Client-side adjustments:
 
-4. Simplified PostEditor Component
+Update /src/routes/posts/[post_id]/+page.svelte:
 
-- Remove all edit/view mode logic
-- Make fields directly editable based on author status
-- Simplify prop interface
-- Use form context instead of prop drilling
+- Remove isNewPost conditional logic
+- Simplify UI rendering based on server-provided permissions
+- Use consistent data binding for all scenarios
 
-Key Benefits
+Benefits of This Approach:
 
-1. Less Code: Eliminates duplicate state management and handler functions
-2. Better UX: Direct click-to-edit without separate edit mode
-3. Type Safety: Zod validation ensures data integrity
-4. Progressive Enhancement: Works with JavaScript but enhances UX when available
-5. Consistency: Uses same patterns as other forms in the application
+1.  Unified Data Flow: Same code path for new and existing posts
+2.  Simplified Logic: No special cases for "new" posts
+3.  Consistent State: Always have real post data and ID
+4.  Better UX: Immediate save capability, URL sharing
+5.  Cleaner Code: Eliminates complex conditional logic
 
-Implementation Steps
-
-1. Define Zod schema for post data
-2. Create server actions for post CRUD operations
-3. Implement form in +page.svelte with Superforms
-4. Simplify PostEditor component
-5. Add click-to-edit functionality with minimal JavaScript
-6. Update utility functions to work with form actions
-7. Test and validate the new implementation
+Would you like me to proceed with implementing this approach?

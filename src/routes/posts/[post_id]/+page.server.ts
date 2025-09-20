@@ -1,6 +1,6 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { fetchAllTags } from '$lib/utils/posts';
+import { fetchAllTags, createPost, updatePost, deletePost } from '$lib/utils/posts';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { postSchema } from './+page.svelte';
@@ -19,23 +19,20 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			throw redirect(302, '/auth/login');
 		}
 
-		const initialData = {
+		// Create a minimal draft post immediately
+		const { post: newPost, error: createError } = await createPost(locals.supabase, session.user.id, {
 			title: null,
 			content: null,
-			post_cover: null,
 			public_visibility: false,
 			tags: []
-		};
+		});
 
-		const form = await superValidate(initialData, zod(postSchema));
-		const tags = await fetchAllTags(locals.supabase);
+		if (createError || !newPost) {
+			throw error(500, 'Failed to create new post');
+		}
 
-		return {
-			form,
-			session,
-			tags,
-			isNewPost: true
-		};
+		// Redirect to the new post
+		throw redirect(302, `/posts/${newPost.id}`);
 	}
 
 	// Handle existing post loading
@@ -104,17 +101,69 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		post,
 		form,
 		session,
-		tags,
-		isNewPost: false
+		tags
 	};
 };
 
 export const actions: Actions = {
-	default: async () => {
-		// Minimal boilerplate for form actions
-		// Implementation would go here
-		return {
-			success: true
+	save: async ({ request, locals, params }) => {
+		const { post_id } = params;
+		const { session } = await locals.safeGetSession();
+
+		if (!session) {
+			throw error(401, 'Unauthorized');
+		}
+
+		const form = await superValidate(request, zod(postSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
+		// Prepare post data
+		const postData = {
+			title: form.data.title,
+			content: form.data.content,
+			public_visibility: form.data.public_visibility,
+			tags: form.data.tags
 		};
+
+		// Update the post (works for both new and existing)
+		const { success, error: updateError } = await updatePost(
+			locals.supabase,
+			session.user.id,
+			parseInt(post_id),
+			postData
+		);
+
+		if (!success) {
+			return fail(500, { form, message: updateError });
+		}
+
+		return {
+			form,
+			message: { text: 'Post saved successfully!' }
+		};
+	},
+
+	delete: async ({ locals, params }) => {
+		const { post_id } = params;
+		const { session } = await locals.safeGetSession();
+
+		if (!session) {
+			throw error(401, 'Unauthorized');
+		}
+
+		const { success, error: deleteError } = await deletePost(
+			locals.supabase,
+			session.user.id,
+			parseInt(post_id)
+		);
+
+		if (!success) {
+			return fail(500, { message: deleteError });
+		}
+
+		throw redirect(302, '/posts');
 	}
 };
