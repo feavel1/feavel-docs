@@ -69,7 +69,7 @@
 
 	const { form: formValues, enhance } = form;
 
-	let canEdit = $derived(post?.user_id === session?.user?.id);
+	let canEdit = $derived(isNewPost || (post?.user_id === session?.user?.id));
 
 	let coverPreview = $state<string>('');
 
