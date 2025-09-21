@@ -121,11 +121,6 @@
 				items={categories}
 				bind:selectedItems={selectedCategories}
 				itemNameProperty="category_name"
-				placeholder="Filter by categories..."
-				label=""
-				showSearch={false}
-				searchPlaceholder="Search categories..."
-				emptyMessage="No categories found."
 			/>
 		</div>
 	</div>

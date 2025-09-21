@@ -56,7 +56,6 @@
 
 <Button
 	variant={isLiked ? 'default' : 'outline'}
-	size="sm"
 	onclick={handleToggleLike}
 	disabled={!currentUserId || isSubmitting}
 	class="gap-2"

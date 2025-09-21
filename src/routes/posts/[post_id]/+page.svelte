@@ -34,7 +34,6 @@
 	import Editor from '$lib/components/modules/content/Editor.svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import { Input } from '$lib/components/ui/input';
-	import { CardContent } from '$lib/components/ui/card';
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -292,51 +291,6 @@
 			</div>
 		</div>
 
-		<!-- Actions -->
-		<div class="mt-6 flex flex-row items-center justify-between gap-4">
-			{#if canEdit}
-				<MultiSelect
-					items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-					bind:selectedItems={$formValues.tags}
-					itemNameProperty="tag_name"
-					placeholder="Add tags..."
-					label="Post Tags"
-					showSearch={true}
-					searchPlaceholder="Search tags..."
-					emptyMessage="No tags found."
-				/>
-				<!-- Publishing Settings -->
-				<div class="flex items-center gap-2">
-					<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
-					<label for="public-visibility" class="text-sm font-medium"> Make post public </label>
-				</div>
-
-				<!-- Action Buttons -->
-				<div class="flex items-center gap-2">
-					<Button variant="outline" onclick={handleDelete} disabled={$submitting} size="sm">
-						Delete
-					</Button>
-					<Button
-						onclick={handleSave}
-						disabled={$submitting}
-						size="sm"
-						variant={saveSuccess ? 'secondary' : 'default'}
-					>
-						{#if $submitting}
-							Saving...
-						{:else if saveSuccess}
-							Saved!
-						{:else}
-							Save
-						{/if}
-					</Button>
-				</div>
-			{/if}
-
-			<!-- Like Button -->
-			<LikeButton postId={post.id} {supabase} currentUserId={session?.user?.id} />
-		</div>
-
 		<!-- Tags -->
 		{#if !canEdit}
 			<div class="mb-6">
@@ -358,27 +312,69 @@
 					{/if}
 				</div>
 			</div>
+		{:else}
+			<div class="mt-6 flex flex-row items-center justify-between gap-4">
+				<!-- Public/draft Settings -->
+				<div class="flex items-center gap-2">
+					<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
+					<label for="public-visibility" class="text-sm font-medium">Public</label>
+				</div>
+
+				<MultiSelect
+					items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+					bind:selectedItems={$formValues.tags}
+					itemNameProperty="tag_name"
+					allowNewItems={true}
+				/>
+			</div>
 		{/if}
 
 		<!-- Content -->
-		<CardContent class="p-4 sm:p-6">
-			{#if canEdit || post.content_v2}
-				<div class="prose prose-lg max-w-none">
-					<Editor
-						content={post.content_v2}
-						readOnly={!canEdit}
-						onChange={canEdit ? handleContentChange : () => {}}
-						class="min-h-[500px]"
-					/>
-				</div>
-			{:else}
-				<p class="text-muted-foreground">No content available.</p>
-			{/if}
-		</CardContent>
+
+		{#if canEdit || post.content_v2}
+			<div class="mt-6">
+				<Editor
+					content={post.content_v2}
+					readOnly={!canEdit}
+					onChange={canEdit ? handleContentChange : () => {}}
+					class="min-h-[500px]"
+				/>
+			</div>
+		{:else}
+			<p class="text-muted-foreground">No content available.</p>
+		{/if}
 	</form>
+
+	<!-- Action Section -->
+
+	<div class="mt-6 flex flex-row items-center justify-between gap-4">
+		<!-- Like Button -->
+		<LikeButton postId={post.id} {supabase} currentUserId={session?.user?.id} />
+
+		{#if canEdit}
+			<!-- Action Buttons -->
+			<div class="flex items-center gap-2">
+				<Button variant="outline" onclick={handleDelete} disabled={$submitting}>Delete</Button>
+				<Button
+					onclick={handleSave}
+					disabled={$submitting}
+					variant={saveSuccess ? 'secondary' : 'default'}
+				>
+					{#if $submitting}
+						Saving...
+					{:else if saveSuccess}
+						Saved!
+					{:else}
+						Save
+					{/if}
+				</Button>
+			</div>
+		{/if}
+	</div>
 
 	<!-- Author & Comments -->
 	<PostAuthor {post} {supabase} />
+
 	<CommentSection
 		postId={post.id}
 		postAuthorId={post.user_id}

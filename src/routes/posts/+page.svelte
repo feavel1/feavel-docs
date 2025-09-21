@@ -157,16 +157,7 @@
 		<div class="flex flex-wrap items-center gap-3">
 			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
 
-			<MultiSelect
-				items={tags}
-				bind:selectedItems={selectedTags}
-				itemNameProperty="tag_name"
-				placeholder="Filter by tags..."
-				label=""
-				showSearch={false}
-				searchPlaceholder="Search tags..."
-				emptyMessage="No tags found."
-			/>
+			<MultiSelect items={tags} bind:selectedItems={selectedTags} itemNameProperty="tag_name" />
 		</div>
 	</div>
 
