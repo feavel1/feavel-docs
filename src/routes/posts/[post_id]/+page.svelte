@@ -27,21 +27,20 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowLeft, Eye, User, Calendar } from '@lucide/svelte';
+	import { Switch } from '$lib/components/ui/switch';
 	import { toast } from 'svelte-sonner';
 	import CommentSection from '$lib/components/modules/content/CommentSection.svelte';
-	import PostActions from '$lib/components/modules/content/PostActions.svelte';
 	import PostAuthor from '$lib/components/modules/content/PostAuthor.svelte';
 	import Editor from '$lib/components/modules/content/Editor.svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
 	import { CardContent } from '$lib/components/ui/card';
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
+	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 
 	let { data } = $props();
 	const { post, session, supabase, tags = [] } = data;
@@ -84,12 +83,12 @@
 	const postDate = new Date(post.created_at).toLocaleDateString();
 
 	let coverPreview = $state('');
-	let isSubmitting = $state(false);
+	let saveSuccess = $state(false);
 
 	const coverUrl = $derived(
 		coverPreview ||
 			($formValues.post_cover ? getPostCoverUrl($formValues.post_cover, supabase) : null) ||
-			(post.post_cover ? getPostCoverUrl(post.post_cover, supabase) : '/placeholder-image.jpg')
+			(post.post_cover ? getPostCoverUrl(post.post_cover, supabase) : null)
 	);
 
 	function handleCoverFileSelect(event: Event) {
@@ -119,7 +118,6 @@
 	}
 
 	async function handleSave() {
-		if (isSubmitting) return;
 		const isValid = await form.validateForm();
 		if (!isValid.valid) {
 			requestAnimationFrame(() => {
@@ -128,7 +126,6 @@
 			return;
 		}
 
-		isSubmitting = true;
 		try {
 			// Server already validated session, no need to check again
 			const postData = {
@@ -141,25 +138,25 @@
 
 			const { success, error } = await updatePost(supabase, session?.user?.id!, post.id, postData);
 			if (success) {
+				saveSuccess = true;
 				toast.success('Post saved successfully!');
-				form.reset();
+				// Reset success state after 2 seconds
+				setTimeout(() => {
+					saveSuccess = false;
+				}, 2000);
 			} else {
 				toast.error(error || 'Failed to save post');
 			}
 		} catch (error) {
 			console.error('Error saving post:', error);
 			toast.error('Failed to save post');
-		} finally {
-			isSubmitting = false;
 		}
 	}
 
 	async function handleDelete() {
-		if (isSubmitting) return;
 		if (!confirm('Are you sure you want to delete this post? This action cannot be undone.'))
 			return;
 
-		isSubmitting = true;
 		try {
 			// Server already validated session, no need to check again
 			const { success, error } = await deletePost(supabase, session?.user?.id!, post.id);
@@ -172,8 +169,6 @@
 		} catch (error) {
 			console.error('Error deleting post:', error);
 			toast.error('Failed to delete post');
-		} finally {
-			isSubmitting = false;
 		}
 	}
 
@@ -198,6 +193,51 @@
 	</Button>
 
 	<form method="POST" use:enhance>
+		<!-- Cover Image -->
+		<div class="mb-6 overflow-hidden rounded-lg">
+			<div class="group relative">
+				{#if canEdit}
+					<button
+						type="button"
+						class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
+						onclick={() => document.getElementById('cover-input')?.click()}
+						aria-label="Change cover image"
+					>
+						<div class="relative h-full w-full">
+							<img
+								src={coverUrl}
+								alt={post.title || 'Cover image'}
+								class="h-full w-full object-cover"
+							/>
+							<div
+								class="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<span class="text-lg font-medium text-white">Click to change cover image</span>
+							</div>
+						</div>
+					</button>
+					<Input
+						type="file"
+						id="cover-input"
+						accept="image/*"
+						onchange={handleCoverFileSelect}
+						class="hidden"
+					/>
+					{#if $formValues.post_cover || coverPreview}
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onclick={handleCoverRemove}
+							class="absolute top-2 right-2"
+						>
+							Remove Cover
+						</Button>
+					{/if}
+				{/if}
+			</div>
+		</div>
+
 		<!-- Header -->
 		<div class="mb-6">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -234,104 +274,67 @@
 				</div>
 			</div>
 		</div>
+		<!-- Actions -->
+		<div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+			{#if canEdit}
+				<div class="flex flex-wrap items-center gap-6">
+					<!-- Publishing Settings -->
+					<div class="flex items-center gap-2">
+						<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
+						<label for="public-visibility" class="text-sm font-medium"> Make post public </label>
+					</div>
 
-		<!-- Cover Image -->
-		<div class="mb-6 overflow-hidden rounded-lg">
-			<div class="group relative">
-				{#if canEdit}
-					<button
-						type="button"
-						class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
-						onclick={() => document.getElementById('cover-input')?.click()}
-						aria-label="Change cover image"
-					>
-						<img
-							src={coverUrl}
-							alt={post.title || 'Cover image'}
-							class="h-full w-full object-cover"
-						/>
-						<div
-							class="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black opacity-0 transition-opacity group-hover:opacity-100"
-						>
-							<span class="text-lg font-medium text-white">Click to change cover</span>
-						</div>
-					</button>
-					<Input
-						type="file"
-						id="cover-input"
-						accept="image/*"
-						onchange={handleCoverFileSelect}
-						class="hidden"
-					/>
-					{#if $formValues.post_cover || coverPreview}
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onclick={handleCoverRemove}
-							class="absolute top-2 right-2"
-						>
-							Remove Cover
+					<!-- Tags Editor -->
+					<div class="min-w-48 flex-1">
+						<Form.Field {form} name="tags">
+							<Form.Control>
+								{#snippet children({ props })}
+									<MultiSelect
+										{...props}
+										items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+										bind:selectedItems={$formValues.tags}
+										itemNameProperty="tag_name"
+										placeholder="Add tags..."
+										label="Post Tags"
+										showSearch={true}
+										searchPlaceholder="Search tags..."
+										emptyMessage="No tags found."
+									/>
+								{/snippet}
+							</Form.Control>
+						</Form.Field>
+					</div>
+
+					<!-- Action Buttons -->
+					<div class="flex items-center gap-2">
+						<Button variant="outline" onclick={handleDelete} disabled={$submitting} size="sm">
+							Delete
 						</Button>
-					{/if}
-				{:else}
-					<img
-						src={coverUrl}
-						alt={post.title || 'Post cover image'}
-						class="h-48 w-full object-cover sm:h-64"
-					/>
-				{/if}
-			</div>
+						<Button
+							onclick={handleSave}
+							disabled={$submitting}
+							size="sm"
+							variant={saveSuccess ? 'secondary' : 'default'}
+						>
+							{#if $submitting}
+								Saving...
+							{:else if saveSuccess}
+								Saved!
+							{:else}
+								Save
+							{/if}
+						</Button>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Like Button -->
+			<LikeButton postId={post.id} {supabase} currentUserId={session?.user?.id} />
 		</div>
 
-		<!-- Settings & Tags -->
-		<div class="mb-6 space-y-4">
-			{#if canEdit}
-				<!-- Publishing Settings -->
-				<div class="flex items-center justify-between rounded-lg border p-4">
-					<div>
-						<h3 class="font-medium">Publishing Settings</h3>
-						<p class="mt-1 text-sm text-muted-foreground">
-							{$formValues.public_visibility
-								? 'This post will be visible to everyone.'
-								: 'This post will be saved as a draft.'}
-						</p>
-					</div>
-					<Form.Field {form} name="public_visibility">
-						<Form.Control>
-							{#snippet children({ props })}
-								<div class="flex items-center gap-2">
-									<span class="text-sm text-muted-foreground">Draft</span>
-									<Switch {...props} bind:checked={$formValues.public_visibility} />
-									<span class="text-sm text-muted-foreground">Public</span>
-								</div>
-							{/snippet}
-						</Form.Control>
-					</Form.Field>
-				</div>
-
-				<!-- Tags Editor -->
-				<div class="space-y-2">
-					<Label>Tags</Label>
-					<Form.Field {form} name="tags">
-						<Form.Control>
-							{#snippet children({ props })}
-								<MultiSelect
-									{...props}
-									items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-									bind:selectedItems={$formValues.tags}
-									itemNameProperty="tag_name"
-									placeholder="Select tags..."
-									label=""
-									showSearch={true}
-									searchPlaceholder="Search tags..."
-									emptyMessage="No tags found."
-								/>
-							{/snippet}
-						</Form.Control>
-					</Form.Field>
-				</div>
-			{:else}
+		<!-- Tags -->
+		{#if !canEdit}
+			<div class="mb-6">
 				<!-- Tags Display -->
 				<div class="flex flex-wrap gap-2">
 					{#if post.posts_tags_rel?.length}
@@ -349,8 +352,8 @@
 						<span class="text-sm text-muted-foreground">No tags</span>
 					{/if}
 				</div>
-			{/if}
-		</div>
+			</div>
+		{/if}
 
 		<!-- Content -->
 		<CardContent class="p-4 sm:p-6">
@@ -367,25 +370,6 @@
 				<p class="text-muted-foreground">No content available.</p>
 			{/if}
 		</CardContent>
-
-		<!-- Actions -->
-		{#if canEdit}
-			<div class="mt-6 flex items-center justify-between">
-				<PostActions {post} {supabase} currentUserId={session?.user?.id} />
-				<div class="flex items-center gap-2">
-					<Button variant="outline" onclick={handleDelete} disabled={isSubmitting || $submitting}
-						>Delete</Button
-					>
-					<Button onclick={handleSave} disabled={isSubmitting || $submitting}>
-						{#if isSubmitting}
-							Saving...
-						{:else}
-							Save
-						{/if}
-					</Button>
-				</div>
-			</div>
-		{/if}
 	</form>
 
 	<!-- Author & Comments -->
