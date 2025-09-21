@@ -35,7 +35,7 @@
 		"clsx": "^2.1.1",
 		"eslint": "^9.36.0",
 		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-svelte": "^3.12.3",
+		"eslint-plugin-svelte": "^3.12.4",
 		"formsnap": "^2.0.1",
 		"globals": "^16.4.0",
 		"mode-watcher": "^1.1.0",

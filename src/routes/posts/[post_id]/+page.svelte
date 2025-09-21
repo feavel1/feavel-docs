@@ -41,6 +41,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { getPostCoverUrl } from '$lib/utils/storage';
+	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
 
 	let { data } = $props();
 	// Extract only necessary properties
@@ -67,11 +68,12 @@
 		}
 	});
 
-	const { form: formValues, enhance } = form;
+	const { form: formValues } = form;
 
 	let canEdit = $derived(post?.user_id === session?.user?.id);
 
 	let coverPreview = $state<string>('');
+	let isSubmitting = $state<boolean>(false);
 
 	async function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -89,10 +91,113 @@
 			return;
 		}
 
-		coverPreview = URL.createObjectURL(file);
+		// Upload the cover image
+		const filename = await handlePostCoverUpload(supabase, file);
 
-		// For now, just show a message that saving is not implemented
-		toast.info('Cover upload would be implemented in a full version');
+		if (filename) {
+			// Update the form value
+			$formValues.post_cover = filename;
+			coverPreview = getPostCoverUrl(filename, supabase);
+			toast.success('Cover image uploaded successfully');
+		} else {
+			toast.error('Failed to upload cover image');
+		}
+	}
+
+	async function handleSave() {
+		if (isSubmitting) return;
+
+		// Validate the form before saving
+		const isValid = await form.validateForm();
+		if (!isValid.valid) {
+			// Focus on first error
+			requestAnimationFrame(() => {
+				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+			});
+			return;
+		}
+
+		// Set submitting state
+		isSubmitting = true;
+
+		try {
+			// Prepare post data
+			const postData = {
+				title: $formValues.title,
+				content: $formValues.content,
+				public_visibility: $formValues.public_visibility,
+				tags: $formValues.tags,
+				cover: $formValues.post_cover
+			};
+
+			// Ensure session exists before proceeding
+			if (!session?.user?.id) {
+				toast.error('User not authenticated');
+				return;
+			}
+
+			// Call the updatePost utility function directly
+			const { success, error: updateError } = await updatePost(
+				supabase,
+				session.user.id,
+				parseInt(post.id),
+				postData
+			);
+
+			if (success) {
+				toast.success('Post saved successfully!');
+				// Reset the form to clear any dirty state
+				form.reset();
+			} else {
+				toast.error(updateError || 'Failed to save post');
+			}
+		} catch (error) {
+			console.error('Error saving post:', error);
+			toast.error('Failed to save post');
+		} finally {
+			// Reset submitting state
+			isSubmitting = false;
+		}
+	}
+
+	async function handleDelete() {
+		if (isSubmitting) return;
+
+		if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+			return;
+		}
+
+		// Set submitting state
+		isSubmitting = true;
+
+		try {
+			// Ensure session exists before proceeding
+			if (!session?.user?.id) {
+				toast.error('User not authenticated');
+				return;
+			}
+
+			// Call the deletePost utility function directly
+			const { success, error: deleteError } = await deletePost(
+				supabase,
+				session.user.id,
+				parseInt(post.id)
+			);
+
+			if (success) {
+				toast.success('Post deleted successfully!');
+				// Redirect to posts list
+				window.location.href = '/posts';
+			} else {
+				toast.error(deleteError || 'Failed to delete post');
+			}
+		} catch (error) {
+			console.error('Error deleting post:', error);
+			toast.error('Failed to delete post');
+		} finally {
+			// Reset submitting state
+			isSubmitting = false;
+		}
 	}
 
 	function handleContentChange(content: any) {
@@ -165,7 +270,7 @@
 						>
 							<img
 								src={coverPreview ||
-									($formValues.post_cover && post
+									($formValues.post_cover
 										? getPostCoverUrl($formValues.post_cover, supabase)
 										: '/placeholder-image.jpg')}
 								alt={coverPreview ? 'Cover preview' : 'Cover image'}
@@ -260,31 +365,47 @@
 
 		<!-- Post Content -->
 		<Card>
-			<form method="POST" use:enhance>
-				<CardContent class="p-4 sm:p-6">
-					{#if (canEdit || post?.content_v2) && (canEdit ? $formValues.content : post?.content_v2)}
-						<div class="prose prose-lg max-w-none">
-							<Editor
-								content={canEdit ? $formValues.content : post?.content_v2}
-								readOnly={!canEdit}
-								onChange={canEdit ? handleContentChange : () => {}}
-								class="min-h-[500px]"
-							/>
-						</div>
-					{:else if post?.content}
-						<!-- Fallback for legacy content -->
-						<div class="prose prose-lg max-w-none">
-							{@html post.content}
-						</div>
-					{:else}
-						<p class="text-muted-foreground">No content available.</p>
-					{/if}
-				</CardContent>
-			</form>
+			<CardContent class="p-4 sm:p-6">
+				{#if canEdit || post?.content_v2}
+					<div class="prose prose-lg max-w-none">
+						<Editor
+							content={post?.content_v2}
+							readOnly={!canEdit}
+							onChange={canEdit ? handleContentChange : () => {}}
+							class="min-h-[500px]"
+						/>
+					</div>
+				{:else}
+					<p class="text-muted-foreground">No content available.</p>
+				{/if}
+			</CardContent>
 		</Card>
 
 		{#if post}
-			<PostActions {post} {supabase} currentUserId={session?.user?.id} />
+			<div class="mt-6 flex items-center justify-between">
+				<PostActions {post} {supabase} currentUserId={session?.user?.id} />
+				{#if canEdit}
+					<div class="flex items-center gap-2">
+						<Button
+							variant="outline"
+							onclick={handleDelete}
+							disabled={isSubmitting}
+						>
+							Delete
+						</Button>
+						<Button
+							onclick={handleSave}
+							disabled={isSubmitting}
+						>
+							{#if isSubmitting}
+								Saving...
+							{:else}
+								Save
+							{/if}
+						</Button>
+					</div>
+				{/if}
+			</div>
 
 			<PostAuthor {post} {supabase} />
 

@@ -1,6 +1,6 @@
-import { error, redirect, fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { fetchAllTags, createPost, updatePost, deletePost } from '$lib/utils/posts';
+import { error, redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { fetchAllTags, createPost } from '$lib/utils/posts';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { postSchema } from './+page.svelte';
@@ -19,10 +19,13 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			throw redirect(302, '/auth/login');
 		}
 
-		// Create a minimal draft post immediately
+		// Create a minimal draft post immediately with proper initial content_v2 structure
 		const { post: newPost, error: createError } = await createPost(locals.supabase, session.user.id, {
 			title: null,
-			content: null,
+			content: {
+				blocks: [],
+				version: '2.27.2' // Editor.js version
+			},
 			public_visibility: false,
 			tags: []
 		});
@@ -103,67 +106,4 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		session,
 		tags
 	};
-};
-
-export const actions: Actions = {
-	save: async ({ request, locals, params }) => {
-		const { post_id } = params;
-		const { session } = await locals.safeGetSession();
-
-		if (!session) {
-			throw error(401, 'Unauthorized');
-		}
-
-		const form = await superValidate(request, zod(postSchema));
-
-		if (!form.valid) {
-			return fail(400, { form });
-		}
-
-		// Prepare post data
-		const postData = {
-			title: form.data.title,
-			content: form.data.content,
-			public_visibility: form.data.public_visibility,
-			tags: form.data.tags
-		};
-
-		// Update the post (works for both new and existing)
-		const { success, error: updateError } = await updatePost(
-			locals.supabase,
-			session.user.id,
-			parseInt(post_id),
-			postData
-		);
-
-		if (!success) {
-			return fail(500, { form, message: updateError });
-		}
-
-		return {
-			form,
-			message: { text: 'Post saved successfully!' }
-		};
-	},
-
-	delete: async ({ locals, params }) => {
-		const { post_id } = params;
-		const { session } = await locals.safeGetSession();
-
-		if (!session) {
-			throw error(401, 'Unauthorized');
-		}
-
-		const { success, error: deleteError } = await deletePost(
-			locals.supabase,
-			session.user.id,
-			parseInt(post_id)
-		);
-
-		if (!success) {
-			return fail(500, { message: deleteError });
-		}
-
-		throw redirect(302, '/posts');
-	}
 };
