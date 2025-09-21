@@ -265,15 +265,15 @@
 									{...props}
 									bind:value={$formValues.title}
 									readonly={!canEdit}
-									class="mb-3 w-full border-0 p-4 text-4xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 {canEdit
+									class="w-full border-0 py-4 text-4xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 {canEdit
 										? 'cursor-text'
 										: 'cursor-default bg-transparent'}"
-									placeholder="Your new post title..."
+									placeholder="Post title..."
 								/>
 							{/snippet}
 						</Form.Control>
 					</Form.Field>
-					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+					<div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 						<div class="flex items-center gap-1">
 							<User class="h-4 w-4" />
 							<span>{postUser}</span>
@@ -313,7 +313,7 @@
 				</div>
 			</div>
 		{:else}
-			<div class="mt-6 flex flex-row items-center justify-between gap-4">
+			<div class="mt-3 flex flex-row items-center justify-between gap-4">
 				<!-- Public/draft Settings -->
 				<div class="flex items-center gap-2">
 					<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />

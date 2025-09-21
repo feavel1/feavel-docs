@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Eye, Heart, Plus, Search, Clock } from '@lucide/svelte';
+	import * as HoverCard from '$lib/components/ui/hover-card';
+	import { Eye, Heart, Plus, Search, Clock, PackageOpen } from '@lucide/svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
@@ -114,13 +115,13 @@
 		</div>
 		<div class="flex items-center gap-2">
 			{#if session && drafts && drafts.length > 0}
-				<div class="group relative">
-					<Button variant="outline" class="flex items-center gap-2">
-						<span>Drafts ({drafts.length})</span>
-					</Button>
-					<div
-						class="absolute right-0 z-10 mt-1 hidden w-64 rounded-md bg-popover p-2 shadow-lg group-hover:block"
-					>
+				<HoverCard.Root>
+					<HoverCard.Trigger>
+						<Button variant="outline" class="flex items-center gap-2">
+							<PackageOpen class="h-4 w-4" /> Drafts ({drafts.length})
+						</Button>
+					</HoverCard.Trigger>
+					<HoverCard.Content class="w-64 p-2">
 						{#each drafts.slice(0, 5) as draft (draft.id)}
 							<a
 								href="/posts/{draft.id}"
@@ -137,8 +138,8 @@
 								+{drafts.length - 5} more drafts
 							</div>
 						{/if}
-					</div>
-				</div>
+					</HoverCard.Content>
+				</HoverCard.Root>
 			{/if}
 			<Button href="/posts/new" class="flex items-center gap-2">
 				<Plus class="h-4 w-4" />
