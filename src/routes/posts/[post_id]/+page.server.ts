@@ -1,9 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { fetchAllTags, createPost } from '$lib/utils/posts';
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { postSchema } from './+page.svelte';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { post_id } = params;
@@ -91,27 +88,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.eq('id', post_id);
 	}
 
-	// Prepare form data
-	const formData = {
-		id: post.id,
-		title: post.title,
-		content: post.content_v2,
-		post_cover: post.post_cover,
-		public_visibility: post.public_visibility,
-		tags: post.posts_tags_rel
-			? post.posts_tags_rel.map(
-					(rel: { post_tags: { tag_name: string } }) => rel.post_tags.tag_name
-				)
-			: []
-	};
-
-	const form = await superValidate(formData, zod(postSchema));
 	const tags = isOwner ? await fetchAllTags(locals.supabase) : [];
 
 	return {
 		post,
-		form,
-		session,
 		tags
 	};
 };
