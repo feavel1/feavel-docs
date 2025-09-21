@@ -41,6 +41,7 @@
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
+	import GradientGenerator from '$lib/components/modules/content/GradientGenerator.svelte';
 
 	let { data } = $props();
 	const { post, session, supabase, tags = [] } = data;
@@ -204,13 +205,17 @@
 						aria-label="Change cover image"
 					>
 						<div class="relative h-full w-full">
-							<img
-								src={coverUrl}
-								alt={post.title || 'Cover image'}
-								class="h-full w-full object-cover"
-							/>
+							{#if coverUrl}
+								<img
+									src={coverUrl}
+									alt={post.title || 'Cover image'}
+									class="h-full w-full object-cover"
+								/>
+							{:else}
+								<GradientGenerator />
+							{/if}
 							<div
-								class="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center opacity-50 transition-opacity hover:bg-gray-400"
 							>
 								<span class="text-lg font-medium text-white">Click to change cover image</span>
 							</div>
@@ -234,6 +239,18 @@
 							Remove Cover
 						</Button>
 					{/if}
+				{:else}
+					<div class="relative h-48 w-full sm:h-64">
+						{#if coverUrl}
+							<img
+								src={coverUrl}
+								alt={post.title || 'Cover image'}
+								class="h-full w-full object-cover"
+							/>
+						{:else}
+							<GradientGenerator />
+						{/if}
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -249,7 +266,7 @@
 									{...props}
 									bind:value={$formValues.title}
 									readonly={!canEdit}
-									class="mb-3 w-full border-0 p-0 text-3xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 sm:text-4xl {canEdit
+									class="mb-3 w-full border-0 p-4 text-4xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 {canEdit
 										? 'cursor-text'
 										: 'cursor-default bg-transparent'}"
 									placeholder="Your new post title..."
@@ -274,57 +291,45 @@
 				</div>
 			</div>
 		</div>
+
 		<!-- Actions -->
-		<div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+		<div class="mt-6 flex flex-row items-center justify-between gap-4">
 			{#if canEdit}
-				<div class="flex flex-wrap items-center gap-6">
-					<!-- Publishing Settings -->
-					<div class="flex items-center gap-2">
-						<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
-						<label for="public-visibility" class="text-sm font-medium"> Make post public </label>
-					</div>
+				<MultiSelect
+					items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+					bind:selectedItems={$formValues.tags}
+					itemNameProperty="tag_name"
+					placeholder="Add tags..."
+					label="Post Tags"
+					showSearch={true}
+					searchPlaceholder="Search tags..."
+					emptyMessage="No tags found."
+				/>
+				<!-- Publishing Settings -->
+				<div class="flex items-center gap-2">
+					<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
+					<label for="public-visibility" class="text-sm font-medium"> Make post public </label>
+				</div>
 
-					<!-- Tags Editor -->
-					<div class="min-w-48 flex-1">
-						<Form.Field {form} name="tags">
-							<Form.Control>
-								{#snippet children({ props })}
-									<MultiSelect
-										{...props}
-										items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-										bind:selectedItems={$formValues.tags}
-										itemNameProperty="tag_name"
-										placeholder="Add tags..."
-										label="Post Tags"
-										showSearch={true}
-										searchPlaceholder="Search tags..."
-										emptyMessage="No tags found."
-									/>
-								{/snippet}
-							</Form.Control>
-						</Form.Field>
-					</div>
-
-					<!-- Action Buttons -->
-					<div class="flex items-center gap-2">
-						<Button variant="outline" onclick={handleDelete} disabled={$submitting} size="sm">
-							Delete
-						</Button>
-						<Button
-							onclick={handleSave}
-							disabled={$submitting}
-							size="sm"
-							variant={saveSuccess ? 'secondary' : 'default'}
-						>
-							{#if $submitting}
-								Saving...
-							{:else if saveSuccess}
-								Saved!
-							{:else}
-								Save
-							{/if}
-						</Button>
-					</div>
+				<!-- Action Buttons -->
+				<div class="flex items-center gap-2">
+					<Button variant="outline" onclick={handleDelete} disabled={$submitting} size="sm">
+						Delete
+					</Button>
+					<Button
+						onclick={handleSave}
+						disabled={$submitting}
+						size="sm"
+						variant={saveSuccess ? 'secondary' : 'default'}
+					>
+						{#if $submitting}
+							Saving...
+						{:else if saveSuccess}
+							Saved!
+						{:else}
+							Save
+						{/if}
+					</Button>
 				</div>
 			{/if}
 
