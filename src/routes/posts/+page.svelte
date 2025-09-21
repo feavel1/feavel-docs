@@ -19,15 +19,15 @@
 	let sortBy = $state<'newest' | 'popular' | 'liked'>('newest');
 
 	// Define sort options for SingleSelect component
-	let options = $state([
+	const options = $state([
 		{ value: 'newest', label: 'Newest', icon: Clock },
 		{ value: 'popular', label: 'Most Viewed', icon: Eye },
 		{ value: 'liked', label: 'Most Liked', icon: Heart }
 	]);
 
 	// Initialize selectedTags from URL parameters
-	let urlTags = $derived(page.url.searchParams.get('tags'));
-	let urlSort = $derived(page.url.searchParams.get('sort'));
+	const urlTags = $derived(page.url.searchParams.get('tags'));
+	const urlSort = $derived(page.url.searchParams.get('sort'));
 
 	$effect(() => {
 		if (urlTags) {

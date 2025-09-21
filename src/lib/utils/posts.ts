@@ -49,22 +49,6 @@ export function filterPosts(posts: Post[], filters: PostFilters): Post[] {
 	return filtered;
 }
 
-export function getPostTags(post: Post): string[] {
-	return post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || [];
-}
-
-export function formatDate(dateString: string): string {
-	return new Date(dateString).toLocaleDateString();
-}
-
-export function getPostViews(post: Post): number {
-	return post.post_views || 0;
-}
-
-export function isPostOwner(post: Post, userId?: string): boolean {
-	return post.user_id === userId;
-}
-
 /**
  * Get the number of likes for a post
  * @param post The post object
@@ -72,15 +56,6 @@ export function isPostOwner(post: Post, userId?: string): boolean {
  */
 export function getPostLikes(post: Post): number {
 	return post.post_likes?.length || 0;
-}
-
-/**
- * Get the number of comments for a post
- * @param post The post object
- * @returns The number of comments
- */
-export function getPostComments(post: Post): number {
-	return post.post_comments?.length || 0;
 }
 
 /**
