@@ -327,10 +327,7 @@ export async function createPostFormData(
 ): Promise<FormData | string> {
 	if (coverFile) {
 		const formData = new FormData();
-		formData.append(
-			'data',
-			JSON.stringify(data)
-		);
+		formData.append('data', JSON.stringify(data));
 		formData.append('cover', coverFile);
 		return formData;
 	} else {

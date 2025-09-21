@@ -10,7 +10,7 @@
 
 	export const postSchema = z.object({
 		id: z.number().optional(),
-		title: z.string().max(200, { message: 'Title must be less than 200 characters' }).nullable(),
+		title: z.string().max(100, { message: 'Title must be less than 200 characters' }).nullable(),
 		content: z
 			.object({
 				blocks: z.array(editorBlockSchema).optional(),
@@ -37,8 +37,9 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
-	import { Card, CardContent } from '$lib/components/ui/card';
+	import { CardContent } from '$lib/components/ui/card';
 	import { superForm } from 'sveltekit-superforms';
+	import * as Form from '$lib/components/ui/form';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
@@ -47,9 +48,10 @@
 	// Extract only necessary properties
 	const { post, session, supabase, tags = [], form: formData } = data;
 
-	// Initialize form with better error handling
+	// Initialize form with better error handling and explicit validation method
 	const form = superForm(formData, {
 		validators: zodClient(postSchema),
+		validationMethod: 'oninput', // Provides oninput/onblur validation as desired
 		dataType: 'json',
 		resetForm: false,
 		onResult: ({ result }) => {
@@ -68,7 +70,7 @@
 		}
 	});
 
-	const { form: formValues } = form;
+	const { form: formValues, enhance } = form;
 
 	let canEdit = $derived(post?.user_id === session?.user?.id);
 
@@ -109,6 +111,9 @@
 
 		// Validate the form before saving
 		const isValid = await form.validateForm();
+
+		console.log(isValid);
+
 		if (!isValid.valid) {
 			// Focus on first error
 			requestAnimationFrame(() => {
@@ -216,7 +221,6 @@
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl px-4 py-8">
-	<!-- Back Button -->
 	<Button variant="ghost" class="mb-6" href="/posts">
 		<ArrowLeft class="mr-2 h-4 w-4" />
 		Back to Posts
@@ -226,16 +230,22 @@
 		<div class="mb-6">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex-1">
-					<input
-						bind:value={$formValues.title}
-						readonly={!canEdit}
-						class="mb-3 w-full border-0 p-0 text-3xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 sm:text-4xl"
-						class:cursor-text={canEdit}
-						class:cursor-default={!canEdit}
-						class:bg-transparent={!canEdit}
-						class:text-foreground={!canEdit}
-						placeholder="Your new post title..."
-					/>
+					<Form.Field {form} name="title">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Input
+									{...props}
+									bind:value={$formValues.title}
+									readonly={!canEdit}
+									class="mb-3 w-full border-0 p-0 text-3xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 sm:text-4xl {canEdit
+										? 'cursor-text'
+										: 'cursor-default bg-transparent text-foreground'}"
+									placeholder="Your new post title..."
+								/>
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
 					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 						<div class="flex items-center gap-1">
 							<User class="h-4 w-4" />
@@ -323,24 +333,39 @@
 									: 'This post will be saved as a draft.'}
 							</p>
 						</div>
-						<div class="flex items-center gap-2">
-							<span class="text-sm text-muted-foreground">Draft</span>
-							<Switch bind:checked={$formValues.public_visibility} />
-							<span class="text-sm text-muted-foreground">Public</span>
-						</div>
+						<Form.Field {form} name="public_visibility">
+							<Form.Control>
+								{#snippet children({ props })}
+									<div class="flex items-center gap-2">
+										<span class="text-sm text-muted-foreground">Draft</span>
+										<Switch {...props} bind:checked={$formValues.public_visibility} />
+										<span class="text-sm text-muted-foreground">Public</span>
+									</div>
+								{/snippet}
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
 					</div>
 					<div class="space-y-2">
 						<Label>Tags</Label>
-						<MultiSelect
-							items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
-							bind:selectedItems={$formValues.tags}
-							itemNameProperty="tag_name"
-							placeholder="Select tags..."
-							label=""
-							showSearch={true}
-							searchPlaceholder="Search tags..."
-							emptyMessage="No tags found."
-						/>
+						<Form.Field {form} name="tags">
+							<Form.Control>
+								{#snippet children({ props })}
+									<MultiSelect
+										{...props}
+										items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+										bind:selectedItems={$formValues.tags}
+										itemNameProperty="tag_name"
+										placeholder="Select tags..."
+										label=""
+										showSearch={true}
+										searchPlaceholder="Search tags..."
+										emptyMessage="No tags found."
+									/>
+								{/snippet}
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
 					</div>
 				{:else}
 					<div class="flex flex-wrap gap-2">
@@ -363,8 +388,7 @@
 			</div>
 		</div>
 
-		<!-- Post Content -->
-		<Card>
+		<form method="POST" use:enhance>
 			<CardContent class="p-4 sm:p-6">
 				{#if canEdit || post?.content_v2}
 					<div class="prose prose-lg max-w-none">
@@ -379,24 +403,15 @@
 					<p class="text-muted-foreground">No content available.</p>
 				{/if}
 			</CardContent>
-		</Card>
+		</form>
 
 		{#if post}
 			<div class="mt-6 flex items-center justify-between">
 				<PostActions {post} {supabase} currentUserId={session?.user?.id} />
 				{#if canEdit}
 					<div class="flex items-center gap-2">
-						<Button
-							variant="outline"
-							onclick={handleDelete}
-							disabled={isSubmitting}
-						>
-							Delete
-						</Button>
-						<Button
-							onclick={handleSave}
-							disabled={isSubmitting}
-						>
+						<Button variant="outline" onclick={handleDelete} disabled={isSubmitting}>Delete</Button>
+						<Button onclick={handleSave} disabled={isSubmitting}>
 							{#if isSubmitting}
 								Saving...
 							{:else}

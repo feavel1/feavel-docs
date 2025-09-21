@@ -14,6 +14,6 @@
 
 <div class="mt-6 flex items-center justify-between">
 	<div class="flex items-center gap-4">
-		<LikeButton postId={post.id} {supabase} currentUserId={currentUserId} />
+		<LikeButton postId={post.id} {supabase} {currentUserId} />
 	</div>
 </div>

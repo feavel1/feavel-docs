@@ -20,15 +20,19 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 
 		// Create a minimal draft post immediately with proper initial content_v2 structure
-		const { post: newPost, error: createError } = await createPost(locals.supabase, session.user.id, {
-			title: null,
-			content: {
-				blocks: [],
-				version: '2.27.2' // Editor.js version
-			},
-			public_visibility: false,
-			tags: []
-		});
+		const { post: newPost, error: createError } = await createPost(
+			locals.supabase,
+			session.user.id,
+			{
+				title: null,
+				content: {
+					blocks: [],
+					version: '2.27.2' // Editor.js version
+				},
+				public_visibility: false,
+				tags: []
+			}
+		);
 
 		if (createError || !newPost) {
 			throw error(500, 'Failed to create new post');
@@ -94,7 +98,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		content: post.content_v2,
 		post_cover: post.post_cover,
 		public_visibility: post.public_visibility,
-		tags: post.posts_tags_rel ? post.posts_tags_rel.map((rel: { post_tags: { tag_name: string } }) => rel.post_tags.tag_name) : []
+		tags: post.posts_tags_rel
+			? post.posts_tags_rel.map(
+					(rel: { post_tags: { tag_name: string } }) => rel.post_tags.tag_name
+				)
+			: []
 	};
 
 	const form = await superValidate(formData, zod(postSchema));

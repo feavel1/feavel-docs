@@ -8,13 +8,22 @@ import type { RequestHandler } from './$types';
  */
 
 export const POST: RequestHandler = async () => {
-	return json({ error: 'This endpoint is deprecated. Use the client-side post operations instead.' }, { status: 410 });
+	return json(
+		{ error: 'This endpoint is deprecated. Use the client-side post operations instead.' },
+		{ status: 410 }
+	);
 };
 
 export const PUT: RequestHandler = async () => {
-	return json({ error: 'This endpoint is deprecated. Use the client-side post operations instead.' }, { status: 410 });
+	return json(
+		{ error: 'This endpoint is deprecated. Use the client-side post operations instead.' },
+		{ status: 410 }
+	);
 };
 
 export const DELETE: RequestHandler = async () => {
-	return json({ error: 'This endpoint is deprecated. Use the client-side post operations instead.' }, { status: 410 });
+	return json(
+		{ error: 'This endpoint is deprecated. Use the client-side post operations instead.' },
+		{ status: 410 }
+	);
 };
