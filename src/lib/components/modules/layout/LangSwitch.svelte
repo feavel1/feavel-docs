@@ -1,13 +1,8 @@
 <script lang="ts">
 	import { locales as availableLanguageTags } from '$lib/paraglide/runtime.js';
 	import { setLocale, getLocale } from '$lib/paraglide/runtime.js';
-	import {
-		DropdownMenu,
-		DropdownMenuContent,
-		DropdownMenuItem,
-		DropdownMenuTrigger
-	} from '$lib/components/ui/dropdown-menu/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Button } from '$lib/components/ui/button';
 	import { Globe } from '@lucide/svelte';
 
 	// Get the current locale
@@ -21,21 +16,23 @@
 	}
 </script>
 
-<DropdownMenu>
-	<DropdownMenuTrigger>
-		<Button variant="outline" size="icon" class="rounded-full">
-			<Globe class="size-4" />
-			<span class="sr-only">Switch language</span>
-		</Button>
-	</DropdownMenuTrigger>
-	<DropdownMenuContent align="end">
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button {...props} variant="outline" size="icon">
+				<Globe class="size-4" />
+				<span class="sr-only">Switch language</span>
+			</Button>
+		{/snippet}
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Content align="end" class="w-16">
 		{#each availableLanguageTags as lang}
-			<DropdownMenuItem
+			<DropdownMenu.Item
 				onclick={() => switchLanguage(lang)}
 				class={lang === currentLocale ? 'bg-accent' : ''}
 			>
 				<span class="font-medium uppercase">{lang}</span>
-			</DropdownMenuItem>
+			</DropdownMenu.Item>
 		{/each}
-	</DropdownMenuContent>
-</DropdownMenu>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>

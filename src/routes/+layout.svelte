@@ -30,8 +30,8 @@
 		<div class="flex items-center justify-between">
 			<Feavel />
 			<div class="flex items-center gap-2">
-				<ModeSwitcher />
 				<LangSwitch />
+				<ModeSwitcher />
 				<HamburgerMenu />
 			</div>
 		</div>
