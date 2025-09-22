@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Heart } from '@lucide/svelte';
-	import { toggleLike, getLikeCount, isPostLiked } from '$lib/utils/likes';
+	import { toggleLike, getLikeInfo } from '$lib/utils/likes';
+	import { toast } from 'svelte-sonner';
 	import type { SupabaseClient } from '@supabase/supabase-js';
 
 	interface Props {
@@ -19,20 +20,33 @@
 	async function handleToggleLike() {
 		if (!currentUserId || isSubmitting) return;
 
+		// Store previous state for rollback on error
+		const previousIsLiked = isLiked;
+		const previousLikeCount = likeCount;
+
+		// Optimistic UI update
+		isLiked = !isLiked;
+		likeCount = isLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+
 		isSubmitting = true;
 		try {
 			const result = await toggleLike(supabase, postId, currentUserId);
-			if (result.success) {
+			if (!result.success) {
+				// Rollback on failure
+				isLiked = previousIsLiked;
+				likeCount = previousLikeCount;
+				toast.error('Failed to update like. Please try again.');
+			} else {
+				// Update state with actual result (in case of discrepancy)
 				isLiked = result.isLiked;
-				// Update like count based on the action
-				if (result.isLiked) {
-					likeCount += 1;
-				} else {
-					likeCount = Math.max(0, likeCount - 1);
-				}
+				// The like count should be automatically updated through cache invalidation in toggleLike
 			}
 		} catch (error) {
+			// Rollback on error
+			isLiked = previousIsLiked;
+			likeCount = previousLikeCount;
 			console.error('Error toggling like:', error);
+			toast.error('Failed to update like. Please try again.');
 		} finally {
 			isSubmitting = false;
 		}
@@ -40,14 +54,10 @@
 
 	// Initialize like state when component mounts
 	$effect(() => {
-		if (postId && currentUserId) {
-			// Get current like count
-			getLikeCount(supabase, postId).then((count) => {
+		if (postId) {
+			// Get both like count and user's like status in one call
+			getLikeInfo(supabase, postId, currentUserId).then(({ count, isLiked: liked }) => {
 				likeCount = count;
-			});
-
-			// Get current like status
-			isPostLiked(supabase, postId, currentUserId).then((liked) => {
 				isLiked = liked;
 			});
 		}
@@ -60,6 +70,12 @@
 	disabled={!currentUserId || isSubmitting}
 	class="gap-2"
 >
-	<Heart class="h-4 w-4 {isLiked ? 'fill-red-500 text-red-500' : ''}" />
+	{#if isSubmitting}
+		<div
+			class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+		></div>
+	{:else}
+		<Heart class="h-4 w-4 {isLiked ? 'fill-red-500 text-red-500' : ''}" />
+	{/if}
 	{likeCount}
 </Button>

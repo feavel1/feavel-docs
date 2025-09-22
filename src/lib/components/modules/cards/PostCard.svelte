@@ -40,7 +40,10 @@
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
 					{#if post.users?.avatar_url}
-						<AvatarImage src={getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase)} alt={post.users.username} />
+						<AvatarImage
+							src={getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase)}
+							alt={post.users.username}
+						/>
 					{/if}
 					<AvatarFallback class="text-xs font-medium">
 						{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -48,7 +51,9 @@
 				</Avatar>
 				<div class="text-sm">
 					<div class="font-medium">{post.users?.username || 'Unknown'}</div>
-					<div class="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleDateString()}</div>
+					<div class="text-xs text-muted-foreground">
+						{new Date(post.created_at).toLocaleDateString()}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -57,7 +62,7 @@
 	<CardContent class="flex-grow pt-0">
 		{#if (post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || []).length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each (post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || []) as tag, i}
+				{#each post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || [] as tag, i}
 					{#if i < 3}
 						<Button
 							variant="outline"

@@ -8,9 +8,44 @@ type PostLike = Tables<'post_likes'> & {
 	};
 };
 
-// Simple in-memory cache for like counts
-const likeCountCache = new Map<string, { count: number; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// Simple in-memory cache for like counts with improved management
+class LikeCountCache {
+	private cache = new Map<string, { count: number; timestamp: number }>();
+	private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+	get(postId: number): number | null {
+		const cacheKey = `post_${postId}`;
+		const cached = this.cache.get(cacheKey);
+
+		if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+			return cached.count;
+		}
+
+		// Remove expired cache entry
+		if (cached) {
+			this.cache.delete(cacheKey);
+		}
+
+		return null;
+	}
+
+	set(postId: number, count: number): void {
+		const cacheKey = `post_${postId}`;
+		this.cache.set(cacheKey, { count, timestamp: Date.now() });
+	}
+
+	clear(postId: number): void {
+		const cacheKey = `post_${postId}`;
+		this.cache.delete(cacheKey);
+	}
+
+	// Clear all cache entries (useful for testing or complete reset)
+	clearAll(): void {
+		this.cache.clear();
+	}
+}
+
+const likeCountCache = new LikeCountCache();
 
 export async function getLikeCount(
 	supabase: SupabaseClient,
@@ -19,12 +54,10 @@ export async function getLikeCount(
 	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
 	if (numericPostId <= 0 || isNaN(numericPostId)) return 0;
 
-	const cacheKey = `post_${numericPostId}`;
-	const cached = likeCountCache.get(cacheKey);
-
-	// Check if we have a valid cached value
-	if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-		return cached.count;
+	// Check cache first
+	const cachedCount = likeCountCache.get(numericPostId);
+	if (cachedCount !== null) {
+		return cachedCount;
 	}
 
 	const { count, error } = await supabase
@@ -40,7 +73,7 @@ export async function getLikeCount(
 	const likeCount = count || 0;
 
 	// Cache the result
-	likeCountCache.set(cacheKey, { count: likeCount, timestamp: Date.now() });
+	likeCountCache.set(numericPostId, likeCount);
 
 	return likeCount;
 }
@@ -50,8 +83,7 @@ export function clearLikeCountCache(postId: string | number): void {
 	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
 	if (numericPostId <= 0 || isNaN(numericPostId)) return;
 
-	const cacheKey = `post_${numericPostId}`;
-	likeCountCache.delete(cacheKey);
+	likeCountCache.clear(numericPostId);
 }
 
 export async function isPostLiked(
@@ -70,6 +102,55 @@ export async function isPostLiked(
 		.maybeSingle();
 
 	return !error && !!data;
+}
+
+// Combined function to get both like count and user's like status in one query
+export async function getLikeInfo(
+	supabase: SupabaseClient,
+	postId: string | number,
+	userId?: string
+): Promise<{ count: number; isLiked: boolean }> {
+	const numericPostId = typeof postId === 'string' ? parseInt(postId, 10) : postId;
+	if (numericPostId <= 0 || isNaN(numericPostId)) {
+		return { count: 0, isLiked: false };
+	}
+
+	// Check cache first for like count
+	const cachedCount = likeCountCache.get(numericPostId);
+	let likeCount = 0;
+
+	if (cachedCount !== null) {
+		likeCount = cachedCount;
+	} else {
+		// Fetch like count from database
+		const { count, error } = await supabase
+			.from('post_likes')
+			.select('*', { count: 'exact', head: true })
+			.eq('post_id', numericPostId);
+
+		if (!error) {
+			likeCount = count || 0;
+			// Update cache
+			likeCountCache.set(numericPostId, likeCount);
+		}
+	}
+
+	// If user is not logged in, they can't have liked the post
+	if (!userId) {
+		return { count: likeCount, isLiked: false };
+	}
+
+	// Check if current user has liked the post
+	const { data, error } = await supabase
+		.from('post_likes')
+		.select('id')
+		.eq('post_id', numericPostId)
+		.eq('user_id', userId)
+		.maybeSingle();
+
+	const isLiked = !error && !!data;
+
+	return { count: likeCount, isLiked };
 }
 
 export async function toggleLike(
