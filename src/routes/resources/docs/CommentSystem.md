@@ -82,13 +82,13 @@ Fetches replies for a specific comment.
 
 Creates a new comment or reply.
 
-### updateComment(supabase, commentId, content)
+### updateComment(supabase, commentId, content, userId)
 
-Updates an existing comment.
+Updates an existing comment. Requires user authorization - only the comment owner can update their comment.
 
-### deleteComment(supabase, commentId)
+### deleteComment(supabase, commentId, userId)
 
-Soft deletes a comment by setting `is_deleted` to true.
+Soft deletes a comment by setting `is_deleted` to true. Requires user authorization - only the comment owner can delete their comment.
 
 ## Bug Fixes
 

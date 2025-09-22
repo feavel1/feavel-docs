@@ -94,14 +94,14 @@
 	}
 
 	async function handleEditComment(commentId: number, content: string) {
-		const updatedComment = await updateComment(supabase, commentId, content);
+		const updatedComment = await updateComment(supabase, commentId, content, currentUserId);
 		if (updatedComment) {
 			comments = updateCommentsWithEditedComment(comments, updatedComment);
 		}
 	}
 
 	async function handleDeleteComment(commentId: number) {
-		const success = await deleteComment(supabase, commentId);
+		const success = await deleteComment(supabase, commentId, currentUserId);
 		if (success) {
 			comments = removeCommentFromList(comments, commentId);
 			repliesCache.delete(commentId);
@@ -140,16 +140,52 @@
 		}
 	}
 
-	// Helper functions
+	// Generic tree traversal function
+	function traverseComments(
+		commentsList: PostComment[],
+		operation: (comment: PostComment, parent?: PostComment) => PostComment | null | 'skip' | void
+	): PostComment[] {
+		return commentsList
+			.map((comment) => {
+				const result = operation(comment);
+
+				if (result === 'skip') {
+					return comment;
+				}
+
+				const updatedComment = result === null ? null : result || comment;
+
+				if (updatedComment === null) {
+					return null;
+				}
+
+				if (updatedComment.replies?.length) {
+					const updatedReplies = traverseComments(updatedComment.replies, operation);
+					const filteredReplies = updatedReplies.filter((reply) => reply !== null) as PostComment[];
+					return {
+						...updatedComment,
+						replies: filteredReplies
+					};
+				}
+
+				return updatedComment;
+			})
+			.filter((comment) => comment !== null) as PostComment[];
+	}
+
+	// Helper functions using the generic traversal
 	function findCommentById(commentsList: PostComment[], id: number): PostComment | null {
-		for (const comment of commentsList) {
-			if (comment.id === id) return comment;
-			if (comment.replies?.length) {
-				const found = findCommentById(comment.replies, id);
-				if (found) return found;
+		let foundComment: PostComment | null = null;
+
+		traverseComments(commentsList, (comment) => {
+			if (comment.id === id) {
+				foundComment = comment;
+				return null; // Stop traversal
 			}
-		}
-		return null;
+			return 'skip'; // Continue traversal
+		});
+
+		return foundComment;
 	}
 
 	function updateCommentReplies(
@@ -157,7 +193,7 @@
 		parentId: number,
 		newReply: PostComment
 	): PostComment[] {
-		return commentsList.map((comment) => {
+		return traverseComments(commentsList, (comment) => {
 			if (comment.id === parentId) {
 				const updatedReplies = comment.replies ? [...comment.replies, newReply] : [newReply];
 				if (repliesCache.has(comment.id)) {
@@ -168,13 +204,8 @@
 					replies: updatedReplies,
 					_reply_count: (comment._reply_count || 0) + 1
 				};
-			} else if (comment.replies?.length) {
-				const updatedReplies = updateCommentReplies(comment.replies, parentId, newReply);
-				if (updatedReplies !== comment.replies) {
-					return { ...comment, replies: updatedReplies };
-				}
 			}
-			return comment;
+			return 'skip'; // Skip processing children in this case since we handle recursion manually
 		});
 	}
 
@@ -182,26 +213,24 @@
 		commentsList: PostComment[],
 		updatedComment: PostComment
 	): PostComment[] {
-		return commentsList.map((comment) => {
+		return traverseComments(commentsList, (comment) => {
 			if (comment.id === updatedComment.id) {
 				return updatedComment;
-			} else if (comment.replies?.length) {
-				const updatedReplies = updateCommentsWithEditedComment(comment.replies, updatedComment);
-				if (updatedReplies !== comment.replies) {
-					return { ...comment, replies: updatedReplies as PostComment[] };
-				}
 			}
-			return comment;
+			return 'skip';
 		});
 	}
 
 	function removeCommentFromList(commentsList: PostComment[], commentId: number): PostComment[] {
-		return commentsList
-			.map((comment) => {
-				if (comment.id === commentId) {
-					return null;
-				} else if (comment.replies?.length) {
-					const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
+		return traverseComments(commentsList, (comment) => {
+			if (comment.id === commentId) {
+				return null; // Remove this comment
+			}
+
+			// Update reply count if this comment has replies that were filtered
+			if (comment.replies?.length) {
+				const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
+				if (filteredReplies.length !== comment.replies.length) {
 					if (repliesCache.has(comment.id)) {
 						repliesCache.set(comment.id, filteredReplies);
 					}
@@ -211,9 +240,10 @@
 						_reply_count: filteredReplies.length
 					};
 				}
-				return comment;
-			})
-			.filter((comment) => comment !== null) as PostComment[];
+			}
+
+			return 'skip';
+		});
 	}
 
 	function updateCommentWithReplies(
@@ -221,16 +251,11 @@
 		targetId: number,
 		updatedComment: PostComment
 	): PostComment[] {
-		return commentsList.map((comment) => {
+		return traverseComments(commentsList, (comment) => {
 			if (comment.id === targetId) {
 				return updatedComment;
-			} else if (comment.replies?.length) {
-				const updatedReplies = updateCommentWithReplies(comment.replies, targetId, updatedComment);
-				if (updatedReplies !== comment.replies) {
-					return { ...comment, replies: updatedReplies };
-				}
 			}
-			return comment;
+			return 'skip';
 		});
 	}
 </script>

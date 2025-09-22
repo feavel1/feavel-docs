@@ -130,8 +130,30 @@ export async function createComment(
 	return data;
 }
 
-export async function deleteComment(supabase: SupabaseClient, commentId: number): Promise<boolean> {
-	if (commentId <= 0) return false;
+export async function deleteComment(
+	supabase: SupabaseClient,
+	commentId: number,
+	userId: string
+): Promise<boolean> {
+	if (commentId <= 0 || !userId) return false;
+
+	// Verify comment ownership
+	const { data: comment, error: fetchError } = await supabase
+		.from('post_comments')
+		.select('user_id')
+		.eq('id', commentId)
+		.single();
+
+	if (fetchError || !comment) {
+		console.error('Error fetching comment:', fetchError);
+		return false;
+	}
+
+	// Check if user is authorized to delete (comment owner or post author)
+	if (comment.user_id !== userId) {
+		console.error('Unauthorized: User does not own this comment');
+		return false;
+	}
 
 	const { error } = await supabase
 		.from('post_comments')
@@ -149,9 +171,28 @@ export async function deleteComment(supabase: SupabaseClient, commentId: number)
 export async function updateComment(
 	supabase: SupabaseClient,
 	commentId: number,
-	content: string
+	content: string,
+	userId: string
 ): Promise<PostComment | null> {
-	if (commentId <= 0 || !content?.trim()) return null;
+	if (commentId <= 0 || !content?.trim() || !userId) return null;
+
+	// Verify comment ownership
+	const { data: comment, error: fetchError } = await supabase
+		.from('post_comments')
+		.select('user_id')
+		.eq('id', commentId)
+		.single();
+
+	if (fetchError || !comment) {
+		console.error('Error fetching comment:', fetchError);
+		return null;
+	}
+
+	// Check if user is authorized to update (comment owner)
+	if (comment.user_id !== userId) {
+		console.error('Unauthorized: User does not own this comment');
+		return null;
+	}
 
 	const { data, error } = await supabase
 		.from('post_comments')
