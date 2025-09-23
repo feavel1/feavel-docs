@@ -16,6 +16,36 @@ const COMMENT_FIELDS = `
 	users!inner(username, avatar_url, full_name)
 `;
 
+// Helper function to get reply counts for multiple comments in a single query
+async function getReplyCounts(
+	supabase: SupabaseClient,
+	commentIds: number[]
+): Promise<Record<number, number>> {
+	if (commentIds.length === 0) return {};
+
+	const { data, error } = await supabase
+		.from('post_comments')
+		.select('parent_id')
+		.in('parent_id', commentIds)
+		.is('is_deleted', false);
+
+	if (error) {
+		console.error('Error fetching reply counts:', error);
+		return {};
+	}
+
+	// Count replies for each comment
+	const counts: Record<number, number> = {};
+	data.forEach((row) => {
+		const parentId = row.parent_id;
+		if (parentId !== null) {
+			counts[parentId] = (counts[parentId] || 0) + 1;
+		}
+	});
+
+	return counts;
+}
+
 export async function getComments(
 	supabase: SupabaseClient,
 	postId: number,
@@ -40,21 +70,15 @@ export async function getComments(
 		return [];
 	}
 
-	// Get reply counts for each comment
-	const commentsWithReplies = await Promise.all(
-		data.map(async (comment) => {
-			const { count } = await supabase
-				.from('post_comments')
-				.select('*', { count: 'exact', head: true })
-				.eq('parent_id', comment.id)
-				.is('is_deleted', false);
+	// Get reply counts for all comments in a single query
+	const commentIds = data.map((comment) => comment.id);
+	const replyCounts = await getReplyCounts(supabase, commentIds);
 
-			return {
-				...comment,
-				_reply_count: count || 0
-			};
-		})
-	);
+	// Attach reply counts to comments
+	const commentsWithReplies = data.map((comment) => ({
+		...comment,
+		_reply_count: replyCounts[comment.id] || 0
+	}));
 
 	return commentsWithReplies;
 }
@@ -65,7 +89,8 @@ export async function getCommentReplies(
 ): Promise<PostComment[]> {
 	if (commentId <= 0) return [];
 
-	const { data, error } = await supabase
+	// First get all replies for this comment
+	const { data: replies, error } = await supabase
 		.from('post_comments')
 		.select(COMMENT_FIELDS)
 		.eq('parent_id', commentId)
@@ -77,28 +102,15 @@ export async function getCommentReplies(
 		return [];
 	}
 
-	// Get reply counts for each reply recursively
-	const repliesWithCounts = await Promise.all(
-		data.map(async (reply) => {
-			const { count } = await supabase
-				.from('post_comments')
-				.select('*', { count: 'exact', head: true })
-				.eq('parent_id', reply.id)
-				.is('is_deleted', false);
+	// Get reply counts for all replies in a single query
+	const replyIds = replies.map((reply) => reply.id);
+	const replyCounts = await getReplyCounts(supabase, replyIds);
 
-			// If this reply has replies, recursively fetch them with counts
-			let nestedReplies: PostComment[] = [];
-			if (count && count > 0) {
-				nestedReplies = await getCommentReplies(supabase, reply.id);
-			}
-
-			return {
-				...reply,
-				_reply_count: count || 0,
-				replies: nestedReplies
-			};
-		})
-	);
+	// Attach reply counts to replies
+	const repliesWithCounts = replies.map((reply) => ({
+		...reply,
+		_reply_count: replyCounts[reply.id] || 0
+	}));
 
 	return repliesWithCounts;
 }
@@ -109,6 +121,7 @@ export async function createComment(
 	userId: string,
 	commentData: CommentFormData
 ): Promise<PostComment | null> {
+	// Validate inputs
 	if (postId <= 0 || !userId || !commentData.content?.trim()) return null;
 
 	const { data, error } = await supabase
@@ -135,12 +148,13 @@ export async function deleteComment(
 	commentId: number,
 	userId: string
 ): Promise<boolean> {
+	// Validate inputs
 	if (commentId <= 0 || !userId) return false;
 
-	// Verify comment ownership
+	// Verify comment ownership and get post_id to check if user is post author
 	const { data: comment, error: fetchError } = await supabase
 		.from('post_comments')
-		.select('user_id')
+		.select('user_id, post_id')
 		.eq('id', commentId)
 		.single();
 
@@ -149,10 +163,19 @@ export async function deleteComment(
 		return false;
 	}
 
-	// Check if user is authorized to delete (comment owner or post author)
+	// Check if user is authorized to delete (comment owner)
 	if (comment.user_id !== userId) {
-		console.error('Unauthorized: User does not own this comment');
-		return false;
+		// Check if user is post author
+		const { data: post, error: postError } = await supabase
+			.from('posts')
+			.select('user_id')
+			.eq('id', comment.post_id)
+			.single();
+
+		if (postError || !post || post.user_id !== userId) {
+			console.error('Unauthorized: User does not own this comment or the post');
+			return false;
+		}
 	}
 
 	const { error } = await supabase
@@ -174,6 +197,7 @@ export async function updateComment(
 	content: string,
 	userId: string
 ): Promise<PostComment | null> {
+	// Validate inputs
 	if (commentId <= 0 || !content?.trim() || !userId) return null;
 
 	// Verify comment ownership
@@ -196,7 +220,10 @@ export async function updateComment(
 
 	const { data, error } = await supabase
 		.from('post_comments')
-		.update({ content: content.trim() })
+		.update({
+			content: content.trim(),
+			updated_at: new Date().toISOString()
+		})
 		.eq('id', commentId)
 		.select(COMMENT_FIELDS)
 		.single();

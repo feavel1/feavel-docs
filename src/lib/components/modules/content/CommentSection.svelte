@@ -84,6 +84,7 @@
 				comments = updateCommentReplies(comments, commentData.parent_id, newComment);
 				// Expand the parent comment to show the new reply
 				expandedComments.add(commentData.parent_id);
+				expandedComments = new Set(expandedComments);
 			} else {
 				// This is a top-level comment, add it to the beginning of the list
 				comments = [newComment, ...comments];
@@ -94,6 +95,8 @@
 	}
 
 	async function handleEditComment(commentId: number, content: string) {
+		if (!currentUserId) return;
+
 		const updatedComment = await updateComment(supabase, commentId, content, currentUserId);
 		if (updatedComment) {
 			comments = updateCommentsWithEditedComment(comments, updatedComment);
@@ -101,6 +104,8 @@
 	}
 
 	async function handleDeleteComment(commentId: number) {
+		if (!currentUserId) return;
+
 		const success = await deleteComment(supabase, commentId, currentUserId);
 		if (success) {
 			comments = removeCommentFromList(comments, commentId);
@@ -120,15 +125,18 @@
 			expandedComments.add(commentId);
 			expandedComments = new Set(expandedComments);
 
+			// Check if we need to load replies
 			const comment = findCommentById(comments, commentId);
-			if (comment && !comment.replies?.length) {
+			if (comment && (!comment.replies || comment.replies.length === 0)) {
+				// Check cache first
 				if (repliesCache.has(commentId)) {
-					const cachedReplies = repliesCache.get(commentId);
+					const cachedReplies = repliesCache.get(commentId) || [];
 					comments = updateCommentWithReplies(comments, commentId, {
 						...comment,
 						replies: cachedReplies
 					});
 				} else {
+					// Load replies from API
 					const replies = await getCommentReplies(supabase, commentId);
 					repliesCache.set(commentId, replies);
 					comments = updateCommentWithReplies(comments, commentId, {
@@ -140,52 +148,18 @@
 		}
 	}
 
-	// Generic tree traversal function
-	function traverseComments(
-		commentsList: PostComment[],
-		operation: (comment: PostComment, parent?: PostComment) => PostComment | null | 'skip' | void
-	): PostComment[] {
-		return commentsList
-			.map((comment) => {
-				const result = operation(comment);
-
-				if (result === 'skip') {
-					return comment;
-				}
-
-				const updatedComment = result === null ? null : result || comment;
-
-				if (updatedComment === null) {
-					return null;
-				}
-
-				if (updatedComment.replies?.length) {
-					const updatedReplies = traverseComments(updatedComment.replies, operation);
-					const filteredReplies = updatedReplies.filter((reply) => reply !== null) as PostComment[];
-					return {
-						...updatedComment,
-						replies: filteredReplies
-					};
-				}
-
-				return updatedComment;
-			})
-			.filter((comment) => comment !== null) as PostComment[];
-	}
-
-	// Helper functions using the generic traversal
+	// Simplified helper functions using direct array manipulation
 	function findCommentById(commentsList: PostComment[], id: number): PostComment | null {
-		let foundComment: PostComment | null = null;
-
-		traverseComments(commentsList, (comment) => {
+		for (const comment of commentsList) {
 			if (comment.id === id) {
-				foundComment = comment;
-				return null; // Stop traversal
+				return comment;
 			}
-			return 'skip'; // Continue traversal
-		});
-
-		return foundComment;
+			if (comment.replies?.length) {
+				const found = findCommentById(comment.replies, id);
+				if (found) return found;
+			}
+		}
+		return null;
 	}
 
 	function updateCommentReplies(
@@ -193,7 +167,7 @@
 		parentId: number,
 		newReply: PostComment
 	): PostComment[] {
-		return traverseComments(commentsList, (comment) => {
+		return commentsList.map((comment) => {
 			if (comment.id === parentId) {
 				const updatedReplies = comment.replies ? [...comment.replies, newReply] : [newReply];
 				if (repliesCache.has(comment.id)) {
@@ -205,7 +179,15 @@
 					_reply_count: (comment._reply_count || 0) + 1
 				};
 			}
-			return 'skip'; // Skip processing children in this case since we handle recursion manually
+
+			if (comment.replies?.length) {
+				return {
+					...comment,
+					replies: updateCommentReplies(comment.replies, parentId, newReply)
+				};
+			}
+
+			return comment;
 		});
 	}
 
@@ -213,37 +195,46 @@
 		commentsList: PostComment[],
 		updatedComment: PostComment
 	): PostComment[] {
-		return traverseComments(commentsList, (comment) => {
+		return commentsList.map((comment) => {
 			if (comment.id === updatedComment.id) {
 				return updatedComment;
 			}
-			return 'skip';
+
+			if (comment.replies?.length) {
+				return {
+					...comment,
+					replies: updateCommentsWithEditedComment(comment.replies, updatedComment)
+				};
+			}
+
+			return comment;
 		});
 	}
 
 	function removeCommentFromList(commentsList: PostComment[], commentId: number): PostComment[] {
-		return traverseComments(commentsList, (comment) => {
-			if (comment.id === commentId) {
-				return null; // Remove this comment
-			}
-
-			// Update reply count if this comment has replies that were filtered
-			if (comment.replies?.length) {
-				const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
-				if (filteredReplies.length !== comment.replies.length) {
-					if (repliesCache.has(comment.id)) {
-						repliesCache.set(comment.id, filteredReplies);
+		return commentsList
+			.filter((comment) => comment.id !== commentId)
+			.map((comment) => {
+				if (comment.replies?.length) {
+					const filteredReplies = comment.replies.filter((reply) => reply.id !== commentId);
+					if (filteredReplies.length !== comment.replies.length) {
+						if (repliesCache.has(comment.id)) {
+							repliesCache.set(comment.id, filteredReplies);
+						}
+						return {
+							...comment,
+							replies: filteredReplies,
+							_reply_count: filteredReplies.length
+						};
 					}
+
 					return {
 						...comment,
-						replies: filteredReplies,
-						_reply_count: filteredReplies.length
+						replies: removeCommentFromList(comment.replies, commentId)
 					};
 				}
-			}
-
-			return 'skip';
-		});
+				return comment;
+			});
 	}
 
 	function updateCommentWithReplies(
@@ -251,11 +242,19 @@
 		targetId: number,
 		updatedComment: PostComment
 	): PostComment[] {
-		return traverseComments(commentsList, (comment) => {
+		return commentsList.map((comment) => {
 			if (comment.id === targetId) {
 				return updatedComment;
 			}
-			return 'skip';
+
+			if (comment.replies?.length) {
+				return {
+					...comment,
+					replies: updateCommentWithReplies(comment.replies, targetId, updatedComment)
+				};
+			}
+
+			return comment;
 		});
 	}
 </script>

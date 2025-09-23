@@ -39,27 +39,19 @@
 		if (!editContent.trim() || isSubmitting) return;
 
 		isSubmitting = true;
-		try {
-			await onEdit(comment.id, editContent.trim());
+		const success = await onEdit(comment.id, editContent.trim());
+		if (success) {
 			isEditing = false;
-		} catch (error) {
-			console.error('Error editing comment:', error);
-		} finally {
-			isSubmitting = false;
 		}
+		isSubmitting = false;
 	}
 
 	async function handleDelete() {
 		if (isSubmitting) return;
 
 		isSubmitting = true;
-		try {
-			await onDelete(comment.id);
-		} catch (error) {
-			console.error('Error deleting comment:', error);
-		} finally {
-			isSubmitting = false;
-		}
+		await onDelete(comment.id);
+		isSubmitting = false;
 	}
 
 	function handleCancelEdit() {
@@ -80,17 +72,10 @@
 		const now = new Date();
 		const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
-		if (diffInHours < 1) {
-			return 'Just now';
-		} else if (diffInHours < 24) {
-			const hours = Math.floor(diffInHours);
-			return `${hours}h ago`;
-		} else if (diffInHours < 168) {
-			const days = Math.floor(diffInHours / 24);
-			return `${days}d ago`;
-		} else {
-			return date.toLocaleDateString();
-		}
+		if (diffInHours < 1) return 'Just now';
+		if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+		if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+		return date.toLocaleDateString();
 	}
 </script>
 
@@ -223,10 +208,10 @@
 				<CommentForm
 					parentId={comment.id}
 					onSubmit={async (data: CommentFormData) => {
-						// Call the parent's onSubmit handler with the proper data
 						const result = await onReply(data);
-						// Close the reply form after successful submission
-						isReplying = false;
+						if (result) {
+							isReplying = false;
+						}
 						return result;
 					}}
 					user={currentUser}
