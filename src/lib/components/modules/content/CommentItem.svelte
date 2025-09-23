@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Reply, Edit, Trash2, Calendar, MoreHorizontal } from '@lucide/svelte';
+	import {
+		Reply,
+		Edit,
+		Trash2,
+		Calendar,
+		MoreHorizontal,
+		ChevronUp,
+		ChevronDown
+	} from '@lucide/svelte';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -81,31 +89,29 @@
 
 <div class="flex gap-3 py-2">
 	<div class="flex-shrink-0">
-		<div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-			<img
-				class="h-8 w-8 rounded-full object-cover"
-				src={getAvatarUrl(comment.users?.avatar_url, comment.users?.username, supabase)}
-				alt={comment.users?.full_name || comment.users?.username}
-				onerror={(e) => {
-					const target = e.target as HTMLImageElement;
-					target.style.display = 'none';
-					const fallback = target.nextElementSibling as HTMLElement;
-					if (fallback) {
-						fallback.style.display = 'flex';
-					} else {
-						// If no fallback element, show the parent container
-						target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
-					}
-				}}
-			/>
-			<span class="text-sm font-medium text-gray-700" style="display: none;">
-				{(comment.users?.full_name ?? comment.users?.username ?? '').charAt(0).toUpperCase()}
-			</span>
-		</div>
+		<img
+			class="h-8 w-8 rounded-full bg-gray-100 object-cover"
+			src={getAvatarUrl(comment.users?.avatar_url, comment.users?.username, supabase)}
+			alt={comment.users?.full_name || comment.users?.username}
+			onerror={(e) => {
+				const target = e.target as HTMLImageElement;
+				target.style.display = 'none';
+				const fallback = target.nextElementSibling as HTMLElement;
+				if (fallback) {
+					fallback.style.display = 'flex';
+				} else {
+					// If no fallback element, show the parent container
+					target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
+				}
+			}}
+		/>
+		<span class="text-sm font-medium text-gray-700" style="display: none;">
+			{(comment.users?.full_name ?? comment.users?.username ?? '').charAt(0).toUpperCase()}
+		</span>
 	</div>
 
 	<div class="flex-1 space-y-2">
-		<div class="flex items-start justify-between">
+		<div class="flex flex-wrap items-start justify-between gap-2">
 			<div class="flex items-center gap-2">
 				<span class="text-sm font-medium">
 					{comment.users?.username || 'Unknown'}
@@ -119,30 +125,7 @@
 				</span>
 			</div>
 
-			<div class="flex items-center gap-1">
-				{#if canReply}
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={handleReplyClick}
-						class="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-					>
-						<Reply class="mr-1 h-3 w-3" />
-						Reply
-					</Button>
-				{/if}
-
-				{#if comment._reply_count && comment._reply_count > 0}
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => onToggleReplies(comment.id)}
-						class="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-					>
-						{expandedComments?.has(comment.id) ? 'Hide Replies' : 'Show Replies'} ({comment._reply_count})
-					</Button>
-				{/if}
-
+			<div class="flex flex-wrap items-center gap-1">
 				{#if (canEdit || canDelete) && !isEditing}
 					<DropdownMenu>
 						<DropdownMenuTrigger>
@@ -198,13 +181,42 @@
 				</div>
 			</div>
 		{:else}
-			<div class="text-sm">
-				<p class="whitespace-pre-wrap">{comment.content}</p>
-			</div>
+			<p class="text-sm whitespace-pre-wrap">{comment.content}</p>
 		{/if}
 
+		<!-- Action buttons at the bottom -->
+		<div class="flex items-center gap-2 pt-2">
+			{#if canReply}
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={handleReplyClick}
+					class="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+				>
+					<Reply class="mr-1 h-3 w-3" />
+					Reply
+				</Button>
+			{/if}
+
+			{#if comment._reply_count && comment._reply_count > 0}
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => onToggleReplies(comment.id)}
+					class="flex h-6 items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+				>
+					{#if expandedComments?.has(comment.id)}
+						<ChevronUp class="h-3 w-3" />
+					{:else}
+						<ChevronDown class="h-3 w-3" />
+					{/if}
+					{comment._reply_count}
+				</Button>
+			{/if}
+		</div>
+
 		{#if isReplying}
-			<div class="mt-3 ml-6 border-l-2 border-muted pl-4">
+			<div class="mt-3 border-l-2 border-muted">
 				<CommentForm
 					parentId={comment.id}
 					onSubmit={async (data: CommentFormData) => {
@@ -225,7 +237,7 @@
 		{/if}
 
 		{#if showReplies && comment.replies && comment.replies.length > 0}
-			<div class="mt-3 ml-6 space-y-4 border-l-2 border-muted pl-4">
+			<div class="mt-3 space-y-4 border-l-2 border-muted pl-4">
 				{#each comment.replies as reply (reply.id)}
 					<Self
 						comment={reply}
