@@ -27,36 +27,13 @@ export const load: ServerLoad = async ({ params, locals, parent }) => {
 	// Check if this is the current user's profile (only if logged in)
 	const isOwnProfile = session?.user?.id === viewedUserProfile.id;
 
-	// Fetch user's posts with related data
-	const { data: posts, error: postsError } = await locals.supabase
-		.from('posts')
-		.select(
-			`
-			*,
-			users!inner(username, avatar_url),
-			posts_tags_rel(
-				post_tags!inner(tag_name)
-			),
-			post_likes(id),
-			post_comments(id)
-		`
-		)
-		.eq('user_id', viewedUserProfile.id)
-		.eq('public_visibility', true)
-		.order('created_at', { ascending: false });
-
 	// Get user statistics using the consolidated utility function
 	const stats = await getUserStats(locals.supabase, viewedUserProfile.id);
-
-	if (postsError) {
-		console.error('Error fetching user posts:', postsError);
-	}
 
 	return {
 		viewedUserProfile,
 		isOwnProfile,
 		session,
-		posts: posts || [],
 		stats: {
 			posts: stats.posts,
 			comments: stats.comments,

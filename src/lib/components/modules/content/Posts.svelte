@@ -13,12 +13,11 @@
 	interface Props {
 		supabase: SupabaseClient;
 		postsPerPage?: number;
+		userId?: string;
+		hideControls?: boolean;
 	}
 
-	let {
-		supabase,
-		postsPerPage = 9
-	}: Props = $props();
+	let { supabase, postsPerPage = 9, userId, hideControls = false }: Props = $props();
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
@@ -109,7 +108,7 @@
 
 	async function fetchPosts() {
 		try {
-			const query = supabase
+			let query = supabase
 				.from('posts')
 				.select(
 					`
@@ -122,9 +121,16 @@
 					post_comments(id)
 				`
 				)
-				.eq('public_visibility', true)
 				.range(offset, offset + postsPerPage - 1)
 				.order('created_at', { ascending: false });
+
+			// Filter by user ID if provided
+			if (userId) {
+				query = query.eq('user_id', userId);
+			} else {
+				// Only show public posts for general feed
+				query = query.eq('public_visibility', true);
+			}
 
 			const { data: posts, error } = await query;
 
@@ -201,22 +207,26 @@
 </script>
 
 <!-- Search, Filters, and Sorting -->
-<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-	<div class="relative max-w-md flex-1">
-		<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-		<Input placeholder="Search posts..." bind:value={searchQuery} class="pl-10" />
-	</div>
+{#if !hideControls}
+	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div class="relative max-w-md flex-1">
+			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+			<Input placeholder="Search posts..." bind:value={searchQuery} class="pl-10" />
+		</div>
 
-	<div class="flex flex-wrap items-center gap-3">
-		<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
-		<MultiSelect items={allTags} bind:selectedItems={selectedTags} itemNameProperty="tag_name" />
+		<div class="flex flex-wrap items-center gap-3">
+			<SingleSelect bind:value={sortBy} {options} placeholder="Sort by..." />
+			<MultiSelect items={allTags} bind:selectedItems={selectedTags} itemNameProperty="tag_name" />
+		</div>
 	</div>
-</div>
+{/if}
 
 <!-- Posts Grid -->
 {#if loading}
 	<div class="flex justify-center py-12">
-		<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+		<div
+			class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+		></div>
 	</div>
 {:else if displayedPosts.length > 0}
 	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -230,7 +240,9 @@
 		<div class="mt-8 flex justify-center">
 			<Button onclick={loadMorePosts} disabled={loadingMore} variant="outline">
 				{#if loadingMore}
-					<div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+					<div
+						class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"
+					></div>
 					Loading...
 				{:else}
 					Load More
@@ -261,7 +273,11 @@
 		{#if !searchQuery && selectedTags.length === 0}
 			<Button href="/posts/new" class="mt-4">
 				<Plus class="mr-2 h-4 w-4" />
-				Create the first post
+				{#if userId}
+					Create a post
+				{:else}
+					Create the first post
+				{/if}
 			</Button>
 		{/if}
 	</div>

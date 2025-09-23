@@ -2,12 +2,12 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
+	import Posts from '$lib/components/modules/content/Posts.svelte';
 	import { Settings, Calendar } from '@lucide/svelte';
 	import { Card, CardContent } from '$lib/components/ui/card';
 
 	const { data: propsData } = $props();
-	const { viewedUserProfile: userProfile, isOwnProfile, supabase, posts, stats } = propsData;
+	const { viewedUserProfile: userProfile, isOwnProfile, supabase, stats } = propsData;
 </script>
 
 <div class="container mx-auto px-4 py-6">
@@ -114,24 +114,7 @@
 					<TabsTrigger value="liked">Liked</TabsTrigger>
 				</TabsList>
 				<TabsContent value="posts" class="mt-6">
-					{#if posts.length > 0}
-						<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-							{#each posts as post (post.id)}
-								<PostCard {post} {supabase} />
-							{/each}
-						</div>
-					{:else}
-						<Card>
-							<CardContent class="py-12 text-center">
-								<div class="text-muted-foreground">
-									<p class="text-lg">No posts yet.</p>
-									{#if isOwnProfile}
-										<p class="mt-2">Start sharing your thoughts with the community!</p>
-									{/if}
-								</div>
-							</CardContent>
-						</Card>
-					{/if}
+					<Posts {supabase} userId={userProfile.id} />
 				</TabsContent>
 				<TabsContent value="comments" class="mt-6">
 					<Card>
