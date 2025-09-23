@@ -19,5 +19,5 @@
 		</Button>
 	</div>
 
-	<Posts {supabase} userId={session?.user?.id} />
+	<Posts {supabase} userId={session?.user?.id} showDrafts={true} />
 </div>

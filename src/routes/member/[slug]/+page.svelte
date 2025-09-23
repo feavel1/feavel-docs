@@ -5,6 +5,7 @@
 	import Posts from '$lib/components/modules/content/Posts.svelte';
 	import { Settings, Calendar } from '@lucide/svelte';
 	import { Card, CardContent } from '$lib/components/ui/card';
+	import { getAvatarUrl } from '$lib/utils/user';
 
 	const { data: propsData } = $props();
 	const { viewedUserProfile: userProfile, isOwnProfile, supabase, stats } = propsData;
@@ -22,9 +23,7 @@
 						class="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-32 sm:w-32"
 					>
 						<img
-							src={userProfile.avatar_url
-								? `${supabase.storage.from('avatars').getPublicUrl(userProfile.avatar_url).data.publicUrl}`
-								: `https://api.dicebear.com/6.x/initials/svg?seed=${userProfile.username}`}
+							src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
 							alt={userProfile.username}
 							class="h-full w-full object-cover"
 							onerror={(e) => {
@@ -71,12 +70,16 @@
 						</p>
 					{/if}
 
-					<div class="mt-4 flex flex-wrap items-center justify-center gap-4 sm:justify-start">
-						<div class="flex items-center text-indigo-100">
-							<Calendar class="mr-2 h-4 w-4" />
-							<span>User Profile</span>
-						</div>
-					</div>
+					{#if userProfile.birthday}
+						<p class="mt-3 text-indigo-100">
+							<Calendar class="mr-2 inline h-4 w-4" />
+							Birthday: {new Date(userProfile.birthday).toLocaleDateString([], {
+								month: 'long',
+								day: 'numeric',
+								year: 'numeric'
+							})}
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>

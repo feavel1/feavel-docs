@@ -15,9 +15,10 @@
 		postsPerPage?: number;
 		userId?: string;
 		hideControls?: boolean;
+		showDrafts?: boolean;
 	}
 
-	let { supabase, postsPerPage = 9, userId, hideControls = false }: Props = $props();
+	let { supabase, postsPerPage = 9, userId, hideControls = false, showDrafts = false }: Props = $props();
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
@@ -127,6 +128,10 @@
 			// Filter by user ID if provided
 			if (userId) {
 				query = query.eq('user_id', userId);
+				// Only filter by public_visibility if not showing drafts
+				if (!showDrafts) {
+					query = query.eq('public_visibility', true);
+				}
 			} else {
 				// Only show public posts for general feed
 				query = query.eq('public_visibility', true);
