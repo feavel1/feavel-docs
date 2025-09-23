@@ -1,8 +1,6 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const { session } = await locals.safeGetSession();
-
 	// Fetch services with related data including categories
 	const { data: services, error: servicesError } = await locals.supabase
 		.from('services_v2')
@@ -41,7 +39,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		session,
 		services: services || [],
 		categories: categories || []
 	};

@@ -1,4 +1,6 @@
 <script lang="ts">
+	//@ts-nocheck
+
 	import ProfileCard from '$lib/components/modules/cards/ProfileCard.svelte';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';

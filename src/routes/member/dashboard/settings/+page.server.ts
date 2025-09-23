@@ -7,12 +7,7 @@ import { updateUserProfile } from '$lib/utils/user';
 import { settingsSchema } from './+page.svelte';
 
 export const load: PageServerLoad = async ({ parent }) => {
-	const { session, userProfile } = await parent();
-
-	// Check if user is logged in
-	if (!session) {
-		throw redirect(303, '/auth/login');
-	}
+	const { userProfile } = await parent();
 
 	// Initialize form with user profile data
 	const formData = {
@@ -23,7 +18,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	return {
 		userProfile,
-		session,
 		form: await superValidate(formData, zod(settingsSchema))
 	};
 };

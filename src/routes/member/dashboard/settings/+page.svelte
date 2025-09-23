@@ -137,7 +137,7 @@
 		<CardContent>
 			<AvatarUpload
 				{supabase}
-				userId={session.user.id}
+				userId={session?.user.id}
 				username={userProfile?.username}
 				currentAvatarUrl={userProfile?.avatar_url}
 				on:avatarUpdated={() => invalidate('app:user')}
