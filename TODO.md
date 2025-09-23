@@ -1,9 +1,7 @@
-Dashboard is accessable if user not logined.
-
-Title isn't shown if user is not logged in.
-
 Improve service utils
 
 Create Studios page
 
 Create Studios dashboard
+
+Only fetches public posts (keeping it simple) 2. Implements pagination with a "Load More" button 3. Can be reused across the application
