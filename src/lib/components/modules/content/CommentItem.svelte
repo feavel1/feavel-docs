@@ -216,7 +216,7 @@
 		</div>
 
 		{#if isReplying}
-			<div class="mt-3 border-l-2 border-muted">
+			<div class="mt-3 border-l-2 border-muted pl-3">
 				<CommentForm
 					parentId={comment.id}
 					onSubmit={async (data: CommentFormData) => {
@@ -237,7 +237,7 @@
 		{/if}
 
 		{#if showReplies && comment.replies && comment.replies.length > 0}
-			<div class="mt-3 space-y-4 border-l-2 border-muted pl-4">
+			<div class="mt-3 space-y-4 border-l-2 border-muted pl-3">
 				{#each comment.replies as reply (reply.id)}
 					<Self
 						comment={reply}
