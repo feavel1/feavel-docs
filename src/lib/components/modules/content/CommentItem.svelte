@@ -16,32 +16,35 @@
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
 	import { getAvatarUrl } from '$lib/utils/user';
+	import { formatCommentDate } from '$lib/utils/comments';
 	import Self from './CommentItem.svelte';
 	import CommentForm from './CommentForm.svelte';
 	import type { CommentFormData } from '$lib/utils/comments';
 
 	let {
 		comment,
-		currentUserId,
-		postAuthorId,
 		onReply,
 		onEdit,
 		onDelete,
 		onToggleReplies,
 		showReplies = false,
 		expandedComments,
-		supabase,
-		currentUser
+		context
 	} = $props();
+
+	// Extract values from context
+	const { currentUserId, postAuthorId, supabase, currentUser } = context;
 
 	let isEditing = $state(false);
 	let editContent = $state(comment.content);
 	let isSubmitting = $state(false);
 	let isReplying = $state(false); // Track if we're replying to this specific comment
 
-	const canEdit = $derived(currentUserId === comment.user_id);
-	const canDelete = $derived(currentUserId === comment.user_id || currentUserId === postAuthorId);
-	const canReply = $derived(!!currentUserId);
+	const permissions = $derived({
+		canEdit: currentUserId === comment.user_id,
+		canDelete: currentUserId === comment.user_id || currentUserId === postAuthorId,
+		canReply: !!currentUserId
+	});
 
 	async function handleEdit() {
 		if (!editContent.trim() || isSubmitting) return;
@@ -75,15 +78,16 @@
 		isReplying = false;
 	}
 
-	function formatDate(dateString: string) {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-		if (diffInHours < 1) return 'Just now';
-		if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
-		if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-		return date.toLocaleDateString();
+	function handleAvatarError(e: Event) {
+		const target = e.target as HTMLImageElement;
+		target.style.display = 'none';
+		const fallback = target.nextElementSibling as HTMLElement;
+		if (fallback) {
+			fallback.style.display = 'flex';
+		} else {
+			// If no fallback element, show the parent container
+			target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
+		}
 	}
 </script>
 
@@ -93,17 +97,7 @@
 			class="h-8 w-8 rounded-full bg-gray-100 object-cover"
 			src={getAvatarUrl(comment.users?.avatar_url, comment.users?.username, supabase)}
 			alt={comment.users?.full_name || comment.users?.username}
-			onerror={(e) => {
-				const target = e.target as HTMLImageElement;
-				target.style.display = 'none';
-				const fallback = target.nextElementSibling as HTMLElement;
-				if (fallback) {
-					fallback.style.display = 'flex';
-				} else {
-					// If no fallback element, show the parent container
-					target.parentElement!.style.backgroundColor = '#d1d5db'; // gray-300
-				}
-			}}
+			onerror={handleAvatarError}
 		/>
 		<span class="text-sm font-medium text-gray-700" style="display: none;">
 			{(comment.users?.full_name ?? comment.users?.username ?? '').charAt(0).toUpperCase()}
@@ -121,12 +115,12 @@
 				{/if}
 				<span class="flex items-center gap-1 text-xs text-muted-foreground">
 					<Calendar class="h-3 w-3" />
-					{formatDate(comment.created_at)}
+					{formatCommentDate(comment.created_at)}
 				</span>
 			</div>
 
 			<div class="flex flex-wrap items-center gap-1">
-				{#if (canEdit || canDelete) && !isEditing}
+				{#if (permissions.canEdit || permissions.canDelete) && !isEditing}
 					<DropdownMenu>
 						<DropdownMenuTrigger>
 							<Button variant="ghost" size="icon" class="h-6 w-6 p-0">
@@ -134,13 +128,13 @@
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							{#if canEdit}
+							{#if permissions.canEdit}
 								<DropdownMenuItem onclick={() => (isEditing = true)} class="text-xs">
 									<Edit class="mr-2 h-3 w-3" />
 									Edit
 								</DropdownMenuItem>
 							{/if}
-							{#if canDelete}
+							{#if permissions.canDelete}
 								<DropdownMenuItem onclick={handleDelete} class="text-xs text-destructive">
 									<Trash2 class="mr-2 h-3 w-3" />
 									Delete
@@ -186,7 +180,7 @@
 
 		<!-- Action buttons at the bottom -->
 		<div class="flex items-center gap-2 pt-2">
-			{#if canReply}
+			{#if permissions.canReply}
 				<Button
 					variant="ghost"
 					size="sm"
@@ -241,16 +235,13 @@
 				{#each comment.replies as reply (reply.id)}
 					<Self
 						comment={reply}
-						{currentUserId}
-						{postAuthorId}
-						{supabase}
-						{currentUser}
 						{onReply}
 						{onEdit}
 						{onDelete}
 						{onToggleReplies}
 						showReplies={expandedComments.has(reply.id)}
 						{expandedComments}
+						{context}
 					/>
 				{/each}
 			</div>

@@ -305,16 +305,13 @@
 						<div class="border-0 border-b border-border pb-4 last:border-0 last:pb-0">
 							<CommentItem
 								{comment}
-								{currentUserId}
-								{postAuthorId}
-								{supabase}
-								{currentUser}
 								onReply={handleSubmitComment}
 								onEdit={handleEditComment}
 								onDelete={handleDeleteComment}
 								onToggleReplies={toggleReplies}
 								showReplies={expandedComments.has(comment.id)}
 								{expandedComments}
+								context={{ currentUserId, postAuthorId, supabase, currentUser }}
 							/>
 						</div>
 					{/each}
