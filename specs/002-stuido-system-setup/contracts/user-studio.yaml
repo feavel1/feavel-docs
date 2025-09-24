@@ -1,0 +1,44 @@
+# User Studio API Contract
+
+## Endpoint
+GET /studios/my-studio
+
+## Description
+Retrieve the studio associated with the currently authenticated user.
+
+## Request
+No request body required.
+
+### Query Parameters
+None
+
+## Response
+### Success (200 OK) - User has a studio
+```json
+{
+  "studio": {
+    "id": 1,
+    "name": "Example Studio",
+    "description": "A great studio that provides excellent services",
+    "status": "approved",
+    "created_at": "2025-09-24T12:00:00Z"
+  }
+}
+```
+
+### Success (200 OK) - User has no studio
+```json
+{
+  "studio": null
+}
+```
+
+### Error Responses
+- 401 Unauthorized: User not authenticated
+- 500 Internal Server Error: Database query failed
+
+## Authentication
+Required: User must be authenticated
+
+## Authorization
+Required: User can only access their own studio data

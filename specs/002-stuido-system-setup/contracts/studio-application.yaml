@@ -1,0 +1,54 @@
+# Studio Application API Contract
+
+## Endpoint
+POST /studios/apply
+
+## Description
+Submit a studio application form to become a studio.
+
+## Request
+### Body
+```json
+{
+  "name": "Example Studio",
+  "description": "A great studio that provides excellent services",
+  "contact_phone": 1234567890,
+  "salary_expectation": "$50,000 - $70,000"
+}
+```
+
+### Validation Rules
+- name: Required, string, 1-100 characters
+- description: Required, string, 1-500 characters
+- contact_phone: Required, number
+- salary_expectation: Required, string, 1-100 characters
+
+## Response
+### Success (201 Created)
+```json
+{
+  "message": "Studio application submitted successfully",
+  "studio": {
+    "id": 1,
+    "name": "Example Studio",
+    "description": "A great studio that provides excellent services",
+    "contact_phone": 1234567890,
+    "salary_expectation": "$50,000 - $70,000",
+    "status": "applied",
+    "user_id": "user-uuid",
+    "created_at": "2025-09-24T12:00:00Z"
+  }
+}
+```
+
+### Error Responses
+- 400 Bad Request: Invalid request body
+- 401 Unauthorized: User not authenticated
+- 409 Conflict: User has already applied to become a studio
+- 500 Internal Server Error: Database operation failed
+
+## Authentication
+Required: User must be authenticated
+
+## Authorization
+Required: Authenticated user can only apply once

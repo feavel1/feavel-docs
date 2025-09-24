@@ -1,0 +1,36 @@
+# Public Studios API Contract
+
+## Endpoint
+GET /studios
+
+## Description
+Retrieve all approved studios for display on the public landing page.
+
+## Request
+No request body required.
+
+### Query Parameters
+None
+
+## Response
+### Success (200 OK)
+```json
+{
+  "studios": [
+    {
+      "id": 1,
+      "name": "Example Studio",
+      "description": "A great studio that provides excellent services"
+    }
+  ]
+}
+```
+
+### Error Responses
+- 500 Internal Server Error: Database query failed
+
+## Authentication
+No authentication required (public endpoint)
+
+## Authorization
+No authorization required (public endpoint)
