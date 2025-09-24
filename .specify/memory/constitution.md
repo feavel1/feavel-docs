@@ -1,8 +1,8 @@
 <!-- Sync Impact Report
-Version change: 1.0.0 → 1.0.0 (Initial version)
-List of modified principles: None (Initial version)
-Added sections: All (Initial version)
-Removed sections: None (Initial version)
+Version change: 1.0.0 → 1.1.0 (Minor version bump for enhanced code quality requirements)
+List of modified principles: None
+Added sections: None
+Removed sections: None
 Templates requiring updates: ⚠ pending
 Follow-up TODOs: None
 -->
@@ -31,10 +31,11 @@ All queries MUST use `select()` to limit returned columns. Pagination MUST be im
 
 ### Code Quality Standards
 
-- All code MUST pass type checking with `bun run check`
+- All code MUST pass type checking with `bun run check` AFTER completion
 - Code formatting MUST be consistent using Prettier (`bun run format`)
 - ESLint MUST be used for code linting
 - All new code MUST include appropriate tests
+- Type checking with `bun run check` MUST be the final validation step before committing code
 
 ### Git Workflow
 
@@ -73,4 +74,4 @@ Constitution versioning follows semantic versioning:
 
 All PRs/reviews MUST verify compliance with constitutional principles. Violations MUST be documented with justification or refactored. Complexity MUST be justified with clear rationale.
 
-**Version**: 1.0.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-24
+**Version**: 1.1.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-24
