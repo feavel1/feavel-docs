@@ -1,50 +1,76 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- Sync Impact Report
+Version change: 1.0.0 → 1.0.0 (Initial version)
+List of modified principles: None (Initial version)
+Added sections: All (Initial version)
+Removed sections: None (Initial version)
+Templates requiring updates: ⚠ pending
+Follow-up TODOs: None
+-->
+
+# Feavel Docs Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Type Safety First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All code MUST be written in TypeScript with strict type checking enabled. Type errors MUST be resolved before merging. Runtime type checking MUST be implemented for all API inputs using Zod schemas. This ensures code reliability and reduces bugs through compile-time validation.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Component-Based Architecture
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+The application MUST follow a modular component structure with UI components in `src/lib/components/ui/` and feature components in `src/lib/components/modules/`. Reusable components MUST be implemented using Svelte 5 runes (`$state`, `$derived`, `$effect`) for state management. This promotes code reuse and maintainability.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Supabase Integration Standards
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`). Row Level Security (RLS) policies MUST be implemented for all tables. Server-side authentication MUST use `auth.getUser()` rather than trusting client session data. This ensures data security and integrity.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Performance and Accessibility
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All queries MUST use `select()` to limit returned columns. Pagination MUST be implemented for large datasets. All components MUST be accessible with proper ARIA attributes and keyboard navigation support. WCAG compliance is required for all UI elements. This ensures application performance and inclusivity.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+
+### Code Quality Standards
+
+- All code MUST pass type checking with `bun run check`
+- Code formatting MUST be consistent using Prettier (`bun run format`)
+- ESLint MUST be used for code linting
+- All new code MUST include appropriate tests
+
+### Git Workflow
+
+- Feature branches MUST follow the pattern `[###-feature-name]`
+- Commits MUST include descriptive messages following conventional commit format
+- Pull requests MUST include a description of changes and testing approach
+- All PRs MUST pass CI checks before merging
+
+### Review Process
+
+- All code changes MUST be reviewed by at least one team member
+- PR reviews MUST verify compliance with constitutional principles
+- Security-sensitive changes MUST be reviewed by a security-aware team member
+- Complexity MUST be justified in PR descriptions
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### Amendment Procedure
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+This Constitution supersedes all other development practices. Amendments require:
+
+1. Documentation of proposed changes with rationale
+2. Team approval through consensus
+3. Migration plan for existing code if applicable
+4. Update to all dependent templates and documentation
+
+### Versioning Policy
+
+Constitution versioning follows semantic versioning:
+
+- MAJOR: Backward incompatible governance/principle removals or redefinitions
+- MINOR: New principle/section added or materially expanded guidance
+- PATCH: Clarifications, wording, typo fixes, non-agnostic refinements
+
+### Compliance Review
+
+All PRs/reviews MUST verify compliance with constitutional principles. Violations MUST be documented with justification or refactored. Complexity MUST be justified with clear rationale.
+
+**Version**: 1.0.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-24

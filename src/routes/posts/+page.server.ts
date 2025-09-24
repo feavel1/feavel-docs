@@ -1,6 +1,4 @@
-import type { PageServerLoad } from './$types';
-
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load = async ({ locals, parent }) => {
 	const { session } = await parent();
 
 	// Fetch drafts for logged-in users
@@ -29,7 +27,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	}
 
 	return {
-		session,
 		drafts
 	};
 };
