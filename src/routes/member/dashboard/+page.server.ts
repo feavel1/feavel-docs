@@ -11,7 +11,6 @@ export const load: ServerLoad = async ({ locals: { supabase }, parent }) => {
 	const stats = await getUserStats(supabase, session.user.id);
 
 	return {
-		stats,
-		session
+		stats
 	};
 };

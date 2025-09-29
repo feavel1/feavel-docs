@@ -209,6 +209,33 @@ The project uses Paraglide.js for internationalization:
 - Use `maybeSingle()` for optional single-record queries
 - Handle string/number ID type conversions explicitly
 
+## Studio System Patterns
+
+The studio system follows specific patterns for handling studio applications and dashboard access:
+
+- **Studio Status Management**: Studios have a status field with values: 'applied', 'approved', 'incomplete', 'disabled', 'blocked'
+- **Limited vs Full Access**: Users with 'applied' status get limited dashboard access, while 'approved' users get full access
+- **Duplicate Prevention**: Each user can only apply to become a studio once (enforced by unique user_id constraint)
+- **Dashboard Navigation**: Studio dashboard follows the same navigation pattern as member dashboard with links to settings, services, and orders pages
+
+### Studio Application Form Handling
+
+Follow the standard form handling pattern with Zod validation for studio applications:
+
+```ts
+// Schema definition
+import { z } from 'zod';
+
+export const studioApplicationSchema = z.object({
+	name: z.string().min(1).max(100),
+	description: z.string().min(1).max(500),
+	contact_phone: z.number().positive(),
+	salary_expectation: z.string().min(1).max(100)
+});
+
+export type StudioApplicationSchema = typeof studioApplicationSchema;
+```
+
 ## Security Directives
 
 - NEVER trust session data from `auth.getSession()` - it comes from local storage and can be tampered with

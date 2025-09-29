@@ -22,7 +22,7 @@
 
 			<Group title="COMMUNITY">
 				<A href="/member">Members</A>
-				<A href="/studio">Studios</A>
+				<A href="/studios">Studios</A>
 				<A href="/member/dashboard">Dashboard</A>
 				<A href="/member/dashboard/messages">Messages</A>
 			</Group>

@@ -18,7 +18,13 @@
 		showDrafts?: boolean;
 	}
 
-	let { supabase, postsPerPage = 9, userId, hideControls = false, showDrafts = false }: Props = $props();
+	let {
+		supabase,
+		postsPerPage = 9,
+		userId,
+		hideControls = false,
+		showDrafts = false
+	}: Props = $props();
 
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);

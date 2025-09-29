@@ -4,6 +4,7 @@
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
 ## Execution Flow (main)
+
 ```
 1. Load plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
@@ -33,22 +34,27 @@
 ```
 
 ## Format: `[ID] [P?] Description`
+
 - **[P]**: Can run in parallel (different files, no dependencies)
 - Include exact file paths in descriptions
 
 ## Path Conventions
+
 - **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
 ## Phase 3.1: Setup
+
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize TypeScript project with Svelte 5 dependencies
 - [ ] T003 [P] Configure linting and formatting tools for SvelteKit
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
+
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
+
 - [ ] T004 [P] Contract test for Services component in tests/contract/test_services_component.py
 - [ ] T005 [P] Integration test for basic pagination in tests/integration/test_pagination.py
 - [ ] T006 [P] Integration test for search functionality in tests/integration/test_search.py
@@ -57,6 +63,7 @@
 - [ ] T009 [P] Integration test for error handling in tests/integration/test_error_handling.py
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
+
 - [ ] T010 Create Services.svelte component in src/lib/components/modules/content/Services.svelte
 - [ ] T011 Update services page server load in src/routes/services/+page.server.ts
 - [ ] T012 Update services page client in src/routes/services/+page.svelte
@@ -67,12 +74,14 @@
 - [ ] T017 Implement sorting functionality
 
 ## Phase 3.4: Integration
+
 - [ ] T018 Connect Services component to Supabase client
 - [ ] T019 Implement proper error handling with toast notifications
 - [ ] T020 Add loading indicators during data fetch
 - [ ] T021 Ensure accessibility with proper ARIA attributes
 
 ## Phase 3.5: Polish
+
 - [ ] T022 [P] Unit tests for Services component in tests/unit/test_services_component.py
 - [ ] T023 Performance tests for pagination (<200ms)
 - [ ] T024 [P] Update documentation in docs/services-pagination.md
@@ -80,12 +89,14 @@
 - [ ] T026 Run manual-testing.md validation checklist
 
 ## Dependencies
+
 - Tests (T004-T009) before implementation (T010-T017)
 - T010 blocks T012, T018
 - T011 blocks T012
 - Implementation before polish (T022-T026)
 
 ## Parallel Example
+
 ```
 # Launch T004-T009 together:
 Task: "Contract test for Services component in tests/contract/test_services_component.py"
@@ -97,13 +108,15 @@ Task: "Integration test for error handling in tests/integration/test_error_handl
 ```
 
 ## Notes
+
 - [P] tasks = different files, no dependencies
 - Verify tests fail before implementing
 - Commit after each task
 - Avoid: vague tasks, same file conflicts
 
 ## Task Generation Rules
-*Applied during main() execution*
+
+_Applied during main() execution_
 
 1. **From Contracts**:
    - Each contract file → contract test task [P]
@@ -122,7 +135,8 @@ Task: "Integration test for error handling in tests/integration/test_error_handl
    - Dependencies block parallel execution
 
 ## Validation Checklist
-*GATE: Checked by main() before returning*
+
+_GATE: Checked by main() before returning_
 
 - [x] All contracts have corresponding tests
 - [x] All entities have model tasks

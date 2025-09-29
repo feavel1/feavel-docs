@@ -17,5 +17,5 @@
 		<p class="text-muted-foreground">Explore our range of professional services</p>
 	</div>
 
-	<Services {supabase} {categories} />
+	<Services {supabase} initialCategories={categories} />
 </div>

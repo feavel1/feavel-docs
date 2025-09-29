@@ -3,7 +3,9 @@
 ## Entities
 
 ### Service
+
 Represents a studio service with the following attributes:
+
 - `id`: Unique identifier for the service
 - `name`: Name of the service
 - `price`: Price of the service
@@ -17,14 +19,18 @@ Represents a studio service with the following attributes:
 - `services_category_rel`: Related category information
 
 ### ServiceCategory
+
 Represents a category that services can be grouped by:
+
 - `id`: Unique identifier for the category
 - `category_name`: Name of the category
 
 ## State Management
 
 ### ServicesPageState
+
 Represents the state of the services page component:
+
 - `searchQuery`: Current search query string
 - `selectedCategories`: Array of selected category IDs
 - `sortBy`: Current sort order (newest, price_low, price_high)
@@ -37,6 +43,7 @@ Represents the state of the services page component:
 - `allCategories`: Array of all available categories
 
 ## Relationships
+
 - A Service belongs to one or more ServiceCategories through services_category_rel
 - A Service is created by a User (created_by)
 - A Service belongs to a Studio (studios)

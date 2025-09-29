@@ -3,9 +3,11 @@
 ## Entities
 
 ### Studio
+
 Represents a studio that can offer services on the platform.
 
 **Fields**:
+
 - `id` (number): Primary key, auto-incremented
 - `name` (string): Studio name (required)
 - `description` (string): Studio description (required)
@@ -16,11 +18,13 @@ Represents a studio that can offer services on the platform.
 - `created_at` (string): Timestamp when studio was created
 
 **Relationships**:
+
 - One-to-one with User (via user_id)
 - One-to-many with Services (via created_by in services table)
 - One-to-many with Events (via studio_id in events table)
 
 **Validation Rules**:
+
 - name: Required, max 100 characters
 - description: Required, max 500 characters
 - contact_phone: Required, valid phone number format
@@ -29,9 +33,11 @@ Represents a studio that can offer services on the platform.
 - user_id: Required, must reference an existing user
 
 ### User
+
 Represents a platform user.
 
 **Fields** (inherited from existing schema):
+
 - `id` (string): Primary key (UUID)
 - `full_name` (string): User's full name (nullable)
 - `username` (string): User's username (nullable)
@@ -40,11 +46,13 @@ Represents a platform user.
 - `description` (string): User's description (nullable)
 
 **Relationships**:
+
 - One-to-one with Studio (via user_id in studios table)
 
 ## State Transitions
 
 ### Studio Status Transitions
+
 1. `applied` → `approved`: When admin approves the studio application
 2. `applied` → `incomplete`: When additional information is needed from the studio
 3. `applied` → `blocked`: When the application is rejected
@@ -56,6 +64,7 @@ Represents a platform user.
 ## Queries
 
 ### Public Studios Query
+
 Get all studios with status "approved" for display on the landing page.
 
 ```sql
@@ -66,6 +75,7 @@ ORDER BY created_at DESC
 ```
 
 ### User Studio Query
+
 Get the studio associated with a specific user.
 
 ```sql
@@ -75,6 +85,7 @@ WHERE user_id = $1
 ```
 
 ### Studio Application Check
+
 Check if a user has already applied to become a studio.
 
 ```sql
