@@ -1,9 +1,10 @@
 <!-- Sync Impact Report
-Version change: 1.1.0 → 1.2.0 (Minor version bump for enhanced session and Supabase client handling principles)
+Version change: 1.2.0 → 2.0.0 (Major version bump for removal of testing requirements)
 List of modified principles:
-- Supabase Integration Standards → Session and Supabase Client Management
+- Code Quality Standards → Removed testing requirements
 Added sections: None
-Removed sections: None
+Removed sections:
+- Testing requirements from Development Workflow
 Templates requiring updates: ✅ updated
 Follow-up TODOs: None
 -->
@@ -35,14 +36,13 @@ All queries MUST use `select()` to limit returned columns. Pagination MUST be im
 - All code MUST pass type checking with `bun run check` AFTER completion
 - Code formatting MUST be consistent using Prettier (`bun run format`)
 - ESLint MUST be used for code linting
-- All new code MUST include appropriate tests
 - Type checking with `bun run check` MUST be the final validation step before committing code
 
 ### Git Workflow
 
 - Feature branches MUST follow the pattern `[###-feature-name]`
 - Commits MUST include descriptive messages following conventional commit format
-- Pull requests MUST include a description of changes and testing approach
+- Pull requests MUST include a description of changes
 - All PRs MUST pass CI checks before merging
 
 ### Review Process
@@ -75,4 +75,4 @@ Constitution versioning follows semantic versioning:
 
 All PRs/reviews MUST verify compliance with constitutional principles. Violations MUST be documented with justification or refactored. Complexity MUST be justified with clear rationale.
 
-**Version**: 1.2.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-30
+**Version**: 2.0.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-10-01
