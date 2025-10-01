@@ -1,10 +1,10 @@
-import { getApprovedStudios, hasUserAppliedToStudio } from '$lib/utils/studio';
+import { getApprovedStudios } from '$lib/utils/studio';
 import type { Studio } from '$lib/utils/studio';
 
 type PublicStudio = Pick<Studio, 'id' | 'name' | 'description'>;
 
-export const load = async ({ locals: { supabase, safeGetSession } }) => {
-	const { session } = await safeGetSession();
+export const load = async ({ locals: { supabase }, parent }) => {
+	const { session, userStudio } = await parent();
 
 	let studios: PublicStudio[] = [];
 	try {
@@ -17,16 +17,8 @@ export const load = async ({ locals: { supabase, safeGetSession } }) => {
 	}
 
 	// Check if user has applied to become a studio (for showing/hiding apply button)
-	let hasApplied = false;
-	if (session) {
-		try {
-			hasApplied = await hasUserAppliedToStudio(supabase, session.user.id);
-		} catch (error) {
-			console.error('Error checking application status:', error);
-			// Assume user hasn't applied if we can't check
-			hasApplied = false;
-		}
-	}
+	// Use userStudio data from parent instead of refetching
+	const hasApplied = !!userStudio;
 
 	return {
 		studios,

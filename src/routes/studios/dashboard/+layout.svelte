@@ -34,13 +34,13 @@
 		{/if}
 
 		<nav class="mb-6 flex h-5 items-center space-x-4 text-sm">
-			<a href="/studio/dashboard">Overview</a>
+			<a href="/studios/dashboard">Overview</a>
 			<Separator orientation="vertical" />
-			<a href="/studio/dashboard/services">Services</a>
+			<a href="/studios/dashboard/services">Services</a>
 			<Separator orientation="vertical" />
-			<a href="/studio/dashboard/orders">Orders</a>
+			<a href="/studios/dashboard/orders">Orders</a>
 			<Separator orientation="vertical" />
-			<a href="/studio/dashboard/settings">Settings</a>
+			<a href="/studios/dashboard/settings">Settings</a>
 		</nav>
 
 		<div class="mt-6">

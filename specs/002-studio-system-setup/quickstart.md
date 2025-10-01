@@ -26,7 +26,7 @@
 
 ### 3. Studio Dashboard Access - Limited
 
-1. After applying, navigate to `/studio/dashboard`
+1. After applying, navigate to `/studios/dashboard`
 2. Verify access to limited dashboard (basic information only)
 3. Verify navigation links are available but limited in functionality
 
@@ -35,7 +35,7 @@
 1. Log in as an admin in Supabase dashboard
 2. Change the studio status from "applied" to "approved"
 3. Log back in as the studio user
-4. Navigate to `/studio/dashboard`
+4. Navigate to `/studios/dashboard`
 5. Verify full access to dashboard with all navigation options
 
 ### 5. Duplicate Application Prevention
@@ -47,10 +47,10 @@
 
 ### 6. Security Checks
 
-1. Try to access `/studio/dashboard` without logging in
+1. Try to access `/studios/dashboard` without logging in
 2. Verify redirection to login page
 3. Log in as a user who hasn't applied to become a studio
-4. Try to access `/studio/dashboard`
+4. Try to access `/studios/dashboard`
 5. Verify redirection to member dashboard
 
 ## Test Data

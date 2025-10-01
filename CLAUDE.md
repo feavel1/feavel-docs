@@ -244,3 +244,25 @@ export type StudioApplicationSchema = typeof studioApplicationSchema;
 - Implement Row Level Security (RLS) policies for all tables
 - Validate all inputs on the server side
 - Never expose service role keys in client-side code
+
+## Constitutional Principles
+
+This project follows the Feavel Docs Constitution (v1.2.0) which establishes clear patterns for:
+
+1. **Session and Permission Handling**
+   - Session validation and permission checks are handled at the hook level (`hooks.server.ts`)
+   - Individual route files should not manually check session validity
+
+2. **Parent-Child Data Flow**
+   - Data loaded in parent +layout.server.ts files is accessible to child layouts and pages through `await parent()`
+   - Child server files should access this data by destructuring the parent result
+
+3. **Supabase Client Usage**
+   - In server files, always use `locals.supabase` instead of creating new clients
+   - This ensures optimal performance and proper authentication context
+
+4. **Frontend Data Access**
+   - Child +page.svelte files can access inherited data directly through props
+   - This eliminates the need for redundant data fetching in individual page server files
+
+See `.specify/memory/constitution.md` for the complete constitutional document.

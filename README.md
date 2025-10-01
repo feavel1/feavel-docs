@@ -243,6 +243,7 @@ bun run preview          # Preview production build
 - Use Svelte 5 runes for state management
 - Follow shadcn-svelte component patterns
 - Write comprehensive tests
+- Adhere to constitutional principles (see `.specify/memory/constitution.md`)
 
 ### Testing Guidelines
 

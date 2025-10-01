@@ -1,6 +1,7 @@
 # [PROJECT NAME] Development Guidelines
 
 Auto-generated from all feature plans. Last updated: [DATE]
+**Constitution**: v1.2.0 - See `/memory/constitution.md`
 
 ## Active Technologies
 [EXTRACTED FROM ALL PLAN.MD FILES]

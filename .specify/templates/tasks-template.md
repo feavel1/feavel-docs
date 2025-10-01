@@ -2,6 +2,7 @@
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
+**Constitution**: v1.2.0 - See `/memory/constitution.md`
 
 ## Execution Flow (main)
 ```

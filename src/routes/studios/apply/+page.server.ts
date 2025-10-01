@@ -1,26 +1,15 @@
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { fail, redirect, type Actions } from '@sveltejs/kit';
-import { hasUserAppliedToStudio, createStudioApplication } from '$lib/utils/studio';
+import { createStudioApplication } from '$lib/utils/studio';
 import { studioApplicationSchema } from './+page.svelte';
 
-export const load = async ({ locals: { supabase }, parent }) => {
-	const { session } = await parent();
+export const load = async ({ parent }) => {
+	const { session, userStudio } = await parent();
 
-	if (!session) {
-		redirect(303, '/auth/login');
-	}
-
-	try {
-		// Check if user has already applied
-		const hasApplied = await hasUserAppliedToStudio(supabase, session.user.id);
-		if (hasApplied) {
-			// Redirect to dashboard if already applied
-			redirect(303, '/studio/dashboard');
-		}
-	} catch (error) {
-		console.error('Error checking application status:', error);
-		// Continue with form initialization even if we can't check application status
+	// Redirect to dashboard if already applied using userStudio data from parent
+	if (userStudio) {
+		redirect(303, '/studios/dashboard');
 	}
 
 	// Initialize form with empty values
@@ -40,10 +29,15 @@ export const actions: Actions = {
 			redirect(303, '/auth/login');
 		}
 
+		// Check if user has already applied
 		try {
-			// Check if user has already applied
-			const hasApplied = await hasUserAppliedToStudio(supabase, session.user.id);
-			if (hasApplied) {
+			const { data: studio } = await supabase
+				.from('studios')
+				.select('id')
+				.eq('user_id', session.user.id)
+				.maybeSingle();
+
+			if (studio) {
 				return fail(409, {
 					error: 'You have already applied to become a studio'
 				});

@@ -1,6 +1,6 @@
 # Tasks: Studio System Setup
 
-**Input**: Design documents from `/specs/002-stuido-system-setup/`
+**Input**: Design documents from `/specs/002-studio-system-setup/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
 ## Execution Flow (main)
@@ -55,9 +55,9 @@
 
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
-- [ ] T004 [P] Contract test GET /studios endpoint in specs/002-stuido-system-setup/tests/public-studios.test.ts
-- [ ] T005 [P] Contract test POST /studios/apply endpoint in specs/002-stuido-system-setup/tests/studio-application.test.ts
-- [ ] T006 [P] Contract test GET /studios/my-studio endpoint in specs/002-stuido-system-setup/tests/user-studio.test.ts
+- [ ] T004 [P] Contract test GET /studios endpoint in specs/002-studio-system-setup/tests/public-studios.test.ts
+- [ ] T005 [P] Contract test POST /studios/apply endpoint in specs/002-studio-system-setup/tests/studio-application.test.ts
+- [ ] T006 [P] Contract test GET /studios/my-studio endpoint in specs/002-studio-system-setup/tests/user-studio.test.ts
 - [ ] T007 [P] Integration test public studios display in tests/integration/test_studios_public.ts
 - [ ] T008 [P] Integration test studio application process in tests/integration/test_studios_application.ts
 - [ ] T009 [P] Integration test studio dashboard access control in tests/integration/test_studios_dashboard.ts
@@ -110,9 +110,9 @@
 
 ```
 # Launch T004-T006 together:
-Task: "Contract test GET /studios endpoint in specs/002-stuido-system-setup/tests/public-studios.test.ts"
-Task: "Contract test POST /studios/apply endpoint in specs/002-stuido-system-setup/tests/studio-application.test.ts"
-Task: "Contract test GET /studios/my-studio endpoint in specs/002-stuido-system-setup/tests/user-studio.test.ts"
+Task: "Contract test GET /studios endpoint in specs/002-studio-system-setup/tests/public-studios.test.ts"
+Task: "Contract test POST /studios/apply endpoint in specs/002-studio-system-setup/tests/studio-application.test.ts"
+Task: "Contract test GET /studios/my-studio endpoint in specs/002-studio-system-setup/tests/user-studio.test.ts"
 
 # Launch T007-T009 together:
 Task: "Integration test public studios display in tests/integration/test_studios_public.ts"

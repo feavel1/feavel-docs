@@ -1,26 +1,19 @@
 import { redirect } from '@sveltejs/kit';
-import { checkStudioDashboardAccess } from '$lib/utils/studio';
 
-export const load = async ({ locals: { supabase, safeGetSession } }) => {
-	const { session } = await safeGetSession();
-
-	if (!session) {
-		redirect(303, '/auth/login');
-	}
+export const load = async ({ parent }) => {
+	const { userStudio } = await parent();
 
 	// Check if user has access to studio dashboard
-	const { hasAccess, isApproved, studio } = await checkStudioDashboardAccess(
-		supabase,
-		session.user.id
-	);
-
-	if (!hasAccess) {
+	// Users with 'applied' or 'approved' status have access
+	if (!userStudio || (userStudio.status !== 'applied' && userStudio.status !== 'approved')) {
 		// Redirect to member dashboard if user is not a studio
 		redirect(303, '/member/dashboard');
 	}
 
+	const isApproved = userStudio.status === 'approved';
+
 	return {
-		studio,
+		studio: userStudio,
 		isApproved
 	};
 };

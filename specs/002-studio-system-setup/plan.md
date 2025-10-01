@@ -1,7 +1,7 @@
 # Implementation Plan: Studio System Setup
 
-**Branch**: `002-stuido-system-setup` | **Date**: 2025-09-24 | **Spec**: /Users/feavel/Documents/Playground/Svelte/202507/feavel-docs/specs/002-stuido-system-setup/spec.md
-**Input**: Feature specification from `/specs/002-stuido-system-setup/spec.md`
+**Branch**: `002-studio-system-setup` | **Date**: 2025-09-24 | **Spec**: /Users/feavel/Documents/Playground/Svelte/202507/feavel-docs/specs/002-studio-system-setup/spec.md
+**Input**: Feature specification from `/specs/002-studio-system-setup/spec.md`
 
 ## Execution Flow (/plan command scope)
 
@@ -33,7 +33,7 @@
 
 ## Summary
 
-This feature implements a studio system with three main components: 1) A public landing page at `/studios` displaying all approved studios as cards, 2) A studio application process where logged-in users can apply to become studios by submitting a form, and 3) A studio dashboard at `/studio/dashboard` with limited access for applied users and full access for approved users. The implementation will focus on UI/UX with simple queries following SvelteKit 5 and Supabase best practices.
+This feature implements a studio system with three main components: 1) A public landing page at `/studios` displaying all approved studios as cards, 2) A studio application process where logged-in users can apply to become studios by submitting a form, and 3) A studio dashboard at `/studios/dashboard` with limited access for applied users and full access for approved users. The implementation will focus on UI/UX with simple queries following SvelteKit 5 and Supabase best practices.
 
 ## Technical Context
 

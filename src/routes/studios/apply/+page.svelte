@@ -47,7 +47,7 @@
 			else if (result.type === 'success' && result.data?.success) {
 				toast.success('Studio application submitted successfully!');
 				// Redirect to dashboard after successful submission
-				redirect(303, '/studio/dashboard');
+				redirect(303, '/studios/dashboard');
 			}
 			// Show error message
 			else if (result.type === 'failure' && result.data?.error) {

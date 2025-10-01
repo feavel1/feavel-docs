@@ -41,7 +41,7 @@
 ### Authentication and Authorization
 
 **Decision**: Leverage existing hooks.server.ts for authentication and authorization checks.
-**Rationale**: The hooks.server.ts file already handles authentication for /studio/dashboard routes with proper security checks, as mentioned in the user input. This eliminates the need for additional authentication logic.
+**Rationale**: The hooks.server.ts file already handles authentication for /studios/dashboard routes with proper security checks, as mentioned in the user input. This eliminates the need for additional authentication logic.
 
 ### Data Access Patterns
 

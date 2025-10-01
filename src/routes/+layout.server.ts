@@ -2,14 +2,18 @@
 import type { LayoutServerLoad } from './$types';
 import { getUserProfile } from '$lib/utils/user';
 import { getMostUsedItems } from '$lib/utils/shared';
+import { getUserStudio } from '$lib/utils/studio';
 
 export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabase }, cookies }) => {
 	const { session, user } = await safeGetSession();
 
 	// If user is logged in, fetch their profile
 	let userProfile = null;
+	let userStudio = null;
 	if (session?.user) {
 		userProfile = await getUserProfile(supabase, session.user.id);
+		// Fetch user's studio information if they are a studio
+		userStudio = await getUserStudio(supabase, session.user.id);
 	}
 
 	// Fetch the most used tags for navigation
@@ -34,6 +38,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 		session,
 		user,
 		userProfile,
+		userStudio,
 		mostUsedTags: mostUsedTags || [],
 		mostUsedCategories: mostUsedCategories || [],
 		cookies: cookies.getAll()

@@ -46,7 +46,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	if (event.url.pathname.startsWith('/studio/dashboard')) {
+	if (event.url.pathname.startsWith('/studios/dashboard')) {
 		const { session, user } = await event.locals.safeGetSession();
 		if (!session || !user) {
 			throw redirect(303, '/auth/login');

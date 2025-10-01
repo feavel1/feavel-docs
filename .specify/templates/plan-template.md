@@ -47,7 +47,13 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`)
+- Session validation and permission checks MUST be handled at the hook level (`hooks.server.ts`) rather than in individual route files
+- Parent-child data flow MUST be implemented through `await parent()` in server files
+- Inherited data MUST be accessed through props in Svelte components
+- Type safety MUST be maintained with TypeScript and Zod validation
+- Code MUST follow the component-based architecture with Svelte 5 runes
+- Performance and accessibility requirements MUST be met
 
 ## Project Structure
 
@@ -209,4 +215,4 @@ ios/ or android/
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v1.1.0 - See `/memory/constitution.md`*
+*Based on Constitution v1.2.0 - See `/memory/constitution.md`*

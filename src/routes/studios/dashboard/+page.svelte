@@ -42,12 +42,12 @@
 				<div class="space-y-2">
 					{#if isApproved}
 						<a
-							href="/studio/dashboard/services"
+							href="/studios/dashboard/services"
 							class="block text-sm text-blue-600 hover:underline"
 						>
 							Manage Services
 						</a>
-						<a href="/studio/dashboard/orders" class="block text-sm text-blue-600 hover:underline">
+						<a href="/studios/dashboard/orders" class="block text-sm text-blue-600 hover:underline">
 							View Orders
 						</a>
 					{:else}
@@ -55,7 +55,7 @@
 							Additional features will be available after your studio is approved.
 						</p>
 					{/if}
-					<a href="/studio/dashboard/settings" class="block text-sm text-blue-600 hover:underline">
+					<a href="/studios/dashboard/settings" class="block text-sm text-blue-600 hover:underline">
 						Studio Settings
 					</a>
 				</div>

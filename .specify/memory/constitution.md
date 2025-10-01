@@ -1,9 +1,10 @@
 <!-- Sync Impact Report
-Version change: 1.0.0 → 1.1.0 (Minor version bump for enhanced code quality requirements)
-List of modified principles: None
+Version change: 1.1.0 → 1.2.0 (Minor version bump for enhanced session and Supabase client handling principles)
+List of modified principles:
+- Supabase Integration Standards → Session and Supabase Client Management
 Added sections: None
 Removed sections: None
-Templates requiring updates: ⚠ pending
+Templates requiring updates: ✅ updated
 Follow-up TODOs: None
 -->
 
@@ -19,9 +20,9 @@ All code MUST be written in TypeScript with strict type checking enabled. Type e
 
 The application MUST follow a modular component structure with UI components in `src/lib/components/ui/` and feature components in `src/lib/components/modules/`. Reusable components MUST be implemented using Svelte 5 runes (`$state`, `$derived`, `$effect`) for state management. This promotes code reuse and maintainability.
 
-### II. Supabase Integration Standards
+### III. Session and Supabase Client Management
 
-All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`). Row Level Security (RLS) policies MUST be implemented for all tables. Server-side authentication MUST use `auth.getUser()` rather than trusting client session data. This ensures data security and integrity.
+All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`). Session validation and permission checks MUST be handled at the hook level (`hooks.server.ts`) rather than in individual route files. Parent-child data flow MUST be implemented through `await parent()` in server files, with inherited data accessed through props in Svelte components. This ensures consistent authentication, optimal performance, and proper data flow throughout the application.
 
 ### IV. Performance and Accessibility
 
@@ -74,4 +75,4 @@ Constitution versioning follows semantic versioning:
 
 All PRs/reviews MUST verify compliance with constitutional principles. Violations MUST be documented with justification or refactored. Complexity MUST be justified with clear rationale.
 
-**Version**: 1.1.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-24
+**Version**: 1.2.0 | **Ratified**: 2025-07-24 | **Last Amended**: 2025-09-30
