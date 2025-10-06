@@ -5,10 +5,10 @@ import { createStudioApplication } from '$lib/utils/studio';
 import { studioApplicationSchema } from './+page.svelte';
 
 export const load = async ({ parent }) => {
-	const { session, userStudio } = await parent();
+	const { session, userProfile } = await parent();
 
-	// Redirect to dashboard if already applied using userStudio data from parent
-	if (userStudio) {
+	// Redirect to dashboard if already applied using userProfile.studio data from parent
+	if (userProfile?.studio) {
 		redirect(303, '/studios/dashboard');
 	}
 

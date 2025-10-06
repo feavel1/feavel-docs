@@ -27,48 +27,6 @@ export async function getApprovedStudios(supabase: SupabaseClient<Database>) {
 }
 
 /**
- * Get studio information for a specific user
- * @param supabase Supabase client
- * @param userId User ID
- * @returns Studio information or null if user is not a studio
- */
-export async function getUserStudio(supabase: SupabaseClient<Database>, userId: string) {
-	const { data, error } = await supabase
-		.from('studios')
-		.select('id, name, description, status, contact_phone, salary_expectation')
-		.eq('user_id', userId)
-		.maybeSingle();
-
-	if (error) {
-		console.error('Error fetching user studio:', error);
-		throw new Error('Failed to fetch studio information. Please try again later.');
-	}
-
-	return data;
-}
-
-/**
- * Check if a user has already applied to become a studio
- * @param supabase Supabase client
- * @param userId User ID
- * @returns Boolean indicating if user has applied
- */
-export async function hasUserAppliedToStudio(supabase: SupabaseClient<Database>, userId: string) {
-	const { data, error } = await supabase
-		.from('studios')
-		.select('id')
-		.eq('user_id', userId)
-		.maybeSingle();
-
-	if (error) {
-		console.error('Error checking studio application status:', error);
-		throw new Error('Failed to check application status. Please try again later.');
-	}
-
-	return !!data;
-}
-
-/**
  * Create a new studio application
  * @param supabase Supabase client
  * @param userId User ID
@@ -81,8 +39,18 @@ export async function createStudioApplication(
 	studioData: Omit<StudioInsert, 'user_id' | 'status'>
 ) {
 	// Check if user has already applied
-	const hasApplied = await hasUserAppliedToStudio(supabase, userId);
-	if (hasApplied) {
+	const { data: existingStudio, error: existingStudioError } = await supabase
+		.from('studios')
+		.select('id')
+		.eq('user_id', userId)
+		.maybeSingle();
+
+	if (existingStudioError) {
+		console.error('Error checking studio application status:', existingStudioError);
+		throw new Error('Failed to check application status. Please try again later.');
+	}
+
+	if (existingStudio) {
 		throw new Error('User has already applied to become a studio');
 	}
 
@@ -129,36 +97,4 @@ export async function updateStudioStatus(
 	}
 
 	return data;
-}
-
-/**
- * Check if user has access to studio dashboard
- * @param supabase Supabase client
- * @param userId User ID
- * @returns Object with access information
- */
-export async function checkStudioDashboardAccess(
-	supabase: SupabaseClient<Database>,
-	userId: string
-) {
-	const { data: studio, error } = await supabase
-		.from('studios')
-		.select('id, name, description, status, contact_phone, salary_expectation')
-		.eq('user_id', userId)
-		.maybeSingle();
-
-	if (error) {
-		console.error('Error checking studio dashboard access:', error);
-		throw new Error('Failed to check dashboard access. Please try again later.');
-	}
-
-	if (!studio) {
-		return { hasAccess: false, isApproved: false, studio: null };
-	}
-
-	// Users with 'applied' or 'approved' status have access
-	const hasAccess = studio.status === 'applied' || studio.status === 'approved';
-	const isApproved = studio.status === 'approved';
-
-	return { hasAccess, isApproved, studio };
 }

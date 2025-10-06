@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '$lib/types/database.types';
 
 export interface UserProfile {
 	id: string;
@@ -7,6 +8,17 @@ export interface UserProfile {
 	avatar_url?: string;
 	birthday?: string;
 	description?: string;
+}
+
+export interface UserProfileWithStudio extends UserProfile {
+	studio?: {
+		id: number;
+		name: string;
+		description: string;
+		status: Database['public']['Enums']['status'];
+		contact_phone: number;
+		salary_expectation: string;
+	};
 }
 
 const USER_FIELDS = 'id, username, full_name, avatar_url, birthday, description';
@@ -22,6 +34,35 @@ export async function getUserProfile(
 		.single();
 
 	return error || !data ? null : data;
+}
+
+export async function getUserProfileWithStudio(
+	supabase: SupabaseClient,
+	userId: string
+): Promise<UserProfileWithStudio | null> {
+	const { data, error } = await supabase
+		.from('users')
+		.select(
+			`${USER_FIELDS}, studios (id, name, description, status, contact_phone, salary_expectation)`
+		)
+		.eq('id', userId)
+		.single();
+
+	if (error || !data) {
+		return null;
+	}
+
+	// Transform the data to match our interface
+	const { studios, ...userProfile } = data;
+
+	// Handle the case where studios might be an array (PostgREST behavior for 1-to-many relationships)
+	// or a single object (for 1-to-1 relationships with foreign key constraint)
+	const studioData = Array.isArray(studios) ? studios[0] : studios;
+
+	return {
+		...userProfile,
+		studio: studioData || undefined
+	};
 }
 
 export async function getUserProfileByUsername(

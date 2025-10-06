@@ -1,19 +1,22 @@
 import { redirect } from '@sveltejs/kit';
 
 export const load = async ({ parent }) => {
-	const { userStudio } = await parent();
+	const { userProfile } = await parent();
 
 	// Check if user has access to studio dashboard
 	// Users with 'applied' or 'approved' status have access
-	if (!userStudio || (userStudio.status !== 'applied' && userStudio.status !== 'approved')) {
+	if (
+		!userProfile?.studio ||
+		(userProfile.studio.status !== 'applied' && userProfile.studio.status !== 'approved')
+	) {
 		// Redirect to member dashboard if user is not a studio
 		redirect(303, '/member/dashboard');
 	}
 
-	const isApproved = userStudio.status === 'approved';
+	const isApproved = userProfile.studio.status === 'approved';
 
 	return {
-		studio: userStudio,
+		studio: userProfile.studio,
 		isApproved
 	};
 };

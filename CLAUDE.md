@@ -218,6 +218,15 @@ The studio system follows specific patterns for handling studio applications and
 - **Duplicate Prevention**: Each user can only apply to become a studio once (enforced by unique user_id constraint)
 - **Dashboard Navigation**: Studio dashboard follows the same navigation pattern as member dashboard with links to settings, services, and orders pages
 
+### Consolidated Data Access
+
+The user profile system has been optimized to consolidate user and studio data into a single query:
+
+- **UserProfileWithStudio**: A new interface that includes both user profile information and associated studio data when available
+- **getUserProfileWithStudio()**: A utility function that fetches both user and studio data in a single query, reducing database calls
+- **Access Patterns**: Use `userProfile.studio?.status` instead of separate `userStudio` variables
+- **Performance**: This approach reduces the number of database queries needed to fetch user information
+
 ### Studio Application Form Handling
 
 Follow the standard form handling pattern with Zod validation for studio applications:

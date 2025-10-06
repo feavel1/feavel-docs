@@ -4,7 +4,7 @@ import type { Studio } from '$lib/utils/studio';
 type PublicStudio = Pick<Studio, 'id' | 'name' | 'description'>;
 
 export const load = async ({ locals: { supabase }, parent }) => {
-	const { session, userStudio } = await parent();
+	const { session, userProfile } = await parent();
 
 	let studios: PublicStudio[] = [];
 	try {
@@ -17,8 +17,8 @@ export const load = async ({ locals: { supabase }, parent }) => {
 	}
 
 	// Check if user has applied to become a studio (for showing/hiding apply button)
-	// Use userStudio data from parent instead of refetching
-	const hasApplied = !!userStudio;
+	// Use userProfile.studio data from parent instead of refetching
+	const hasApplied = !!userProfile?.studio;
 
 	return {
 		studios,
