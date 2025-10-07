@@ -4,7 +4,7 @@ import { fail } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { updateUserProfile } from '$lib/utils/user';
-import { settingsSchema } from './+page.svelte';
+import { settingsSchema } from './schema';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { userProfile } = await parent();
