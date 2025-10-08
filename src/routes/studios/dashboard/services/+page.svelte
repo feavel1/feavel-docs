@@ -1,17 +1,10 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import Services from '$lib/components/modules/content/Services.svelte';
-	import type { SupabaseClient } from '@supabase/supabase-js';
-
-	interface Data {
-		isApproved: boolean;
-		services: any[];
-		supabase: SupabaseClient;
-	}
 
 	// Get data from parent layout
-	const { data }: { data: Data } = $props();
-	const { isApproved, services, supabase } = data;
+	const { data } = $props();
+	const { isApproved, supabase } = data;
 </script>
 
 <div class="space-y-6">
@@ -21,7 +14,7 @@
 
 	{#if isApproved}
 		<!-- Display services using existing Services component -->
-		<Services {supabase} initialServices={services} />
+		<Services {supabase} />
 	{:else}
 		<!-- Display limited access message -->
 		<Card>
