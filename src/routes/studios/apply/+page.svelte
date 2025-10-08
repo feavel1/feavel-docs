@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { z } from 'zod';
+	import { z } from 'zod/v4';
 
 	export const studioApplicationSchema = z.object({
 		name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
@@ -8,7 +8,7 @@
 			.min(1, 'Description is required')
 			.max(500, 'Description must be 500 characters or less'),
 		contact_phone: z
-			.number({ invalid_type_error: 'Contact phone must be a number' })
+			.number({ error: 'Contact phone must be a number' })
 			.positive('Contact phone must be a positive number'),
 		salary_expectation: z
 			.string()
@@ -19,7 +19,7 @@
 
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { redirect } from '@sveltejs/kit';
 	import { toast } from 'svelte-sonner';
 
@@ -34,7 +34,7 @@
 		submitting,
 		errors
 	} = superForm(form, {
-		validators: zodClient(studioApplicationSchema),
+		validators: zod4Client(studioApplicationSchema),
 		resetForm: false,
 		onResult: ({ result }) => {
 			// Focus on first error

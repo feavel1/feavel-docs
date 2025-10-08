@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { updateUserProfile } from '$lib/utils/user';
 import { settingsSchema } from './schema';
 
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	return {
 		userProfile,
-		form: await superValidate(formData, zod(settingsSchema))
+		form: await superValidate(formData, zod4(settingsSchema))
 	};
 };
 
@@ -26,7 +26,7 @@ export const actions: Actions = {
 	default: async (event) => {
 		const { locals } = event;
 		const { session } = await locals.safeGetSession();
-		const form = await superValidate(event, zod(settingsSchema));
+		const form = await superValidate(event, zod4(settingsSchema));
 
 		// Check if user is logged in
 		if (!session) {
@@ -40,9 +40,9 @@ export const actions: Actions = {
 
 		// Update user profile
 		const result = await updateUserProfile(locals.supabase, session.user.id, {
-			full_name: form.data.full_name ?? null,
-			description: form.data.description ?? null,
-			birthday: form.data.birthday ?? null
+			full_name: form.data.full_name,
+			description: form.data.description,
+			birthday: form.data.birthday
 		});
 
 		if (!result.success) {

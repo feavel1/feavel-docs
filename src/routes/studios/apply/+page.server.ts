@@ -1,10 +1,10 @@
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import { fail, redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { createStudioApplication } from '$lib/utils/studio';
 import { studioApplicationSchema } from './+page.svelte';
 
-export const load = async ({ parent }) => {
+export const load: ServerLoad = async ({ parent }) => {
 	const { session, userProfile } = await parent();
 
 	// Redirect to dashboard if already applied using userProfile.studio data from parent
@@ -13,7 +13,7 @@ export const load = async ({ parent }) => {
 	}
 
 	// Initialize form with empty values
-	const form = await superValidate(zod(studioApplicationSchema));
+	const form = await superValidate(zod4(studioApplicationSchema));
 
 	return {
 		form,
@@ -50,7 +50,7 @@ export const actions: Actions = {
 		}
 
 		// Validate form
-		const form = await superValidate(request, zod(studioApplicationSchema));
+		const form = await superValidate(request, zod4(studioApplicationSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });

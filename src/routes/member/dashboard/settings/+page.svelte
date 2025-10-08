@@ -13,7 +13,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { LogOut, User, Shield } from '@lucide/svelte';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import * as Form from '$lib/components/ui/form';
 	import { toast } from 'svelte-sonner';
 	import { settingsSchema } from './schema';
@@ -24,7 +24,7 @@
 
 	// Initialize form with proper binding and submission handling
 	const form = superForm(formData, {
-		validators: zodClient(settingsSchema),
+		validators: zod4Client(settingsSchema),
 		resetForm: false, // Don't reset form after submission
 		onResult: () => {
 			// Focus on first error

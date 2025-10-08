@@ -1,9 +1,8 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { z } from 'zod';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 
 	const {
 		formSchema,
@@ -14,18 +13,9 @@
 		linkHref,
 		linkLabel,
 		successMessage = ''
-	} = $props<{
-		formSchema: z.ZodSchema;
-		formData: SuperValidated<Infer<typeof formSchema>>;
-		title: string;
-		submitText: string;
-		linkText: string;
-		linkHref: string;
-		linkLabel: string;
-		successMessage?: string;
-	}>();
+	} = $props();
 
-	const form = superForm(formData, { validators: zodClient(formSchema) });
+	const form = superForm(formData, { validators: zod4Client(formSchema) });
 	const { form: formValues, enhance } = form;
 </script>
 

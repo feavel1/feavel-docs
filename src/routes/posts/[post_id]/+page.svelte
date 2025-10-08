@@ -1,10 +1,10 @@
 <script lang="ts" module>
-	import { z } from 'zod';
+	import { z } from 'zod/v4';
 
 	const editorBlockSchema = z.object({
 		id: z.string().optional(),
 		type: z.string().min(1),
-		data: z.record(z.any()).optional()
+		data: z.json()
 	});
 
 	export const postSchema = z.object({
@@ -36,7 +36,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { getPostCoverUrl } from '$lib/utils/storage';
 	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
@@ -60,7 +60,7 @@
 	};
 
 	const form = superForm(initialFormData, {
-		validators: zodClient(postSchema),
+		validators: zod4Client(postSchema),
 		validationMethod: 'oninput',
 		dataType: 'json',
 		resetForm: false,

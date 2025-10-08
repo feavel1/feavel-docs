@@ -62,7 +62,7 @@ The project uses sveltekit-superforms with Zod for form validation. Follow this 
 ### Schema Definition (in +page.svelte module script)
 
 ```ts
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const settingsSchema = z.object({
 	full_name: z.string().max(100).nullable(),
@@ -102,14 +102,14 @@ export const load = async ({ parent }) => {
 ```svelte
 <script>
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { settingsSchema } from './+page.svelte';
 
 	const { data } = $props();
 	const { form: formData } = data;
 
 	const form = superForm(formData, {
-		validators: zodClient(settingsSchema),
+		validators: zod4Client(settingsSchema),
 		resetForm: false,
 		onResult: () => {
 			// Focus on first error
@@ -233,7 +233,7 @@ Follow the standard form handling pattern with Zod validation for studio applica
 
 ```ts
 // Schema definition
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const studioApplicationSchema = z.object({
 	name: z.string().min(1).max(100),
