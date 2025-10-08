@@ -60,7 +60,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			.maybeSingle();
 
 		if (!studio) {
-			throw redirect(303, '/member/dashboard');
+			throw redirect(303, '/studios/apply');
 		}
 	}
 
