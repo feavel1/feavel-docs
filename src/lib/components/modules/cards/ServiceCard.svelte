@@ -34,6 +34,22 @@
 			currency: 'USD'
 		}).format(price);
 	}
+
+	// Function to get status badge variant based on service status
+	function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+		switch (status) {
+			case 'approved':
+				return 'default';
+			case 'applied':
+				return 'secondary';
+			case 'disabled':
+				return 'outline';
+			case 'blocked':
+				return 'destructive';
+			default:
+				return 'secondary';
+		}
+	}
 </script>
 
 <a href="/services/{service.id}" class="block h-full">
@@ -46,7 +62,12 @@
 			/>
 		{/if}
 		<CardHeader>
-			<CardTitle class="line-clamp-1 text-lg leading-tight">{service.name}</CardTitle>
+			<div class="flex items-start justify-between">
+				<CardTitle class="line-clamp-1 text-lg leading-tight">{service.name}</CardTitle>
+				{#if service.status}
+					<Badge variant={getStatusVariant(service.status)}>{service.status}</Badge>
+				{/if}
+			</div>
 
 			<div class="mt-3 flex items-center justify-between">
 				<div class="flex items-center gap-2">

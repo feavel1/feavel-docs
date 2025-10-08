@@ -1,33 +1,29 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
+	import Services from '$lib/components/modules/content/Services.svelte';
+	import type { SupabaseClient } from '@supabase/supabase-js';
+
+	interface Data {
+		isApproved: boolean;
+		services: any[];
+		supabase: SupabaseClient;
+	}
 
 	// Get data from parent layout
-	const { data } = $props();
-	const { isApproved } = data;
+	const { data }: { data: Data } = $props();
+	const { isApproved, services, supabase } = data;
 </script>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<h1 class="text-2xl font-bold">Studio Services</h1>
-		{#if isApproved}
-			<Button disabled>Add Service</Button>
-		{/if}
 	</div>
 
 	{#if isApproved}
-		<Card>
-			<CardHeader>
-				<CardTitle>Available Services</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<p class="text-sm text-muted-foreground">
-					You can create and manage services that your studio offers. This feature will be
-					implemented in a future update.
-				</p>
-			</CardContent>
-		</Card>
+		<!-- Display services using existing Services component -->
+		<Services {supabase} initialServices={services} />
 	{:else}
+		<!-- Display limited access message -->
 		<Card>
 			<CardHeader>
 				<CardTitle>Services Management</CardTitle>
