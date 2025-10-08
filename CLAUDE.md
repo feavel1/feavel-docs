@@ -77,7 +77,7 @@ export type SettingsSchema = typeof settingsSchema;
 
 ```ts
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { settingsSchema } from './+page.svelte';
 
 export const load = async ({ parent }) => {
@@ -92,7 +92,7 @@ export const load = async ({ parent }) => {
 	return {
 		userProfile,
 		session,
-		form: await superValidate(formData, zod(settingsSchema))
+		form: await superValidate(formData, zod4(settingsSchema))
 	};
 };
 ```
