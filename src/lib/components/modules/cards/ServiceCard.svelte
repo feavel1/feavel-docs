@@ -5,7 +5,7 @@
 	import { getServiceTags } from '$lib/utils/serviceCategories';
 	import type { Service } from '$lib/utils/services';
 
-	let { service }: { service: Service } = $props();
+	let { service, studioId }: { service: Service; studioId?: number } = $props();
 
 	// Helper function to get studio name regardless of data structure
 	function getStudioName(studios: Service['studios']): string | undefined {
@@ -121,13 +121,20 @@
 		</CardContent>
 		<CardFooter class="flex justify-between">
 			<span class="text-sm text-muted-foreground">Added {formattedDate}</span>
-			<Button
-				size="sm"
-				onclick={(e) => {
-					e.preventDefault();
-					alert('Order service functionality will be implemented in a future update.');
-				}}>Order Service</Button
-			>
+			<div class="flex gap-2">
+				{#if studioId && service.created_by === studioId}
+					<Button href="/studios/dashboard/services/{service.id}" variant="outline" size="sm">
+						Edit
+					</Button>
+				{/if}
+				<Button
+					size="sm"
+					onclick={(e) => {
+						e.preventDefault();
+						alert('Order service functionality will be implemented in a future update.');
+					}}>Order Service</Button
+				>
+			</div>
 		</CardFooter>
 	</Card>
 </a>

@@ -1,15 +1,16 @@
 import { getApprovedStudios } from '$lib/utils/studio';
 import type { Studio } from '$lib/utils/studio';
+import type { PageServerLoad } from './$types';
 
 type PublicStudio = Pick<Studio, 'id' | 'name' | 'description'>;
 
-export const load = async ({ locals: { supabase }, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { session, userProfile } = await parent();
 
 	let studios: PublicStudio[] = [];
 	try {
 		// Get approved studios for public display
-		studios = await getApprovedStudios(supabase);
+		studios = await getApprovedStudios(locals.supabase);
 	} catch (error) {
 		console.error('Error fetching studios:', error);
 		// Return empty array if we can't fetch studios

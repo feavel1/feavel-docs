@@ -15,13 +15,15 @@
 		servicesPerPage?: number;
 		initialServices?: any[];
 		initialCategories?: ServiceCategory[];
+		studioId?: number; // New prop to identify service owner
 	}
 
 	let {
 		supabase,
 		servicesPerPage = 9,
 		initialServices = [],
-		initialCategories = []
+		initialCategories = [],
+		studioId
 	}: Props = $props();
 
 	let searchQuery = $state('');
@@ -258,7 +260,7 @@
 {:else if displayedServices.length > 0}
 	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 		{#each displayedServices as service (service.id)}
-			<ServiceCard {service} />
+			<ServiceCard {service} {studioId} />
 		{/each}
 	</div>
 

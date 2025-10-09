@@ -4,7 +4,7 @@
 
 	// Get data from parent layout
 	const { data } = $props();
-	const { isApproved, supabase } = data;
+	const { isApproved, supabase, studio } = data;
 </script>
 
 <div class="space-y-6">
@@ -14,7 +14,7 @@
 
 	{#if isApproved}
 		<!-- Display services using existing Services component -->
-		<Services {supabase} />
+		<Services {supabase} studioId={studio.id} />
 	{:else}
 		<!-- Display limited access message -->
 		<Card>

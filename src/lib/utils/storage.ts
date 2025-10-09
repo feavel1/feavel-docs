@@ -361,3 +361,51 @@ export function getPostCoverUrl(filename: string, supabase: SupabaseClient): str
 		return '';
 	}
 }
+
+export function getServiceCoverUrl(filename: string, supabase: SupabaseClient): string {
+	if (!filename) return '';
+
+	try {
+		const path = StoragePath.serviceCovers(filename);
+		const { data } = supabase.storage.from(StoragePath.getBucket()).getPublicUrl(path);
+		return data.publicUrl;
+	} catch (error: any) {
+		console.error('Failed to get service cover URL:', error.message || error);
+		return '';
+	}
+}
+
+// Service cover management
+export async function uploadServiceCover(
+	supabase: SupabaseClient,
+	file: File
+): Promise<string | null> {
+	const timestamp = Date.now();
+	const random = Math.random();
+	const extension = file.name.split('.').pop() || 'jpeg';
+	const filename = `${timestamp}.${random}.${extension}`;
+	const path = StoragePath.serviceCovers(filename);
+
+	try {
+		// Compress the image
+		const compressedFile = await compressImage(file);
+
+		// Upload the file
+		const result = await uploadFile(supabase, path, {
+			file: compressedFile,
+			bucket: StoragePath.getBucket(),
+			upsert: true
+		});
+
+		if (!result) {
+			console.error('Failed to upload service cover file');
+			return null;
+		}
+
+		// Return only the filename, not the full path
+		return filename;
+	} catch (error: any) {
+		console.error('Service cover upload failed:', error.message || error);
+		return null;
+	}
+}
