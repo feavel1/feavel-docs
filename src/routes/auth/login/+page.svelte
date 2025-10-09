@@ -1,21 +1,11 @@
 <script lang="ts">
 	import AuthForm from '$lib/components/modules/forms/AuthForm.svelte';
-	import { formSchema, type FormSchema } from './schema';
-	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import { formSchema } from './schema';
 
-	let {
-		data,
-		url
-	}: {
-		data: { form: SuperValidated<Infer<FormSchema>> };
-		url: URL;
-	} = $props();
+	let { data } = $props();
 
 	// Get success message from URL params
 	let successMessage = $state('');
-	$effect(() => {
-		successMessage = url.searchParams.get('message') || '';
-	});
 </script>
 
 <AuthForm
