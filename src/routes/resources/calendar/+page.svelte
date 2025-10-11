@@ -1,9 +1,8 @@
 <script lang="ts">
 	import EventCalendar from '$lib/components/modules/calendar/EventCalendar.svelte';
-	import type { Tables } from '$lib/types/database.types';
 
 	// Mock data that fits the current Supabase events table structure
-	let mockEvents: Tables<'events'>[] = [
+	let mockEvents = [
 		{
 			id: '1',
 			title: 'Studio Reservation',
@@ -157,7 +156,7 @@
 	];
 
 	// Handle event click
-	function handleEventClick(event: Tables<'events'>) {
+	function handleEventClick(event: any) {
 		console.log('Event clicked:', event);
 		// You can implement navigation or a modal here
 	}

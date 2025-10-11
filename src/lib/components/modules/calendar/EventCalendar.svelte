@@ -8,12 +8,11 @@
 		ResourceTimeline,
 		ResourceTimeGrid
 	} from '@event-calendar/core';
-	import type { Tables } from '$lib/types/database.types';
 
 	// Define the component props
 	let { events = [], onEventClick } = $props<{
-		events?: Tables<'events'>[];
-		onEventClick?: (event: Tables<'events'>) => void;
+		events: any;
+		onEventClick?: (event: any) => void;
 	}>();
 
 	// Calendar plugins
@@ -45,7 +44,7 @@
 
 	// Convert Supabase events to calendar events with resource support
 	let calendarEvents = $derived(
-		events.map((event: Tables<'events'>) => {
+		events.map((event: any) => {
 			const { start, end } = parseRange(event.duration);
 
 			// Determine color based on event type
@@ -116,7 +115,7 @@
 	function handleEventClick(info: any) {
 		if (!onEventClick) return;
 
-		const event = events.find((e: Tables<'events'>) => e.id === info.event.id);
+		const event = events.find((e: any) => e.id === info.event.id);
 		if (event) onEventClick(event);
 	}
 

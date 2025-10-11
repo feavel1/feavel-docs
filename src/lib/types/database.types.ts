@@ -12,17 +12,14 @@ export type Database = {
 				Row: {
 					created_at: string;
 					id: string;
-					name: string | null;
 				};
 				Insert: {
 					created_at?: string;
 					id: string;
-					name?: string | null;
 				};
 				Update: {
 					created_at?: string;
 					id?: string;
-					name?: string | null;
 				};
 				Relationships: [];
 			};
@@ -98,47 +95,37 @@ export type Database = {
 			digital_access: {
 				Row: {
 					created_at: string;
-					digital_order_id: string;
 					download_count: number;
 					expires_at: string | null;
 					id: string;
+					order_id: string;
 					revoked_at: string | null;
-					service_id: string;
 					user_id: string;
 				};
 				Insert: {
 					created_at?: string;
-					digital_order_id: string;
 					download_count?: number;
 					expires_at?: string | null;
 					id?: string;
+					order_id: string;
 					revoked_at?: string | null;
-					service_id: string;
 					user_id: string;
 				};
 				Update: {
 					created_at?: string;
-					digital_order_id?: string;
 					download_count?: number;
 					expires_at?: string | null;
 					id?: string;
+					order_id?: string;
 					revoked_at?: string | null;
-					service_id?: string;
 					user_id?: string;
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'digital_access_digital_order_id_fkey';
-						columns: ['digital_order_id'];
+						foreignKeyName: 'digital_access_order_id_fkey';
+						columns: ['order_id'];
 						isOneToOne: false;
 						referencedRelation: 'digital_order';
-						referencedColumns: ['id'];
-					},
-					{
-						foreignKeyName: 'digital_access_service_id_fkey';
-						columns: ['service_id'];
-						isOneToOne: false;
-						referencedRelation: 'services';
 						referencedColumns: ['id'];
 					},
 					{
@@ -155,18 +142,21 @@ export type Database = {
 					created_at: string;
 					id: string;
 					service_id: string;
+					status: Database['public']['Enums']['purchase_status'];
 					user_id: string;
 				};
 				Insert: {
 					created_at?: string;
 					id?: string;
 					service_id: string;
+					status?: Database['public']['Enums']['purchase_status'];
 					user_id: string;
 				};
 				Update: {
 					created_at?: string;
 					id?: string;
 					service_id?: string;
+					status?: Database['public']['Enums']['purchase_status'];
 					user_id?: string;
 				};
 				Relationships: [
