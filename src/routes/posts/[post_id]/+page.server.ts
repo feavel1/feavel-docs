@@ -40,6 +40,9 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 
 	// Handle existing post loading
+	// Convert post_id from string to number for database queries
+	const postIdNum = parseInt(post_id, 10);
+
 	const { data: post, error: postError } = await locals.supabase
 		.from('posts')
 		.select(
@@ -47,15 +50,15 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			*,
 			users!inner(username, avatar_url),
 			posts_tags_rel(
-				post_tags!inner(tag_name)
+				posts_tags!inner(id, tag_name)
 			),
-			post_likes(
+			posts_likes(
 				id,
 				user_id,
 				created_at,
 				users!inner(username, avatar_url)
 			),
-			post_comments(
+			posts_comments(
 				id,
 				created_at,
 				updated_at,
@@ -67,7 +70,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			)
 		`
 		)
-		.eq('id', post_id)
+		.eq('id', postIdNum)
 		.single();
 
 	if (postError || !post) {
@@ -85,7 +88,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		await locals.supabase
 			.from('posts')
 			.update({ post_views: (post.post_views || 0) + 1 })
-			.eq('id', post_id);
+			.eq('id', postIdNum);
 	}
 
 	const tags = isOwner ? await fetchAllTags(locals.supabase) : [];

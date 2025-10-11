@@ -14,7 +14,7 @@
 		if (!searchTerm) return userProfilesWithStats;
 		return userProfilesWithStats.filter(
 			(user) =>
-				user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				(user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
 				(user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
 		);
 	});

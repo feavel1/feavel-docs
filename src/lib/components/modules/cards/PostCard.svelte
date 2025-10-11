@@ -60,21 +60,21 @@
 	</CardHeader>
 
 	<CardContent class="flex-grow pt-0">
-		{#if (post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || []).length > 0}
+		{#if (post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || []).length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || [] as tag, i}
+				{#each post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || [] as tag, i}
 					{#if i < 3}
 						<Button
 							variant="outline"
 							size="sm"
-							href={`/posts?tags=${encodeURIComponent(tag)}`}
+							href={`/posts?tags=${encodeURIComponent(tag || '')}`}
 							class="h-6 px-2 text-xs"
 						>
 							{tag}
 						</Button>
 					{:else if i === 3}
 						<div class="flex h-6 items-center rounded border px-2 text-xs text-muted-foreground">
-							+{(post.posts_tags_rel?.map((rel) => rel.post_tags.tag_name) || []).length - 3}
+							+{(post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || []).length - 3}
 						</div>
 					{/if}
 				{/each}
@@ -90,11 +90,11 @@
 			</span>
 			<span class="flex items-center gap-1">
 				<Heart class="h-4 w-4" />
-				{post.post_likes?.length || 0}
+				{post.posts_likes?.length || 0}
 			</span>
 			<span class="flex items-center gap-1">
 				<MessageCircle class="h-4 w-4" />
-				{post.post_comments?.length || 0}
+				{post.posts_comments?.length || 0}
 			</span>
 		</div>
 

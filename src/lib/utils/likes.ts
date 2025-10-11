@@ -1,7 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Tables } from '$lib/types/database.types';
 
-type PostLike = Tables<'post_likes'> & {
+type PostLike = {
+	id: number;
+	post_id: number;
+	user_id: string;
+	created_at: string;
 	users: {
 		username: string;
 		avatar_url: string | null;
@@ -61,7 +64,7 @@ export async function getLikeCount(
 	}
 
 	const { count, error } = await supabase
-		.from('post_likes')
+		.from('posts_likes')
 		.select('*', { count: 'exact', head: true })
 		.eq('post_id', numericPostId);
 
@@ -95,7 +98,7 @@ export async function isPostLiked(
 	if (numericPostId <= 0 || isNaN(numericPostId) || !userId) return false;
 
 	const { data, error } = await supabase
-		.from('post_likes')
+		.from('posts_likes')
 		.select('id')
 		.eq('post_id', numericPostId)
 		.eq('user_id', userId)
@@ -124,7 +127,7 @@ export async function getLikeInfo(
 	} else {
 		// Fetch like count from database
 		const { count, error } = await supabase
-			.from('post_likes')
+			.from('posts_likes')
 			.select('*', { count: 'exact', head: true })
 			.eq('post_id', numericPostId);
 
@@ -142,7 +145,7 @@ export async function getLikeInfo(
 
 	// Check if current user has liked the post
 	const { data, error } = await supabase
-		.from('post_likes')
+		.from('posts_likes')
 		.select('id')
 		.eq('post_id', numericPostId)
 		.eq('user_id', userId)
@@ -168,7 +171,7 @@ export async function toggleLike(
 	if (isLiked) {
 		// Unlike
 		const { error } = await supabase
-			.from('post_likes')
+			.from('posts_likes')
 			.delete()
 			.eq('post_id', numericPostId)
 			.eq('user_id', userId);
@@ -184,7 +187,7 @@ export async function toggleLike(
 		return { success: true, isLiked: false };
 	} else {
 		// Like
-		const { error } = await supabase.from('post_likes').insert({
+		const { error } = await supabase.from('posts_likes').insert({
 			post_id: numericPostId,
 			user_id: userId
 		});
@@ -210,7 +213,7 @@ export async function getLikedUsers(
 	if (numericPostId <= 0 || isNaN(numericPostId) || limit < 1) return [];
 
 	const { data, error } = await supabase
-		.from('post_likes')
+		.from('posts_likes')
 		.select(
 			`
 			*,

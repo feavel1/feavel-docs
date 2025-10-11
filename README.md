@@ -52,7 +52,7 @@ users (id, username, avatar_url, created_at)
 posts (id, user_id, title, content_v2, post_cover, public_visibility, post_views, created_at)
 
 -- Tags
-post_tags (id, tag_name, created_at)
+posts_tags (id, tag_name, created_at)
 posts_tags_rel (id, post_id, tag_id, created_at)
 ```
 

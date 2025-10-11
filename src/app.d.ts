@@ -3,7 +3,8 @@
 
 // src/app.d.ts
 
-import { SupabaseClient, Session } from '@supabase/supabase-js';
+import type { Database } from '$lib/types/database.types';
+import { SupabaseClient, Session, User } from '@supabase/supabase-js';
 
 declare module '*.svelte' {
 	export { SvelteComponent as default } from 'svelte';
@@ -12,7 +13,7 @@ declare module '*.svelte' {
 declare global {
 	namespace App {
 		interface Locals {
-			supabase: SupabaseClient;
+			supabase: SupabaseClient<Database>;
 			safeGetSession(): Promise<{ session: Session | null; user: User | null }>;
 		}
 		interface PageData {
@@ -20,11 +21,11 @@ declare global {
 			user: User | null;
 			userProfile?: {
 				id: string;
-				username: string;
-				full_name?: string;
-				avatar_url?: string;
-				birthday?: string;
-				description?: string;
+				username: string | null;
+				full_name: string | null;
+				avatar_url: string | null;
+				birthday: string | null;
+				description: string | null;
 			} | null;
 		}
 		// interface Error {}

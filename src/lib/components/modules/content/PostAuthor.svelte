@@ -22,7 +22,7 @@
 				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
 					<img
 						class="h-12 w-12 rounded-full object-cover"
-						src={getAvatarUrl(post.users?.avatar_url, post.users?.username, supabase)}
+						src={getAvatarUrl(post.users?.avatar_url, post.users?.username || undefined, supabase)}
 						alt={post.users?.username || 'Author'}
 						onerror={(e) => {
 							const target = e.target as HTMLImageElement;

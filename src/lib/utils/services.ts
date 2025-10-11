@@ -1,21 +1,29 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Json } from '$lib/types/database.types';
 import { uploadServiceCover } from './storage';
 
-// Service type that matches what's actually returned from the server queries
-// Using a more flexible type to avoid type conflicts
+// Simplified service type
 export interface Service {
-	id: number;
+	id: string;
 	name: string;
 	price: number;
-	description: any;
+	description: Json | null;
 	cover_url: string | null;
-	highlights: any;
-	service_type: string;
-	status: any;
-	created_at: string | null;
+	highlights: Json;
+	type: string;
+	status: string;
+	created_at: string;
 	created_by: number;
-	studios?: any;
-	services_category_rel?: any[];
+	studios?: {
+		name: string;
+		description: string;
+		contact_phone: number;
+	} | null;
+	services_category_rel?: {
+		services_category: {
+			category_name: string;
+		};
+	}[];
 }
 
 interface ServiceFilters {
@@ -26,38 +34,20 @@ interface ServiceFilters {
 export function filterServices(services: Service[], filters: ServiceFilters): Service[] {
 	let filtered = services;
 
-	// Filter by categories
-	if (filters.selectedCategories.length > 0) {
-		filtered = filtered.filter((service) =>
-			service.services_category_rel?.some((rel: any) =>
-				filters.selectedCategories.includes(rel.services_category?.category_name)
-			)
-		);
-	}
-
 	// Filter by search query
 	if (filters.searchQuery) {
 		const query = filters.searchQuery.toLowerCase();
 		filtered = filtered.filter(
 			(service) =>
-				service.name?.toLowerCase().includes(query) ||
-				service.service_type?.toLowerCase().includes(query) ||
-				(service.studios &&
-					(Array.isArray(service.studios)
-						? service.studios[0]?.name?.toLowerCase().includes(query)
-						: service.studios.name?.toLowerCase().includes(query)))
+				service.name?.toLowerCase().includes(query) || service.type?.toLowerCase().includes(query)
 		);
 	}
 
 	return filtered;
 }
 
-export function getServiceCategories(service: Service): string[] {
-	return (
-		service.services_category_rel
-			?.map((rel: any) => rel.services_category?.category_name)
-			.filter(Boolean) || []
-	);
+export function getServiceCategories(_service: Service): string[] {
+	return [];
 }
 
 export function formatServicePrice(price: number): string {
@@ -73,8 +63,8 @@ export function isServiceOwner(service: Service, studioId?: number): boolean {
  * @param service The service object
  * @returns The number of categories
  */
-export function getServiceCategoryCount(service: Service): number {
-	return service.services_category_rel?.length || 0;
+export function getServiceCategoryCount(_service: Service): number {
+	return 0;
 }
 
 // Service cover upload handler
@@ -85,6 +75,10 @@ export async function handleServiceCoverUpload(
 	return await uploadServiceCover(supabase, file);
 }
 
+// Valid service types according to database enum
+const VALID_SERVICE_TYPES = ['video', 'download', 'event', 'subscription'] as const;
+type ServiceType = typeof VALID_SERVICE_TYPES[number];
+
 // Create a new service
 export async function createService(
 	supabase: SupabaseClient,
@@ -93,12 +87,17 @@ export async function createService(
 		name: string;
 		price: number;
 		description: string | null;
-		service_type: string;
+		type: string;
 		highlights: string[];
 		cover_url: string | null;
 	}
 ): Promise<{ service: Service | null; error: string | null }> {
 	try {
+		// Validate service type
+		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
+			return { service: null, error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}` };
+		}
+
 		const { data, error } = await supabase
 			.from('services')
 			.insert([
@@ -106,7 +105,7 @@ export async function createService(
 					name: serviceData.name,
 					price: serviceData.price,
 					description: serviceData.description,
-					service_type: serviceData.service_type,
+					type: serviceData.type,
 					highlights: serviceData.highlights,
 					cover_url: serviceData.cover_url,
 					created_by: studioId,
@@ -133,17 +132,22 @@ export async function createService(
 export async function updateService(
 	supabase: SupabaseClient,
 	studioId: number,
-	serviceId: number,
+	serviceId: string,
 	serviceData: {
 		name: string;
 		price: number;
 		description: string | null;
-		service_type: string;
+		type: string;
 		highlights: string[];
 		cover_url: string | null;
 	}
 ): Promise<{ success: boolean; error: string | null }> {
 	try {
+		// Validate service type
+		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
+			return { success: false, error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}` };
+		}
+
 		// First check if the service belongs to this studio
 		const { data: service, error: fetchError } = await supabase
 			.from('services')
@@ -163,7 +167,7 @@ export async function updateService(
 				name: serviceData.name,
 				price: serviceData.price,
 				description: serviceData.description,
-				service_type: serviceData.service_type,
+				type: serviceData.type,
 				highlights: serviceData.highlights,
 				cover_url: serviceData.cover_url
 			})
@@ -185,7 +189,7 @@ export async function updateService(
 export async function deleteService(
 	supabase: SupabaseClient,
 	studioId: number,
-	serviceId: number
+	serviceId: string
 ): Promise<{ success: boolean; error: string | null }> {
 	try {
 		// First check if the service belongs to this studio

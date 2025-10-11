@@ -181,30 +181,30 @@ export type Database = {
 					content_v2: Json;
 					created_at: string;
 					id: number;
-					post_cover: string;
+					post_cover: string | null;
 					post_views: number;
 					public_visibility: boolean;
-					title: string;
+					title: string | null;
 					user_id: string;
 				};
 				Insert: {
 					content_v2: Json;
 					created_at?: string;
 					id?: number;
-					post_cover?: string;
+					post_cover?: string | null;
 					post_views?: number;
 					public_visibility?: boolean;
-					title: string;
+					title?: string | null;
 					user_id: string;
 				};
 				Update: {
 					content_v2?: Json;
 					created_at?: string;
 					id?: number;
-					post_cover?: string;
+					post_cover?: string | null;
 					post_views?: number;
 					public_visibility?: boolean;
-					title?: string;
+					title?: string | null;
 					user_id?: string;
 				};
 				Relationships: [
@@ -250,21 +250,21 @@ export type Database = {
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'post_comments_parent_id_fkey';
+						foreignKeyName: 'posts_comments_parent_id_fkey';
 						columns: ['parent_id'];
 						isOneToOne: false;
 						referencedRelation: 'posts_comments';
 						referencedColumns: ['id'];
 					},
 					{
-						foreignKeyName: 'post_comments_post_id_fkey';
+						foreignKeyName: 'posts_comments_post_id_fkey';
 						columns: ['post_id'];
 						isOneToOne: false;
 						referencedRelation: 'posts';
 						referencedColumns: ['id'];
 					},
 					{
-						foreignKeyName: 'post_comments_user_id_fkey';
+						foreignKeyName: 'posts_comments_user_id_fkey';
 						columns: ['user_id'];
 						isOneToOne: false;
 						referencedRelation: 'users';
@@ -293,14 +293,14 @@ export type Database = {
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'post_likes_post_id_fkey';
+						foreignKeyName: 'posts_likes_post_id_fkey';
 						columns: ['post_id'];
 						isOneToOne: false;
 						referencedRelation: 'posts';
 						referencedColumns: ['id'];
 					},
 					{
-						foreignKeyName: 'post_likes_user_id_fkey';
+						foreignKeyName: 'posts_likes_user_id_fkey';
 						columns: ['user_id'];
 						isOneToOne: false;
 						referencedRelation: 'users';
@@ -382,7 +382,7 @@ export type Database = {
 					highlights: Json;
 					id?: string;
 					name: string;
-					price: number;
+					price?: number;
 					status?: Database['public']['Enums']['status'];
 					type: Database['public']['Enums']['service_type'];
 				};

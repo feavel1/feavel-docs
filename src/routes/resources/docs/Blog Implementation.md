@@ -87,7 +87,7 @@ Fully implemented tag system with many-to-many relationships:
 
 ```sql
 -- Database schema
-post_tags (id, tag_name, created_at)
+posts_tags (id, tag_name, created_at)
 posts_tags_rel (id, post_id, tag_id, created_at)
 ```
 
@@ -177,7 +177,7 @@ posts (
 )
 
 -- Tags table
-post_tags (
+posts_tags (
   id: bigint PRIMARY KEY,
   tag_name: text UNIQUE,
   created_at: timestamptz DEFAULT now()
@@ -187,7 +187,7 @@ post_tags (
 posts_tags_rel (
   id: bigint PRIMARY KEY,
   post_id: bigint REFERENCES posts(id),
-  tag_id: bigint REFERENCES post_tags(id),
+  tag_id: bigint REFERENCES posts_tags(id),
   created_at: timestamptz DEFAULT now()
 )
 ```

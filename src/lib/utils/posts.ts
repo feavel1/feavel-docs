@@ -5,20 +5,38 @@ import { uploadPostCover } from './storage';
 
 export type Post = Tables<'posts'> & {
 	users?: {
-		username: string;
+		username: string | null;
 		avatar_url: string | null;
 	} | null;
 	posts_tags_rel?: {
-		post_tags: {
+		posts_tags: {
+			id: number;
 			tag_name: string;
-		};
-	}[];
-	post_likes?: {
+		} | null;
+	}[] | null;
+	posts_likes?: {
 		id: number;
-	}[];
-	post_comments?: {
+		user_id: string;
+		created_at: string;
+		users?: {
+			username: string | null;
+			avatar_url: string | null;
+		} | null;
+	}[] | null;
+	posts_comments?: {
 		id: number;
-	}[];
+		created_at: string;
+		updated_at: string;
+		user_id: string;
+		parent_id: number | null;
+		content: string;
+		is_deleted: boolean;
+		users?: {
+			username: string | null;
+			avatar_url: string | null;
+			full_name: string | null;
+		} | null;
+	}[] | null;
 };
 
 interface PostFilters {
@@ -32,7 +50,7 @@ export function filterPosts(posts: Post[], filters: PostFilters): Post[] {
 	// Filter by tags
 	if (filters.selectedTags.length > 0) {
 		filtered = filtered.filter((post) =>
-			post.posts_tags_rel?.some((rel) => filters.selectedTags.includes(rel.post_tags.tag_name))
+			post.posts_tags_rel?.some((rel) => rel.posts_tags && filters.selectedTags.includes(rel.posts_tags.tag_name))
 		);
 	}
 
@@ -55,7 +73,7 @@ export function filterPosts(posts: Post[], filters: PostFilters): Post[] {
  * @returns The number of likes
  */
 export function getPostLikes(post: Post): number {
-	return post.post_likes?.length || 0;
+	return post.posts_likes?.length || 0;
 }
 
 /**

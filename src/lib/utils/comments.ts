@@ -1,14 +1,28 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Tables } from '$lib/types/database.types';
 
 export interface CommentFormData {
 	content: string;
 	parent_id?: number;
 }
 
-export interface PostComment extends Tables<'post_comments'> {
+export interface PostComment {
+	id: number;
+	content: string;
+	created_at: string;
+	updated_at: string;
+	user_id: string;
+	parent_id: number | null;
+	is_deleted: boolean;
+	users?: {
+		username: string;
+		avatar_url: string | null;
+		full_name: string | null;
+	} | null;
 	replies?: PostComment[];
 	_reply_count?: number;
+
+	// Index signature to allow access to any property
+	[key: string]: any;
 }
 
 const COMMENT_FIELDS = `
@@ -24,7 +38,7 @@ async function getReplyCounts(
 	if (commentIds.length === 0) return {};
 
 	const { data, error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select('parent_id')
 		.in('parent_id', commentIds)
 		.is('is_deleted', false);
@@ -57,7 +71,7 @@ export async function getComments(
 	const offset = (page - 1) * limit;
 
 	const { data, error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select(COMMENT_FIELDS)
 		.eq('post_id', postId)
 		.is('parent_id', null)
@@ -91,7 +105,7 @@ export async function getCommentReplies(
 
 	// First get all replies for this comment
 	const { data: replies, error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select(COMMENT_FIELDS)
 		.eq('parent_id', commentId)
 		.is('is_deleted', false)
@@ -125,7 +139,7 @@ export async function createComment(
 	if (postId <= 0 || !userId || !commentData.content?.trim()) return null;
 
 	const { data, error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.insert({
 			post_id: postId,
 			user_id: userId,
@@ -153,7 +167,7 @@ export async function deleteComment(
 
 	// Verify comment ownership and get post_id to check if user is post author
 	const { data: comment, error: fetchError } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select('user_id, post_id')
 		.eq('id', commentId)
 		.single();
@@ -179,7 +193,7 @@ export async function deleteComment(
 	}
 
 	const { error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.update({ is_deleted: true })
 		.eq('id', commentId);
 
@@ -202,7 +216,7 @@ export async function updateComment(
 
 	// Verify comment ownership
 	const { data: comment, error: fetchError } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select('user_id')
 		.eq('id', commentId)
 		.single();
@@ -219,7 +233,7 @@ export async function updateComment(
 	}
 
 	const { data, error } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.update({
 			content: content.trim(),
 			updated_at: new Date().toISOString()

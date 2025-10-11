@@ -15,7 +15,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 	// Fetch the most used tags for navigation
 	const mostUsedTags = await getMostUsedItems(supabase, {
 		relationshipTable: 'posts_tags_rel',
-		foreignKey: 'post_tags',
+		foreignKey: 'posts_tags',
 		nameField: 'tag_name',
 		limit: 5,
 		cacheKey: 'mostUsedTags'

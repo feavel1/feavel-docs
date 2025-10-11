@@ -79,8 +79,9 @@ export type SettingsSchema = typeof settingsSchema;
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { settingsSchema } from './+page.svelte';
+import type { PageServerLoad } from './$types';
 
-export const load = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent }) => {
 	const { session, userProfile } = await parent();
 
 	const formData = {
@@ -140,26 +141,6 @@ export const load = async ({ parent }) => {
 		{/if}</button
 	>
 </form>
-```
-
-## Supabase Integration Patterns
-
-Always use the Supabase client provided by SvelteKit hooks:
-
-- Use `event.locals.supabase` in server code (never create new clients)
-- Use `event.locals.safeGetSession()` for auth checks
-- Use `maybeSingle()` for optional single-record queries
-- Implement proper error handling for all Supabase operations
-- Validate inputs in `+page.server.ts` actions
-- Storage: construct bucket paths carefully; never trust client-provided paths
-
-Example:
-
-```ts
-export const load = async ({ locals }) => {
-	const { session, user } = await locals.safeGetSession();
-	return { session, user };
-};
 ```
 
 ## Component Architecture

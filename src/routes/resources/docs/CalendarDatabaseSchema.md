@@ -21,7 +21,7 @@ The `services` table has been created with:
 4. **name**: VARCHAR(255) NOT NULL
 5. **description**: JSONB
 6. **price**: DECIMAL(10, 2) NOT NULL
-7. **service_type**: VARCHAR(50) NOT NULL DEFAULT 'single_download'
+7. **type**: VARCHAR(50) NOT NULL DEFAULT 'single_download'
 8. **enabled**: BOOLEAN DEFAULT true
 9. **status**: VARCHAR(50)
 10. **cover_url**: TEXT
@@ -69,7 +69,7 @@ The following indexes have been added for better performance:
 - `idx_events_event_type`: Index on events.event_type
 - `idx_events_is_public`: Index on events.is_public
 - `idx_services_created_by`: Index on services.created_by
-- `idx_services_service_type`: Index on services.service_type
+- `idx_services_type`: Index on services.type
 
 ## Migration
 

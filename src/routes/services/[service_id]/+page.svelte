@@ -95,7 +95,7 @@
 
 			<div class="mb-4">
 				<span class="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-					{service.service_type}
+					{service.type}
 				</span>
 			</div>
 
@@ -123,7 +123,7 @@
 			<CardContent>
 				{#if service.description}
 					<div class="prose prose-lg max-w-none">
-						<p>{@html service.description}</p>
+						<p>{@html typeof service.description === 'string' ? service.description : JSON.stringify(service.description)}</p>
 					</div>
 				{:else}
 					<p class="text-muted-foreground">No description available.</p>
@@ -137,7 +137,9 @@
 				? service.highlights
 				: typeof service.highlights === 'string'
 					? JSON.parse(service.highlights)
-					: []}
+					: Array.isArray(service.highlights)
+						? service.highlights
+						: []}
 			{#if highlightsArray.length > 0}
 				<Card class="mb-8">
 					<CardHeader>
@@ -148,7 +150,7 @@
 							{#each highlightsArray as highlight}
 								<li class="flex items-start">
 									<span class="mr-2">•</span>
-									<span>{highlight}</span>
+									<span>{typeof highlight === 'string' ? highlight : JSON.stringify(highlight)}</span>
 								</li>
 							{/each}
 						</ul>

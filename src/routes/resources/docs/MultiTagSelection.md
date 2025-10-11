@@ -99,7 +99,7 @@ Tags are stored in the Supabase database with the following schema:
 
 ```sql
 -- Tags table
-post_tags (
+posts_tags (
   id: bigint PRIMARY KEY,
   tag_name: text UNIQUE,
   created_at: timestamptz DEFAULT now()
@@ -109,7 +109,7 @@ post_tags (
 posts_tags_rel (
   id: bigint PRIMARY KEY,
   post_id: bigint REFERENCES posts(id),
-  tag_id: bigint REFERENCES post_tags(id),
+  tag_id: bigint REFERENCES posts_tags(id),
   created_at: timestamptz DEFAULT now()
 )
 ```
@@ -119,7 +119,10 @@ posts_tags_rel (
 ```typescript
 // src/lib/utils/tags.ts
 export async function getTags(supabase: SupabaseClient) {
-	const { data, error } = await supabase.from('post_tags').select('id, tag_name').order('tag_name');
+	const { data, error } = await supabase
+		.from('posts_tags')
+		.select('id, tag_name')
+		.order('tag_name');
 	return { data, error };
 }
 
@@ -129,7 +132,7 @@ export async function getPostTags(supabase: SupabaseClient, postId: number) {
 		.select(
 			`
 			tag_id,
-			post_tags!inner(id, tag_name)
+			posts_tags!inner(id, tag_name)
 		`
 		)
 		.eq('post_id', postId);
@@ -229,14 +232,14 @@ export const load = async ({ url, locals }) => {
 			*,
 			users!inner(username, avatar_url),
 			posts_tags_rel(
-				post_tags!inner(tag_name)
+				posts_tags!inner(tag_name)
 			)
 		`
 		)
 		.eq('public_visibility', true);
 
 	if (tag) {
-		query = query.eq('posts_tags_rel.post_tags.tag_name', tag);
+		query = query.eq('posts_tags_rel.posts_tags.tag_name', tag);
 	}
 
 	const { data: posts } = await query;

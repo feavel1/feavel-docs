@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				name: 'New Service',
 				price: 0,
 				description: '',
-				service_type: '',
+				type: 'video', // Default to 'video' instead of empty string
 				highlights: [],
 				cover_url: null
 			}
@@ -39,6 +39,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 
 	// Handle existing service loading
+	// Use service_id directly as string for database queries
 	const { data: service, error: serviceError } = await locals.supabase
 		.from('services')
 		.select('*')

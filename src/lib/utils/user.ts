@@ -3,11 +3,11 @@ import type { Database } from '$lib/types/database.types';
 
 export interface UserProfile {
 	id: string;
-	username: string;
-	full_name?: string;
-	avatar_url?: string;
-	birthday?: string;
-	description?: string;
+	username: string | null;
+	full_name: string | null;
+	avatar_url: string | null;
+	birthday: string | null;
+	description: string | null;
 }
 
 export interface UserProfileWithStudio extends UserProfile {
@@ -104,14 +104,14 @@ export async function getUserStats(
 
 	// Get comments count
 	const { count: commentsCount } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select('*', { count: 'exact', head: true })
 		.eq('user_id', userId)
 		.is('is_deleted', false);
 
 	// Get likes received count
 	const { count: likesCount } = await supabase
-		.from('post_likes')
+		.from('posts_likes')
 		.select(
 			`
 			id,
@@ -177,7 +177,7 @@ export async function getMultipleUserStats(
 
 	// Get comments count for all users in a single query
 	const { data: commentsData, error: commentsError } = await supabase
-		.from('post_comments')
+		.from('posts_comments')
 		.select('user_id, id')
 		.in('user_id', userIds)
 		.is('is_deleted', false);
@@ -215,7 +215,7 @@ export async function getMultipleUserStats(
 		// Then count likes on those posts
 		if (postIds.length > 0) {
 			const { data: likesData, error: likesError } = await supabase
-				.from('post_likes')
+				.from('posts_likes')
 				.select('post_id')
 				.in('post_id', postIds);
 

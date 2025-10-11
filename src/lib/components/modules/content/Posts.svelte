@@ -94,7 +94,7 @@
 		try {
 			// Fetch tags for filtering
 			const { data: tags, error: tagsError } = await supabase
-				.from('post_tags')
+				.from('posts_tags')
 				.select('id, tag_name')
 				.order('tag_name');
 
@@ -122,10 +122,10 @@
 					*,
 					users!inner(username, avatar_url),
 					posts_tags_rel(
-						post_tags!inner(tag_name)
+						posts_tags!inner(id, tag_name)
 					),
-					post_likes(id),
-					post_comments(id)
+					posts_likes(id),
+					posts_comments(id)
 				`
 				)
 				.range(offset, offset + postsPerPage - 1)
@@ -173,7 +173,9 @@
 		// Filter by tags
 		if (selectedTags.length > 0) {
 			filtered = filtered.filter((post: Post) =>
-				post.posts_tags_rel?.some((rel) => selectedTags.includes(rel.post_tags.tag_name))
+				post.posts_tags_rel?.some(
+					(rel) => rel.posts_tags && selectedTags.includes(rel.posts_tags.tag_name)
+				)
 			);
 		}
 

@@ -138,7 +138,7 @@
 					price,
 					cover_url,
 					highlights,
-					service_type,
+					type,
 					status,
 					created_at,
 					created_by,

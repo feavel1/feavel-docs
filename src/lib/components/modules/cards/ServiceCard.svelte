@@ -83,7 +83,7 @@
 						<div class="text-xs text-muted-foreground">{formattedDate}</div>
 					</div>
 				</div>
-				<Badge variant="secondary">{service.service_type}</Badge>
+				<Badge variant="secondary">{service.type}</Badge>
 			</div>
 		</CardHeader>
 		<CardContent class="flex-grow">

@@ -1,8 +1,11 @@
-export const load = async ({ locals, parent }) => {
+import type { Post } from '$lib/utils/posts';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { session } = await parent();
 
 	// Fetch drafts for logged-in users
-	let drafts = [];
+	let drafts: Post[] = [];
 	if (session) {
 		const { data: userDrafts, error: draftsError } = await locals.supabase
 			.from('posts')
@@ -11,7 +14,7 @@ export const load = async ({ locals, parent }) => {
 				*,
 				users!inner(username, avatar_url),
 				posts_tags_rel(
-					post_tags!inner(tag_name)
+					posts_tags!inner(id, tag_name)
 				)
 			`
 			)

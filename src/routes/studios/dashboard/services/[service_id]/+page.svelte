@@ -2,13 +2,13 @@
 	import { z } from 'zod/v4';
 
 	export const serviceSchema = z.object({
-		id: z.number().optional(),
+		id: z.string().optional(),
 		name: z.string().min(1).max(100),
 		price: z.number().positive(),
-		description: z.string().max(1000).nullable(),
-		service_type: z.string().min(1).max(50),
+		description: z.string().max(1000).optional(),
+		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
-		cover_url: z.string().max(255).nullable()
+		cover_url: z.string().max(255).optional()
 	});
 
 	export type ServiceSchema = typeof serviceSchema;
@@ -32,13 +32,30 @@
 	const { service, supabase, studio } = data;
 
 	// Prepare initial form data from service
+	// Ensure highlights is always an array of strings
+	const serviceHighlights = Array.isArray(service?.highlights)
+		? service.highlights
+		: typeof service?.highlights === 'string'
+			? JSON.parse(service.highlights)
+			: [];
+
+	// Handle description which might be Json type from database
+	const serviceDescription = service?.description
+		? typeof service.description === 'string'
+			? service.description
+			: JSON.stringify(service.description)
+		: '';
+
+	// Set default type to 'video' if creating new service, otherwise use existing type
+	const serviceType = service?.type && service.type !== '' ? service.type : 'video';
+
 	const initialFormData = {
 		id: service?.id,
 		name: service?.name || '',
 		price: service?.price || 0,
-		description: service?.description || '',
-		service_type: service?.service_type || '',
-		highlights: service?.highlights || [],
+		description: serviceDescription,
+		type: serviceType,
+		highlights: serviceHighlights || [],
 		cover_url: service?.cover_url || null
 	};
 
@@ -127,7 +144,7 @@
 				name: $formValues.name,
 				price: $formValues.price,
 				description: $formValues.description,
-				service_type: $formValues.service_type,
+				type: $formValues.type,
 				highlights: $formValues.highlights,
 				cover_url: $formValues.cover_url
 			};
@@ -223,15 +240,20 @@
 						</Form.Control>
 					</Form.Field>
 
-					<Form.Field {form} name="service_type">
+					<Form.Field {form} name="type">
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Service Type</Form.Label>
-								<Input
+								<select
 									{...props}
-									bind:value={$formValues.service_type}
-									placeholder="e.g., Photography, Design"
-								/>
+									bind:value={$formValues.type}
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="video">Video</option>
+									<option value="download">Download</option>
+									<option value="event">Event</option>
+									<option value="subscription">Subscription</option>
+								</select>
 							{/snippet}
 						</Form.Control>
 					</Form.Field>

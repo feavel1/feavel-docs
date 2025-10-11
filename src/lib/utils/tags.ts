@@ -9,7 +9,10 @@ export interface Tag {
  * Get all tags
  */
 export async function getTags(supabase: SupabaseClient) {
-	const { data, error } = await supabase.from('post_tags').select('id, tag_name').order('tag_name');
+	const { data, error } = await supabase
+		.from('posts_tags')
+		.select('id, tag_name')
+		.order('tag_name');
 
 	return { data, error };
 }
@@ -20,7 +23,7 @@ export async function getTags(supabase: SupabaseClient) {
 export async function getPostTags(supabase: SupabaseClient, postId: number) {
 	const { data, error } = await supabase
 		.from('posts_tags_rel')
-		.select('post_tags(tag_name)')
+		.select('posts_tags(tag_name)')
 		.eq('post_id', postId);
 
 	return { data, error };
@@ -31,9 +34,9 @@ export async function getPostTags(supabase: SupabaseClient, postId: number) {
  */
 export async function addTagsToPost(supabase: SupabaseClient, postId: number, tagNames: string[]) {
 	try {
-		// First, ensure all tags exist in the post_tags table
+		// First, ensure all tags exist in the posts_tags table
 		for (const tagName of tagNames) {
-			await supabase.from('post_tags').upsert(
+			await supabase.from('posts_tags').upsert(
 				{ tag_name: tagName },
 				{
 					onConflict: 'tag_name'
@@ -43,7 +46,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 
 		// Get tag IDs
 		const { data: tagData } = await supabase
-			.from('post_tags')
+			.from('posts_tags')
 			.select('id')
 			.in('tag_name', tagNames);
 

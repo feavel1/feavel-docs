@@ -9,7 +9,7 @@
 
 	export const postSchema = z.object({
 		id: z.number().optional(),
-		title: z.string().max(100).nullable(),
+		title: z.string().max(100).optional(),
 		content: z
 			.object({
 				blocks: z.array(editorBlockSchema).optional(),
@@ -53,9 +53,7 @@
 		post_cover: post.post_cover,
 		public_visibility: post.public_visibility,
 		tags: post.posts_tags_rel
-			? post.posts_tags_rel.map(
-					(rel: { post_tags: { tag_name: string } }) => rel.post_tags.tag_name
-				)
+			? post.posts_tags_rel.map((rel: any) => rel?.posts_tags?.tag_name).filter(Boolean)
 			: []
 	};
 
@@ -119,6 +117,7 @@
 
 	async function handleSave() {
 		const isValid = await form.validateForm();
+		console.log(isValid);
 		if (!isValid.valid) {
 			requestAnimationFrame(() => {
 				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
@@ -137,6 +136,7 @@
 			};
 
 			const { success, error } = await updatePost(supabase, session?.user?.id!, post.id, postData);
+			console.log(success);
 			if (success) {
 				saveSuccess = true;
 				toast.success('Post saved successfully!');
@@ -178,7 +178,7 @@
 
 	function handleCoverRemove() {
 		coverPreview = '';
-		$formValues.post_cover = null;
+		$formValues.post_cover = null as any;
 	}
 </script>
 
@@ -298,14 +298,16 @@
 				<div class="flex flex-wrap gap-2">
 					{#if post.posts_tags_rel?.length}
 						{#each post.posts_tags_rel as relation}
-							<Button
-								variant="outline"
-								size="sm"
-								href={`/posts?tags=${encodeURIComponent(relation.post_tags.tag_name)}`}
-								class="h-6 px-2 text-xs"
-							>
-								{relation.post_tags.tag_name}
-							</Button>
+							{#if relation?.posts_tags && relation.posts_tags.tag_name}
+								<Button
+									variant="outline"
+									size="sm"
+									href={`/posts?tags=${encodeURIComponent(relation.posts_tags.tag_name)}`}
+									class="h-6 px-2 text-xs"
+								>
+									{relation.posts_tags.tag_name}
+								</Button>
+							{/if}
 						{/each}
 					{:else}
 						<span class="text-sm text-muted-foreground">No tags</span>
