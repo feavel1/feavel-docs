@@ -95,27 +95,79 @@ export type Database = {
 					}
 				];
 			};
-			digital_order: {
+			digital_access: {
 				Row: {
 					created_at: string;
-					description: string | null;
+					digital_order_id: string;
+					download_count: number;
+					expires_at: string | null;
 					id: string;
-					service_id: number | null;
-					user_id: string | null;
+					revoked_at: string | null;
+					service_id: string;
+					user_id: string;
 				};
 				Insert: {
 					created_at?: string;
-					description?: string | null;
-					id: string;
-					service_id?: number | null;
-					user_id?: string | null;
+					digital_order_id: string;
+					download_count?: number;
+					expires_at?: string | null;
+					id?: string;
+					revoked_at?: string | null;
+					service_id: string;
+					user_id: string;
 				};
 				Update: {
 					created_at?: string;
-					description?: string | null;
+					digital_order_id?: string;
+					download_count?: number;
+					expires_at?: string | null;
 					id?: string;
-					service_id?: number | null;
-					user_id?: string | null;
+					revoked_at?: string | null;
+					service_id?: string;
+					user_id?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'digital_access_digital_order_id_fkey';
+						columns: ['digital_order_id'];
+						isOneToOne: false;
+						referencedRelation: 'digital_order';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'digital_access_service_id_fkey';
+						columns: ['service_id'];
+						isOneToOne: false;
+						referencedRelation: 'services';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'digital_access_user_id_fkey';
+						columns: ['user_id'];
+						isOneToOne: false;
+						referencedRelation: 'users';
+						referencedColumns: ['id'];
+					}
+				];
+			};
+			digital_order: {
+				Row: {
+					created_at: string;
+					id: string;
+					service_id: string;
+					user_id: string;
+				};
+				Insert: {
+					created_at?: string;
+					id?: string;
+					service_id: string;
+					user_id: string;
+				};
+				Update: {
+					created_at?: string;
+					id?: string;
+					service_id?: string;
+					user_id?: string;
 				};
 				Relationships: [
 					{
@@ -134,75 +186,53 @@ export type Database = {
 					}
 				];
 			};
-			events: {
+			posts: {
 				Row: {
-					created_at: string | null;
-					description: string | null;
-					duration: unknown;
-					event_type: string;
-					id: string;
-					is_public: boolean | null;
-					metadata: Json | null;
-					service_id: number | null;
-					status: string;
-					studio_id: number;
+					content_v2: Json;
+					created_at: string;
+					id: number;
+					post_cover: string;
+					post_views: number;
+					public_visibility: boolean;
 					title: string;
-					updated_at: string | null;
-					user_id: string | null;
+					user_id: string;
 				};
 				Insert: {
-					created_at?: string | null;
-					description?: string | null;
-					duration: unknown;
-					event_type?: string;
-					id?: string;
-					is_public?: boolean | null;
-					metadata?: Json | null;
-					service_id?: number | null;
-					status?: string;
-					studio_id: number;
+					content_v2: Json;
+					created_at?: string;
+					id?: number;
+					post_cover?: string;
+					post_views?: number;
+					public_visibility?: boolean;
 					title: string;
-					updated_at?: string | null;
-					user_id?: string | null;
+					user_id: string;
 				};
 				Update: {
-					created_at?: string | null;
-					description?: string | null;
-					duration?: unknown;
-					event_type?: string;
-					id?: string;
-					is_public?: boolean | null;
-					metadata?: Json | null;
-					service_id?: number | null;
-					status?: string;
-					studio_id?: number;
+					content_v2?: Json;
+					created_at?: string;
+					id?: number;
+					post_cover?: string;
+					post_views?: number;
+					public_visibility?: boolean;
 					title?: string;
-					updated_at?: string | null;
-					user_id?: string | null;
+					user_id?: string;
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'events_service_id_fkey';
-						columns: ['service_id'];
+						foreignKeyName: 'posts_user_id_fkey';
+						columns: ['user_id'];
 						isOneToOne: false;
-						referencedRelation: 'services_v2';
-						referencedColumns: ['id'];
-					},
-					{
-						foreignKeyName: 'events_studio_id_fkey';
-						columns: ['studio_id'];
-						isOneToOne: false;
-						referencedRelation: 'studios';
+						referencedRelation: 'users';
 						referencedColumns: ['id'];
 					}
 				];
 			};
-			post_comments: {
+			posts_comments: {
 				Row: {
 					content: string;
 					created_at: string;
 					id: number;
-					is_deleted: boolean | null;
+					is_deleted: boolean;
 					parent_id: number | null;
 					post_id: number;
 					updated_at: string;
@@ -212,7 +242,7 @@ export type Database = {
 					content: string;
 					created_at?: string;
 					id?: number;
-					is_deleted?: boolean | null;
+					is_deleted?: boolean;
 					parent_id?: number | null;
 					post_id: number;
 					updated_at?: string;
@@ -222,7 +252,7 @@ export type Database = {
 					content?: string;
 					created_at?: string;
 					id?: number;
-					is_deleted?: boolean | null;
+					is_deleted?: boolean;
 					parent_id?: number | null;
 					post_id?: number;
 					updated_at?: string;
@@ -233,7 +263,7 @@ export type Database = {
 						foreignKeyName: 'post_comments_parent_id_fkey';
 						columns: ['parent_id'];
 						isOneToOne: false;
-						referencedRelation: 'post_comments';
+						referencedRelation: 'posts_comments';
 						referencedColumns: ['id'];
 					},
 					{
@@ -252,7 +282,7 @@ export type Database = {
 					}
 				];
 			};
-			post_likes: {
+			posts_likes: {
 				Row: {
 					created_at: string;
 					id: number;
@@ -288,7 +318,7 @@ export type Database = {
 					}
 				];
 			};
-			post_tags: {
+			posts_tags: {
 				Row: {
 					created_at: string;
 					id: number;
@@ -306,65 +336,21 @@ export type Database = {
 				};
 				Relationships: [];
 			};
-			posts: {
-				Row: {
-					content: Json | null;
-					content_v2: Json | null;
-					created_at: string;
-					id: number;
-					post_cover: string | null;
-					post_views: number;
-					public_visibility: boolean | null;
-					title: string | null;
-					user_id: string | null;
-				};
-				Insert: {
-					content?: Json | null;
-					content_v2?: Json | null;
-					created_at?: string;
-					id?: number;
-					post_cover?: string | null;
-					post_views?: number;
-					public_visibility?: boolean | null;
-					title?: string | null;
-					user_id?: string | null;
-				};
-				Update: {
-					content?: Json | null;
-					content_v2?: Json | null;
-					created_at?: string;
-					id?: number;
-					post_cover?: string | null;
-					post_views?: number;
-					public_visibility?: boolean | null;
-					title?: string | null;
-					user_id?: string | null;
-				};
-				Relationships: [
-					{
-						foreignKeyName: 'posts_user_id_fkey';
-						columns: ['user_id'];
-						isOneToOne: false;
-						referencedRelation: 'users';
-						referencedColumns: ['id'];
-					}
-				];
-			};
 			posts_tags_rel: {
 				Row: {
 					id: number;
-					post_id: number | null;
-					tag_id: number | null;
+					post_id: number;
+					tag_id: number;
 				};
 				Insert: {
 					id?: number;
-					post_id?: number | null;
-					tag_id?: number | null;
+					post_id: number;
+					tag_id: number;
 				};
 				Update: {
 					id?: number;
-					post_id?: number | null;
-					tag_id?: number | null;
+					post_id?: number;
+					tag_id?: number;
 				};
 				Relationships: [
 					{
@@ -378,7 +364,7 @@ export type Database = {
 						foreignKeyName: 'posts_tags_rel_tag_id_fkey';
 						columns: ['tag_id'];
 						isOneToOne: false;
-						referencedRelation: 'post_tags';
+						referencedRelation: 'posts_tags';
 						referencedColumns: ['id'];
 					}
 				];
@@ -388,41 +374,44 @@ export type Database = {
 					cover_url: string | null;
 					created_at: string;
 					created_by: number;
-					description: string;
+					description: Json;
 					enabled: boolean;
 					highlights: Json;
-					id: number;
+					id: string;
 					name: string;
 					price: number;
-					status: Database['public']['Enums']['status'] | null;
+					status: Database['public']['Enums']['status'];
+					type: Database['public']['Enums']['service_type'];
 				};
 				Insert: {
 					cover_url?: string | null;
 					created_at?: string;
 					created_by: number;
-					description: string;
+					description: Json;
 					enabled?: boolean;
 					highlights: Json;
-					id: number;
+					id?: string;
 					name: string;
 					price: number;
-					status?: Database['public']['Enums']['status'] | null;
+					status?: Database['public']['Enums']['status'];
+					type: Database['public']['Enums']['service_type'];
 				};
 				Update: {
 					cover_url?: string | null;
 					created_at?: string;
 					created_by?: number;
-					description?: string;
+					description?: Json;
 					enabled?: boolean;
 					highlights?: Json;
-					id?: number;
+					id?: string;
 					name?: string;
 					price?: number;
-					status?: Database['public']['Enums']['status'] | null;
+					status?: Database['public']['Enums']['status'];
+					type?: Database['public']['Enums']['service_type'];
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'services_created_by_fkey';
+						foreignKeyName: 'services_v2_created_by_fkey';
 						columns: ['created_by'];
 						isOneToOne: false;
 						referencedRelation: 'studios';
@@ -432,17 +421,17 @@ export type Database = {
 			};
 			services_category: {
 				Row: {
-					category_name: string | null;
+					category_name: string;
 					created_at: string;
 					id: number;
 				};
 				Insert: {
-					category_name?: string | null;
+					category_name: string;
 					created_at?: string;
 					id?: number;
 				};
 				Update: {
-					category_name?: string | null;
+					category_name?: string;
 					created_at?: string;
 					id?: number;
 				};
@@ -450,22 +439,22 @@ export type Database = {
 			};
 			services_category_rel: {
 				Row: {
-					category_id: number | null;
+					category_id: number;
 					created_at: string;
 					id: number;
-					service_id: number | null;
+					service_id: string;
 				};
 				Insert: {
-					category_id?: number | null;
+					category_id: number;
 					created_at?: string;
 					id?: number;
-					service_id?: number | null;
+					service_id: string;
 				};
 				Update: {
-					category_id?: number | null;
+					category_id?: number;
 					created_at?: string;
 					id?: number;
-					service_id?: number | null;
+					service_id?: string;
 				};
 				Relationships: [
 					{
@@ -479,57 +468,7 @@ export type Database = {
 						foreignKeyName: 'services_category_rel_service_id_fkey';
 						columns: ['service_id'];
 						isOneToOne: false;
-						referencedRelation: 'services_v2';
-						referencedColumns: ['id'];
-					}
-				];
-			};
-			services_v2: {
-				Row: {
-					cover_url: string | null;
-					created_at: string | null;
-					created_by: number;
-					description: Json | null;
-					enabled: boolean | null;
-					highlights: Json | null;
-					id: number;
-					name: string;
-					price: number;
-					service_type: string;
-					status: Database['public']['Enums']['status'] | null;
-				};
-				Insert: {
-					cover_url?: string | null;
-					created_at?: string | null;
-					created_by: number;
-					description?: Json | null;
-					enabled?: boolean | null;
-					highlights?: Json | null;
-					id?: number;
-					name: string;
-					price: number;
-					service_type?: string;
-					status?: Database['public']['Enums']['status'] | null;
-				};
-				Update: {
-					cover_url?: string | null;
-					created_at?: string | null;
-					created_by?: number;
-					description?: Json | null;
-					enabled?: boolean | null;
-					highlights?: Json | null;
-					id?: number;
-					name?: string;
-					price?: number;
-					service_type?: string;
-					status?: Database['public']['Enums']['status'] | null;
-				};
-				Relationships: [
-					{
-						foreignKeyName: 'services_v2_created_by_fkey';
-						columns: ['created_by'];
-						isOneToOne: false;
-						referencedRelation: 'studios';
+						referencedRelation: 'services';
 						referencedColumns: ['id'];
 					}
 				];
@@ -632,6 +571,7 @@ export type Database = {
 				| 'finished'
 				| 'refund_start'
 				| 'refund_finished';
+			service_type: 'video' | 'download' | 'event' | 'subscription';
 			status: 'applied' | 'approved' | 'incomplete' | 'disabled' | 'blocked';
 		};
 		CompositeTypes: {
@@ -766,6 +706,7 @@ export const Constants = {
 				'refund_start',
 				'refund_finished'
 			],
+			service_type: ['video', 'download', 'event', 'subscription'],
 			status: ['applied', 'approved', 'incomplete', 'disabled', 'blocked']
 		}
 	}
