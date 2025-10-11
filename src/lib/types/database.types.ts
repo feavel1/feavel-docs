@@ -401,7 +401,7 @@ export type Database = {
 				};
 				Relationships: [
 					{
-						foreignKeyName: 'services_v2_created_by_fkey';
+						foreignKeyName: 'services_created_by_fkey';
 						columns: ['created_by'];
 						isOneToOne: false;
 						referencedRelation: 'studios';

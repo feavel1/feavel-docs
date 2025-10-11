@@ -10,10 +10,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Fetch the service with related data
 	const { data: service, error: serviceError } = await locals.supabase
-		.from('services_v2')
+		.from('services')
 		.select(
 			`*,
-			studios!services_v2_created_by_fkey(name, description, contact_phone),
+			studios!services_created_by_fkey(name, description, contact_phone),
 			services_category_rel(
 				services_category!inner(category_name)
 			)

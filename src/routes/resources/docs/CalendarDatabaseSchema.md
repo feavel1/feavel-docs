@@ -7,13 +7,13 @@ This document describes the new database schema implemented for the calendar sys
 The calendar system has been implemented with the following new tables:
 
 1. `events` - New table to store all calendar events with PostgreSQL range types
-2. `services_v2` - New table to support reservation types
+2. `services` - New table to support reservation types
 
 ## Database Changes
 
 ### Services V2 Table
 
-The `services_v2` table has been created with:
+The `services` table has been created with:
 
 1. **id**: SERIAL primary key
 2. **created_at**: Timestamp with default NOW()
@@ -40,7 +40,7 @@ The `events` table has been created with:
 7. **event_type**: VARCHAR(50) NOT NULL DEFAULT 'other'
 8. **status**: VARCHAR(50) NOT NULL DEFAULT 'pending'
 9. **studio_id**: INTEGER NOT NULL REFERENCES studios(id)
-10. **service_id**: INTEGER REFERENCES services_v2(id) (Direct foreign key relationship)
+10. **service_id**: INTEGER REFERENCES services(id) (Direct foreign key relationship)
 11. **user_id**: UUID REFERENCES auth.users(id)
 12. **is_public**: BOOLEAN DEFAULT false
 13. **metadata**: JSONB
@@ -52,7 +52,7 @@ The `duration` column uses PostgreSQL's TSTZRANGE type which provides:
 - Built-in exclusion constraints to prevent overlapping reservations
 - Eliminates the need for separate start_time and end_time columns
 
-The direct foreign key relationship between events and services_v2 (one-to-many) correctly models that:
+The direct foreign key relationship between events and services (one-to-many) correctly models that:
 
 - One service can be associated with multiple events
 - Each event is associated with at most one service
@@ -68,8 +68,8 @@ The following indexes have been added for better performance:
 - `idx_events_status`: Index on events.status
 - `idx_events_event_type`: Index on events.event_type
 - `idx_events_is_public`: Index on events.is_public
-- `idx_services_v2_created_by`: Index on services_v2.created_by
-- `idx_services_v2_service_type`: Index on services_v2.service_type
+- `idx_services_created_by`: Index on services.created_by
+- `idx_services_service_type`: Index on services.service_type
 
 ## Migration
 
@@ -88,9 +88,9 @@ This migration:
 
 The TypeScript types have been updated in `src/lib/types/database.types.ts` to reflect these changes:
 
-- Added the new `services_v2` table definition
+- Added the new `services` table definition
 - Updated the `events` table definition to use `duration` instead of `start_time`, `end_time`, and `time_range`
-- Created a direct foreign key relationship between events and services_v2
+- Created a direct foreign key relationship between events and services
 
 ## Postgres gist operators
 

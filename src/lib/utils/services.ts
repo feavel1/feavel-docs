@@ -100,7 +100,7 @@ export async function createService(
 ): Promise<{ service: Service | null; error: string | null }> {
 	try {
 		const { data, error } = await supabase
-			.from('services_v2')
+			.from('services')
 			.insert([
 				{
 					name: serviceData.name,
@@ -146,7 +146,7 @@ export async function updateService(
 	try {
 		// First check if the service belongs to this studio
 		const { data: service, error: fetchError } = await supabase
-			.from('services_v2')
+			.from('services')
 			.select('id, created_by')
 			.eq('id', serviceId)
 			.eq('created_by', studioId)
@@ -158,7 +158,7 @@ export async function updateService(
 
 		// Update the service
 		const { error } = await supabase
-			.from('services_v2')
+			.from('services')
 			.update({
 				name: serviceData.name,
 				price: serviceData.price,
@@ -190,7 +190,7 @@ export async function deleteService(
 	try {
 		// First check if the service belongs to this studio
 		const { data: service, error: fetchError } = await supabase
-			.from('services_v2')
+			.from('services')
 			.select('id, created_by')
 			.eq('id', serviceId)
 			.eq('created_by', studioId)
@@ -201,7 +201,7 @@ export async function deleteService(
 		}
 
 		// Delete the service
-		const { error } = await supabase.from('services_v2').delete().eq('id', serviceId);
+		const { error } = await supabase.from('services').delete().eq('id', serviceId);
 
 		if (error) {
 			console.error('Error deleting service:', error);

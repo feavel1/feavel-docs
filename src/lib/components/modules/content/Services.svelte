@@ -130,7 +130,7 @@
 
 			// Fetch services with pagination
 			const { data: services, error } = await supabase
-				.from('services_v2')
+				.from('services')
 				.select(
 					`
 					id,
@@ -142,7 +142,7 @@
 					status,
 					created_at,
 					created_by,
-					studios!services_v2_created_by_fkey(name),
+					studios!services_created_by_fkey(name),
 					services_category_rel(
 						services_category!inner(category_name)
 					)

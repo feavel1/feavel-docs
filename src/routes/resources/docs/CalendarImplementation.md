@@ -13,7 +13,7 @@ calendar modules: src/lib/components/modules/calendar/
 
 2. Service Integration (COMPLETED)
 
-- Created a new services_v2 table to support reservation types
+- Created a new services table to support reservation types
 - Added a field to distinguish between single download, reservation, and package delivery services
 - Made service.description jsonb to support current text editor
 - Created direct relationship between services and events (one-to-many: one service can have multiple events, each event belongs to one service)
