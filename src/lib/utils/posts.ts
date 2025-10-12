@@ -8,35 +8,41 @@ export type Post = Tables<'posts'> & {
 		username: string | null;
 		avatar_url: string | null;
 	} | null;
-	posts_tags_rel?: {
-		posts_tags: {
-			id: number;
-			tag_name: string;
-		} | null;
-	}[] | null;
-	posts_likes?: {
-		id: number;
-		user_id: string;
-		created_at: string;
-		users?: {
-			username: string | null;
-			avatar_url: string | null;
-		} | null;
-	}[] | null;
-	posts_comments?: {
-		id: number;
-		created_at: string;
-		updated_at: string;
-		user_id: string;
-		parent_id: number | null;
-		content: string;
-		is_deleted: boolean;
-		users?: {
-			username: string | null;
-			avatar_url: string | null;
-			full_name: string | null;
-		} | null;
-	}[] | null;
+	posts_tags_rel?:
+		| {
+				posts_tags: {
+					id: number;
+					tag_name: string;
+				} | null;
+		  }[]
+		| null;
+	posts_likes?:
+		| {
+				id: number;
+				user_id: string;
+				created_at: string;
+				users?: {
+					username: string | null;
+					avatar_url: string | null;
+				} | null;
+		  }[]
+		| null;
+	posts_comments?:
+		| {
+				id: number;
+				created_at: string;
+				updated_at: string;
+				user_id: string;
+				parent_id: number | null;
+				content: string;
+				is_deleted: boolean;
+				users?: {
+					username: string | null;
+					avatar_url: string | null;
+					full_name: string | null;
+				} | null;
+		  }[]
+		| null;
 };
 
 interface PostFilters {
@@ -50,7 +56,9 @@ export function filterPosts(posts: Post[], filters: PostFilters): Post[] {
 	// Filter by tags
 	if (filters.selectedTags.length > 0) {
 		filtered = filtered.filter((post) =>
-			post.posts_tags_rel?.some((rel) => rel.posts_tags && filters.selectedTags.includes(rel.posts_tags.tag_name))
+			post.posts_tags_rel?.some(
+				(rel) => rel.posts_tags && filters.selectedTags.includes(rel.posts_tags.tag_name)
+			)
 		);
 	}
 
@@ -272,11 +280,9 @@ export async function handlePostCoverUpload(
  */
 export async function fetchAllTags(supabase: SupabaseClient): Promise<string[]> {
 	const { data, error } = await getTags(supabase);
-
 	if (error) {
 		console.error('Error fetching tags:', error);
 		return [];
 	}
-
 	return data?.map((tag: any) => tag.tag_name) || [];
 }

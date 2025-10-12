@@ -3,15 +3,8 @@
 	import { Heart } from '@lucide/svelte';
 	import { toggleLike, getLikeInfo } from '$lib/utils/likes';
 	import { toast } from 'svelte-sonner';
-	import type { SupabaseClient } from '@supabase/supabase-js';
 
-	interface Props {
-		postId: string | number;
-		supabase: SupabaseClient;
-		currentUserId?: string;
-	}
-
-	let { postId, supabase, currentUserId }: Props = $props();
+	let { postId, supabase, currentUserId } = $props();
 
 	let likeCount = $state(0);
 	let isLiked = $state(false);

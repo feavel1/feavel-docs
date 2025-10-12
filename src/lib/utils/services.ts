@@ -77,7 +77,7 @@ export async function handleServiceCoverUpload(
 
 // Valid service types according to database enum
 const VALID_SERVICE_TYPES = ['video', 'download', 'event', 'subscription'] as const;
-type ServiceType = typeof VALID_SERVICE_TYPES[number];
+type ServiceType = (typeof VALID_SERVICE_TYPES)[number];
 
 // Create a new service
 export async function createService(
@@ -95,7 +95,10 @@ export async function createService(
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
-			return { service: null, error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}` };
+			return {
+				service: null,
+				error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`
+			};
 		}
 
 		const { data, error } = await supabase
@@ -145,7 +148,10 @@ export async function updateService(
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
-			return { success: false, error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}` };
+			return {
+				success: false,
+				error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`
+			};
 		}
 
 		// First check if the service belongs to this studio

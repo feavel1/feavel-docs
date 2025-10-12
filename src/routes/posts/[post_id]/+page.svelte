@@ -37,7 +37,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { getPostCoverUrl } from '$lib/utils/storage';
+	import { getPostCoverUrl, deleteFile } from '$lib/utils/storage';
 	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 	import GradientGenerator from '$lib/components/modules/content/GradientGenerator.svelte';
@@ -81,13 +81,89 @@
 	const postDate = new Date(post.created_at).toLocaleDateString();
 
 	let coverPreview = $state('');
-	let saveSuccess = $state(false);
+	let saveTimeout: any = $state(null);
+	let saveStatus = $state('Saved');
+	let lastSaved = $state(new Date(post.created_at));
+	let likesCount = $state(post.posts_likes?.length || 0);
+	let isPostLiked = $state(false);
+	let prevTags = $state([
+		...(post.posts_tags_rel
+			? post.posts_tags_rel.map((rel: any) => rel?.posts_tags?.tag_name).filter(Boolean)
+			: [])
+	]);
 
 	const coverUrl = $derived(
 		coverPreview ||
 			($formValues.post_cover ? getPostCoverUrl($formValues.post_cover, supabase) : null) ||
 			(post.post_cover ? getPostCoverUrl(post.post_cover, supabase) : null)
 	);
+
+	// Check if tags have changed and trigger save
+	$effect(() => {
+		if (canEdit) {
+			// Read current tags to trigger effect when they change
+			const currentTags = $formValues.tags;
+
+			// Check if tags actually changed from previous state
+			const tagsChanged = JSON.stringify(currentTags) !== JSON.stringify(prevTags);
+
+			if (tagsChanged) {
+				// Update previous tags
+				prevTags = [...currentTags];
+
+				// Trigger save only if tags actually changed
+				debouncedSave();
+			}
+		}
+	});
+
+	// Unified debounced save function that handles all fields
+	const debouncedSave = async () => {
+		if (saveTimeout) {
+			clearTimeout(saveTimeout);
+		}
+
+		saveStatus = 'Saving...';
+		saveTimeout = setTimeout(async () => {
+			try {
+				const postData = {
+					title: $formValues.title,
+					content: $formValues.content,
+					public_visibility: $formValues.public_visibility,
+					tags: $formValues.tags,
+					cover: $formValues.post_cover
+				};
+
+				const { success, error } = await updatePost(
+					supabase,
+					session?.user?.id!,
+					post.id,
+					postData
+				);
+
+				if (success) {
+					saveStatus = 'All changes saved';
+					lastSaved = new Date();
+				} else {
+					saveStatus = 'Error saving';
+					toast.error(error || 'Failed to save post');
+				}
+			} catch (error) {
+				console.error('Error saving post:', error);
+				saveStatus = 'Error saving';
+				toast.error('Failed to save post');
+			}
+		}, 2000); // 2-second delay to allow user to continue typing
+	};
+
+	// Cleanup function for when component unmounts
+	$effect(() => {
+		return () => {
+			if (saveTimeout) {
+				clearTimeout(saveTimeout);
+			}
+		};
+	});
 
 	function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -109,53 +185,30 @@
 				$formValues.post_cover = filename;
 				coverPreview = getPostCoverUrl(filename, supabase);
 				toast.success('Cover image uploaded successfully');
+				debouncedSave(); // Trigger real-time save after cover upload
 			} else {
 				toast.error('Failed to upload cover image');
 			}
 		});
 	}
 
-	async function handleSave() {
-		const isValid = await form.validateForm();
-		console.log(isValid);
-		if (!isValid.valid) {
-			requestAnimationFrame(() => {
-				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-			});
-			return;
-		}
-
-		try {
-			// Server already validated session, no need to check again
-			const postData = {
-				title: $formValues.title,
-				content: $formValues.content,
-				public_visibility: $formValues.public_visibility,
-				tags: $formValues.tags,
-				cover: $formValues.post_cover
-			};
-
-			const { success, error } = await updatePost(supabase, session?.user?.id!, post.id, postData);
-			console.log(success);
-			if (success) {
-				saveSuccess = true;
-				toast.success('Post saved successfully!');
-				// Reset success state after 2 seconds
-				setTimeout(() => {
-					saveSuccess = false;
-				}, 2000);
-			} else {
-				toast.error(error || 'Failed to save post');
-			}
-		} catch (error) {
-			console.error('Error saving post:', error);
-			toast.error('Failed to save post');
-		}
-	}
-
 	async function handleDelete() {
+		if (saveTimeout) {
+			clearTimeout(saveTimeout); // Cancel any pending save before deletion
+		}
+
 		if (!confirm('Are you sure you want to delete this post? This action cannot be undone.'))
 			return;
+
+		// First, remove the cover file from storage if it exists
+		if (post.post_cover) {
+			const { StoragePath } = await import('$lib/utils/storage');
+			const path = StoragePath.postCovers(post.post_cover);
+			const success = await deleteFile(supabase, path, { path, bucket: StoragePath.getBucket() });
+			if (!success) {
+				console.warn(`Failed to delete cover file during post deletion: ${post.post_cover}`);
+			}
+		}
 
 		try {
 			// Server already validated session, no need to check again
@@ -174,11 +227,13 @@
 
 	function handleContentChange(content: any) {
 		$formValues.content = content;
+		debouncedSave(); // Trigger real-time save when content changes
 	}
 
 	function handleCoverRemove() {
 		coverPreview = '';
 		$formValues.post_cover = null as any;
+		debouncedSave(); // Trigger real-time save after cover removal
 	}
 </script>
 
@@ -264,6 +319,7 @@
 								<Input
 									{...props}
 									bind:value={$formValues.title}
+									oninput={() => (canEdit ? debouncedSave() : null)}
 									readonly={!canEdit}
 									class="w-full border-0 py-4 text-4xl font-bold shadow-none focus:ring-0 focus:ring-offset-0 {canEdit
 										? 'cursor-text'
@@ -274,6 +330,14 @@
 						</Form.Control>
 					</Form.Field>
 					<div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+						{#if canEdit}
+							<div class="flex items-center gap-2">
+								<span class="rounded bg-muted px-2 py-1 text-xs">
+									{saveStatus}
+								</span>
+								<span class="text-xs">• Last saved: {lastSaved.toLocaleTimeString()}</span>
+							</div>
+						{/if}
 						<div class="flex items-center gap-1">
 							<User class="h-4 w-4" />
 							<span>{postUser}</span>
@@ -318,7 +382,11 @@
 			<div class="mt-3 flex flex-row items-center justify-between gap-4">
 				<!-- Public/draft Settings -->
 				<div class="flex items-center gap-2">
-					<Switch bind:checked={$formValues.public_visibility} id="public-visibility" />
+					<Switch
+						bind:checked={$formValues.public_visibility}
+						id="public-visibility"
+						onclick={() => (canEdit ? debouncedSave() : null)}
+					/>
 					<label for="public-visibility" class="text-sm font-medium">Public</label>
 				</div>
 
@@ -357,19 +425,6 @@
 			<!-- Action Buttons -->
 			<div class="flex items-center gap-2">
 				<Button variant="outline" onclick={handleDelete} disabled={$submitting}>Delete</Button>
-				<Button
-					onclick={handleSave}
-					disabled={$submitting}
-					variant={saveSuccess ? 'secondary' : 'default'}
-				>
-					{#if $submitting}
-						Saving...
-					{:else if saveSuccess}
-						Saved!
-					{:else}
-						Save
-					{/if}
-				</Button>
 			</div>
 		{/if}
 	</div>

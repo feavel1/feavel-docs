@@ -60,9 +60,13 @@
 	</CardHeader>
 
 	<CardContent class="flex-grow pt-0">
-		{#if (post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || []).length > 0}
+		{#if (post.posts_tags_rel
+				?.map((rel) => rel.posts_tags?.tag_name)
+				.filter(Boolean) || []).length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || [] as tag, i}
+				{#each post.posts_tags_rel
+					?.map((rel) => rel.posts_tags?.tag_name)
+					.filter(Boolean) || [] as tag, i}
 					{#if i < 3}
 						<Button
 							variant="outline"
@@ -74,7 +78,8 @@
 						</Button>
 					{:else if i === 3}
 						<div class="flex h-6 items-center rounded border px-2 text-xs text-muted-foreground">
-							+{(post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || []).length - 3}
+							+{(post.posts_tags_rel?.map((rel) => rel.posts_tags?.tag_name).filter(Boolean) || [])
+								.length - 3}
 						</div>
 					{/if}
 				{/each}

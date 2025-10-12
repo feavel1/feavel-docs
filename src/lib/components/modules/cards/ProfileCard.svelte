@@ -1,21 +1,10 @@
 <script lang="ts">
 	import { getAvatarUrl } from '$lib/utils/user';
-	import type { SupabaseClient } from '@supabase/supabase-js';
-	import type { UserProfile } from '$lib/utils/user';
+
 	import { Card, CardContent, CardFooter, CardHeader } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 
-	const {
-		userProfile,
-		supabase,
-		isOwnProfile = false,
-		stats = null
-	} = $props<{
-		userProfile: UserProfile;
-		supabase: SupabaseClient;
-		isOwnProfile?: boolean;
-		stats?: { posts: number; comments: number; likes: number } | null;
-	}>();
+	const { userProfile, supabase, isOwnProfile = false, stats = null } = $props();
 
 	function handleImageError(event: Event) {
 		const img = event.target as HTMLImageElement;

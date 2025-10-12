@@ -123,7 +123,11 @@
 			<CardContent>
 				{#if service.description}
 					<div class="prose prose-lg max-w-none">
-						<p>{@html typeof service.description === 'string' ? service.description : JSON.stringify(service.description)}</p>
+						<p>
+							{@html typeof service.description === 'string'
+								? service.description
+								: JSON.stringify(service.description)}
+						</p>
 					</div>
 				{:else}
 					<p class="text-muted-foreground">No description available.</p>
@@ -150,7 +154,9 @@
 							{#each highlightsArray as highlight}
 								<li class="flex items-start">
 									<span class="mr-2">•</span>
-									<span>{typeof highlight === 'string' ? highlight : JSON.stringify(highlight)}</span>
+									<span
+										>{typeof highlight === 'string' ? highlight : JSON.stringify(highlight)}</span
+									>
 								</li>
 							{/each}
 						</ul>

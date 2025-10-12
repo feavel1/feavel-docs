@@ -23,7 +23,11 @@
 						class="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-32 sm:w-32"
 					>
 						<img
-							src={getAvatarUrl(userProfile.avatar_url, userProfile.username || undefined, supabase)}
+							src={getAvatarUrl(
+								userProfile.avatar_url,
+								userProfile.username || undefined,
+								supabase
+							)}
 							alt={userProfile.username || 'User'}
 							class="h-full w-full object-cover"
 							onerror={(e) => {
