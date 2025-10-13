@@ -97,6 +97,7 @@ export type Database = {
 					created_at: string;
 					download_count: number;
 					expires_at: string | null;
+					file_storage_id: string | null;
 					id: string;
 					order_id: string;
 					revoked_at: string | null;
@@ -106,6 +107,7 @@ export type Database = {
 					created_at?: string;
 					download_count?: number;
 					expires_at?: string | null;
+					file_storage_id?: string | null;
 					id?: string;
 					order_id: string;
 					revoked_at?: string | null;
@@ -115,12 +117,20 @@ export type Database = {
 					created_at?: string;
 					download_count?: number;
 					expires_at?: string | null;
+					file_storage_id?: string | null;
 					id?: string;
 					order_id?: string;
 					revoked_at?: string | null;
 					user_id?: string;
 				};
 				Relationships: [
+					{
+						foreignKeyName: 'digital_access_file_storage_id_fkey';
+						columns: ['file_storage_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
 					{
 						foreignKeyName: 'digital_access_order_id_fkey';
 						columns: ['order_id'];
@@ -176,10 +186,69 @@ export type Database = {
 					}
 				];
 			};
+			file_storage: {
+				Row: {
+					access_count: number | null;
+					access_limit: number | null;
+					bucket_name: string;
+					entity_id: string | null;
+					entity_type: string | null;
+					expires_at: string | null;
+					file_size: number;
+					file_type: string;
+					id: string;
+					is_public: boolean | null;
+					metadata: Json | null;
+					mime_type: string | null;
+					original_filename: string;
+					storage_path: string;
+					upload_date: string | null;
+					uploader_user_id: string | null;
+				};
+				Insert: {
+					access_count?: number | null;
+					access_limit?: number | null;
+					bucket_name: string;
+					entity_id?: string | null;
+					entity_type?: string | null;
+					expires_at?: string | null;
+					file_size: number;
+					file_type: string;
+					id?: string;
+					is_public?: boolean | null;
+					metadata?: Json | null;
+					mime_type?: string | null;
+					original_filename: string;
+					storage_path: string;
+					upload_date?: string | null;
+					uploader_user_id?: string | null;
+				};
+				Update: {
+					access_count?: number | null;
+					access_limit?: number | null;
+					bucket_name?: string;
+					entity_id?: string | null;
+					entity_type?: string | null;
+					expires_at?: string | null;
+					file_size?: number;
+					file_type?: string;
+					id?: string;
+					is_public?: boolean | null;
+					metadata?: Json | null;
+					mime_type?: string | null;
+					original_filename?: string;
+					storage_path?: string;
+					upload_date?: string | null;
+					uploader_user_id?: string | null;
+				};
+				Relationships: [];
+			};
 			posts: {
 				Row: {
 					content_v2: Json;
+					cover_file_id: string | null;
 					created_at: string;
+					embedded_file_ids: string[] | null;
 					id: number;
 					post_cover: string | null;
 					post_views: number;
@@ -189,7 +258,9 @@ export type Database = {
 				};
 				Insert: {
 					content_v2: Json;
+					cover_file_id?: string | null;
 					created_at?: string;
+					embedded_file_ids?: string[] | null;
 					id?: number;
 					post_cover?: string | null;
 					post_views?: number;
@@ -199,7 +270,9 @@ export type Database = {
 				};
 				Update: {
 					content_v2?: Json;
+					cover_file_id?: string | null;
 					created_at?: string;
+					embedded_file_ids?: string[] | null;
 					id?: number;
 					post_cover?: string | null;
 					post_views?: number;
@@ -208,6 +281,13 @@ export type Database = {
 					user_id?: string;
 				};
 				Relationships: [
+					{
+						foreignKeyName: 'posts_cover_file_id_fkey';
+						columns: ['cover_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
 					{
 						foreignKeyName: 'posts_user_id_fkey';
 						columns: ['user_id'];
@@ -361,6 +441,7 @@ export type Database = {
 			};
 			services: {
 				Row: {
+					cover_file_id: string | null;
 					cover_url: string | null;
 					created_at: string;
 					created_by: number;
@@ -374,6 +455,7 @@ export type Database = {
 					type: Database['public']['Enums']['service_type'];
 				};
 				Insert: {
+					cover_file_id?: string | null;
 					cover_url?: string | null;
 					created_at?: string;
 					created_by: number;
@@ -387,6 +469,7 @@ export type Database = {
 					type: Database['public']['Enums']['service_type'];
 				};
 				Update: {
+					cover_file_id?: string | null;
 					cover_url?: string | null;
 					created_at?: string;
 					created_by?: number;
@@ -400,6 +483,13 @@ export type Database = {
 					type?: Database['public']['Enums']['service_type'];
 				};
 				Relationships: [
+					{
+						foreignKeyName: 'services_cover_file_id_fkey';
+						columns: ['cover_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
 					{
 						foreignKeyName: 'services_created_by_fkey';
 						columns: ['created_by'];
@@ -506,6 +596,7 @@ export type Database = {
 			};
 			users: {
 				Row: {
+					avatar_file_id: string | null;
 					avatar_url: string | null;
 					birthday: string | null;
 					description: string | null;
@@ -514,6 +605,7 @@ export type Database = {
 					username: string | null;
 				};
 				Insert: {
+					avatar_file_id?: string | null;
 					avatar_url?: string | null;
 					birthday?: string | null;
 					description?: string | null;
@@ -522,6 +614,7 @@ export type Database = {
 					username?: string | null;
 				};
 				Update: {
+					avatar_file_id?: string | null;
 					avatar_url?: string | null;
 					birthday?: string | null;
 					description?: string | null;
@@ -529,7 +622,15 @@ export type Database = {
 					id?: string;
 					username?: string | null;
 				};
-				Relationships: [];
+				Relationships: [
+					{
+						foreignKeyName: 'users_avatar_file_id_fkey';
+						columns: ['avatar_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					}
+				];
 			};
 		};
 		Views: {

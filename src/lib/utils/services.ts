@@ -58,15 +58,6 @@ export function isServiceOwner(service: Service, studioId?: number): boolean {
 	return service.created_by === studioId;
 }
 
-/**
- * Get the number of categories for a service
- * @param service The service object
- * @returns The number of categories
- */
-export function getServiceCategoryCount(_service: Service): number {
-	return 0;
-}
-
 // Service cover upload handler
 export async function handleServiceCoverUpload(
 	supabase: SupabaseClient,

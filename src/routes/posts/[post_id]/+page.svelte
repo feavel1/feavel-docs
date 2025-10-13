@@ -84,8 +84,6 @@
 	let saveTimeout: any = $state(null);
 	let saveStatus = $state('Saved');
 	let lastSaved = $state(new Date(post.created_at));
-	let likesCount = $state(post.posts_likes?.length || 0);
-	let isPostLiked = $state(false);
 	let prevTags = $state([
 		...(post.posts_tags_rel
 			? post.posts_tags_rel.map((rel: any) => rel?.posts_tags?.tag_name).filter(Boolean)

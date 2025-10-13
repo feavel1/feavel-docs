@@ -161,7 +161,7 @@ src/
 │   ├── components/
 │   │   ├── modules/          # Feature components (AuthForm, Editor, etc.)
 │   │   └── ui/               # shadcn-svelte components
-│   ├── utils/                # Utility functions (posts, comments, etc.)
+│   ├── utils/                # Utility functions (posts, storage, etc.)
 │   ├── stores/               # Svelte stores
 │   └── types/                # TypeScript types
 ├── routes/                   # SvelteKit routes
