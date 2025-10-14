@@ -304,6 +304,50 @@ export async function handlePostCoverUpload(
 }
 
 /**
+ * Update only the cover image of a post
+ * @param supabase Supabase client instance
+ * @param userId ID of the user updating the post
+ * @param postId ID of the post to update
+ * @param coverId New cover file ID (null to remove cover)
+ * @returns Success status and error message if any
+ */
+export async function updatePostCover(
+	supabase: SupabaseClient,
+	userId: string,
+	postId: number,
+	coverId: string | null
+): Promise<{ success: boolean; error: string | null }> {
+	try {
+		// If coverId is provided, validate UUID format
+		if (coverId && coverId !== null) {
+			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+			if (!uuidRegex.test(coverId)) {
+				console.error('Invalid UUID format for cover_file_id:', coverId);
+				return { success: false, error: 'Invalid cover file ID format' };
+			}
+		}
+
+		const { error: postError } = await supabase
+			.from('posts')
+			.update({
+				cover_file_id: coverId
+			})
+			.eq('id', postId)
+			.eq('user_id', userId);
+
+		if (postError) {
+			console.error('Error updating post cover:', postError);
+			return { success: false, error: 'Failed to update post cover' };
+		}
+
+		return { success: true, error: null };
+	} catch (error) {
+		console.error('Error in post cover update:', error);
+		return { success: false, error: 'Failed to update post cover' };
+	}
+}
+
+/**
  * Fetch all available tags
  * @param supabase Supabase client instance
  * @returns Array of tag names

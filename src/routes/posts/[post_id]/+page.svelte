@@ -37,7 +37,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
+	import { handlePostCoverUpload, updatePost, updatePostCover, deletePost } from '$lib/utils/posts';
 	import { FileStorage } from '$lib/services/storage';
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 	import GradientGenerator from '$lib/components/modules/content/GradientGenerator.svelte';
@@ -225,7 +225,16 @@
 				$formValues.cover_file_id = storageId;
 				coverPreview = await storage.getUrl(storageId) || '';
 				toast.success('Cover image uploaded successfully');
-				debouncedSave(); // Trigger real-time save after cover upload
+
+				// Update only the cover field instead of all post data
+				updatePostCover(supabase, session?.user?.id!, post.id, storageId).then(({ success, error }) => {
+					if (success) {
+						saveStatus = 'Cover saved';
+					} else {
+						saveStatus = 'Error saving cover';
+						toast.error(error || 'Failed to save cover');
+					}
+				});
 			} else {
 				// Revert to original cover on failure
 				$formValues.cover_file_id = originalCover;
@@ -293,7 +302,16 @@
 	function handleCoverRemove() {
 		coverPreview = '';
 		$formValues.cover_file_id = null as any;
-		debouncedSave(); // Trigger real-time save after cover removal
+
+		// Update only the cover field instead of all post data
+		updatePostCover(supabase, session?.user?.id!, post.id, null).then(({ success, error }) => {
+			if (success) {
+				saveStatus = 'Cover saved';
+			} else {
+				saveStatus = 'Error saving cover';
+				toast.error(error || 'Failed to save cover');
+			}
+		});
 	}
 </script>
 
