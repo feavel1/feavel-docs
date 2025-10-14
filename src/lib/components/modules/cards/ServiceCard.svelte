@@ -72,13 +72,9 @@
 	<Card class="flex h-full flex-col transition-shadow hover:shadow-lg">
 		{#if service.cover_file_id}
 			{#if coverUrl}
-				<img
-					src={coverUrl}
-					alt={service.name}
-					class="h-48 w-full rounded-t-lg object-cover"
-				/>
+				<img src={coverUrl} alt={service.name} class="h-48 w-full rounded-t-lg object-cover" />
 			{:else}
-				<div class="h-48 w-full bg-muted animate-pulse rounded-t-lg" />
+				<div class="h-48 w-full animate-pulse rounded-t-lg bg-muted" />
 			{/if}
 		{/if}
 		<CardHeader>

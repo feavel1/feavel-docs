@@ -116,7 +116,6 @@
 				return;
 			}
 
-
 			coverUrl = '';
 		};
 		fetchCoverUrl();
@@ -212,54 +211,59 @@
 		const loadingId = 'loading-' + Date.now();
 		coverPreview = loadingId;
 
-		handlePostCoverUpload(supabase, file, post.id).then(async (storageId) => {
-			if (storageId) {
-				// Check if this is a valid UUID format before assigning
-				const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-				if (!uuidRegex.test(storageId)) {
-					toast.error('Invalid storage ID format received from server');
-					coverPreview = coverUrl; // Revert to previous cover
-					return;
-				}
-
-				$formValues.cover_file_id = storageId;
-				coverPreview = await storage.getUrl(storageId) || '';
-				toast.success('Cover image uploaded successfully');
-
-				// Update only the cover field instead of all post data
-				updatePostCover(supabase, session?.user?.id!, post.id, storageId).then(({ success, error }) => {
-					if (success) {
-						saveStatus = 'Cover saved';
-					} else {
-						saveStatus = 'Error saving cover';
-						toast.error(error || 'Failed to save cover');
+		handlePostCoverUpload(supabase, file, post.id)
+			.then(async (storageId) => {
+				if (storageId) {
+					// Check if this is a valid UUID format before assigning
+					const uuidRegex =
+						/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+					if (!uuidRegex.test(storageId)) {
+						toast.error('Invalid storage ID format received from server');
+						coverPreview = coverUrl; // Revert to previous cover
+						return;
 					}
-				});
-			} else {
-				// Revert to original cover on failure
+
+					$formValues.cover_file_id = storageId;
+					coverPreview = (await storage.getUrl(storageId)) || '';
+					toast.success('Cover image uploaded successfully');
+
+					// Update only the cover field instead of all post data
+					updatePostCover(supabase, session?.user?.id!, post.id, storageId).then(
+						({ success, error }) => {
+							if (success) {
+								saveStatus = 'Cover saved';
+							} else {
+								saveStatus = 'Error saving cover';
+								toast.error(error || 'Failed to save cover');
+							}
+						}
+					);
+				} else {
+					// Revert to original cover on failure
+					$formValues.cover_file_id = originalCover;
+					// Update coverPreview to original
+					if (originalCover) {
+						coverPreview = (await storage.getUrl(originalCover)) || '';
+					} else {
+						coverPreview = '';
+					}
+					toast.error('Failed to upload cover image');
+				}
+			})
+			.catch((error) => {
+				console.error('Error during cover upload:', error);
+				// Revert to original cover
 				$formValues.cover_file_id = originalCover;
 				// Update coverPreview to original
 				if (originalCover) {
-					coverPreview = await storage.getUrl(originalCover) || '';
+					storage.getUrl(originalCover).then((url) => {
+						coverPreview = url || '';
+					});
 				} else {
 					coverPreview = '';
 				}
 				toast.error('Failed to upload cover image');
-			}
-		}).catch((error) => {
-			console.error('Error during cover upload:', error);
-			// Revert to original cover
-			$formValues.cover_file_id = originalCover;
-			// Update coverPreview to original
-			if (originalCover) {
-				storage.getUrl(originalCover).then(url => {
-					coverPreview = url || '';
-				});
-			} else {
-				coverPreview = '';
-			}
-			toast.error('Failed to upload cover image');
-		});
+			});
 	}
 
 	async function handleDelete() {

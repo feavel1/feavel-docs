@@ -121,7 +121,7 @@ interface PostData {
 	id?: number;
 	title: string | null;
 	content: any;
-	cover_file_id?: string | null;  // New field for foreign key reference
+	cover_file_id?: string | null; // New field for foreign key reference
 	public_visibility: boolean;
 	tags: string[];
 }
@@ -190,7 +190,8 @@ export async function updatePost(
 		// Additional validation: ensure cover_file_id is a valid UUID if provided
 		if (postData.cover_file_id && postData.cover_file_id !== null) {
 			// Check if this is a valid UUID format
-			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+			const uuidRegex =
+				/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 			if (!uuidRegex.test(postData.cover_file_id)) {
 				console.error('Invalid UUID format for cover_file_id:', postData.cover_file_id);
 				return { success: false, error: 'Invalid cover file ID format' };
@@ -320,7 +321,8 @@ export async function updatePostCover(
 	try {
 		// If coverId is provided, validate UUID format
 		if (coverId && coverId !== null) {
-			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+			const uuidRegex =
+				/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 			if (!uuidRegex.test(coverId)) {
 				console.error('Invalid UUID format for cover_file_id:', coverId);
 				return { success: false, error: 'Invalid cover file ID format' };

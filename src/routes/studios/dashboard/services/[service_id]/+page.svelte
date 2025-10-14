@@ -9,7 +9,7 @@
 		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
 		cover_file_id: z.string().max(255).optional(),
-		cover_url: z.string().max(255).optional()  // Legacy field for compatibility
+		cover_url: z.string().max(255).optional() // Legacy field for compatibility
 	});
 
 	export type ServiceSchema = typeof serviceSchema;
@@ -134,7 +134,7 @@
 				$formValues.cover_file_id = filename;
 				// Create new storage instance for the URL
 				const storage = new FileStorage(supabase);
-				coverPreview = await storage.getUrl(filename) || '';
+				coverPreview = (await storage.getUrl(filename)) || '';
 				toast.success('Cover image uploaded successfully');
 			} else {
 				toast.error('Failed to upload cover image');

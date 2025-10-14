@@ -100,11 +100,7 @@
 
 			{#if coverUrl}
 				<div class="mb-6 overflow-hidden rounded-lg">
-					<img
-						src={coverUrl}
-						alt={service.name}
-						class="h-64 w-full object-cover md:h-96"
-					/>
+					<img src={coverUrl} alt={service.name} class="h-64 w-full object-cover md:h-96" />
 				</div>
 			{/if}
 

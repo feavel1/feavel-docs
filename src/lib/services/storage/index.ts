@@ -7,8 +7,8 @@ export { FileStorage, ImageProcessor };
 
 // Convenience function for creating storage instances
 export function createFileStorage(supabase: SupabaseClient) {
-  const fileStorage = new FileStorage(supabase);
-  return fileStorage;
+	const fileStorage = new FileStorage(supabase);
+	return fileStorage;
 }
 
 // Export helpers

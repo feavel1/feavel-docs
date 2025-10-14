@@ -298,7 +298,10 @@ export function getAvatarUrl(
 /**
  * Asynchronously get the actual URL from avatar_file_id using FileStorage
  */
-export async function getAvatarUrlFromFileId(supabase: SupabaseClient, avatarFileId: string): Promise<string | null> {
+export async function getAvatarUrlFromFileId(
+	supabase: SupabaseClient,
+	avatarFileId: string
+): Promise<string | null> {
 	try {
 		const storage = new FileStorage(supabase);
 		return await storage.getUrl(avatarFileId);

@@ -69,10 +69,7 @@
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
 					{#if userAvatarUrl}
-						<AvatarImage
-							src={userAvatarUrl}
-							alt={post.users?.username || ''}
-						/>
+						<AvatarImage src={userAvatarUrl} alt={post.users?.username || ''} />
 					{/if}
 					<AvatarFallback class="text-xs font-medium">
 						{post.users?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -93,9 +90,9 @@
 				?.map((rel) => rel.posts_tags?.tag_name)
 				.filter(Boolean) || []).length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each (post.posts_tags_rel
+				{#each post.posts_tags_rel
 					?.map((rel) => rel.posts_tags?.tag_name)
-					.filter(Boolean) || []) as tag, i}
+					.filter(Boolean) || [] as tag, i}
 					{#if i < 3}
 						<Button
 							variant="outline"
