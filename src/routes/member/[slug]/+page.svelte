@@ -5,10 +5,27 @@
 	import Posts from '$lib/components/modules/content/Posts.svelte';
 	import { Settings, Calendar } from '@lucide/svelte';
 	import { Card, CardContent } from '$lib/components/ui/card';
-	import { getAvatarUrl } from '$lib/utils/user';
+	import { FileStorage } from '$lib/services/storage';
 
 	const { data: propsData } = $props();
 	const { viewedUserProfile: userProfile, isOwnProfile, supabase, stats } = propsData;
+
+	// State for resolved avatar URL
+	let resolvedAvatarUrl = $state('');
+
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (userProfile.avatar_file_id) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(userProfile.avatar_file_id);
+				resolvedAvatarUrl = url || resolvedAvatarUrl;
+			} else {
+				// Generate default avatar based on username
+				resolvedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userProfile.username || 'default')}`;
+			}
+		};
+		fetchAvatarUrl();
+	});
 </script>
 
 <div class="container mx-auto px-4 py-6">
@@ -23,16 +40,12 @@
 						class="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-32 sm:w-32"
 					>
 						<img
-							src={getAvatarUrl(
-								userProfile.avatar_url,
-								userProfile.username || undefined,
-								supabase
-							)}
+							src={resolvedAvatarUrl}
 							alt={userProfile.username || 'User'}
 							class="h-full w-full object-cover"
 							onerror={(e) => {
 								const target = e.target as HTMLImageElement;
-								target.src = `https://api.dicebear.com/6.x/initials/svg?seed=${userProfile.username || 'User'}`;
+								target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.username || 'default'}`;
 							}}
 						/>
 					</div>

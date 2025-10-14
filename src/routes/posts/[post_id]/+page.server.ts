@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		.select(
 			`
 			*,
-			users!inner(username, avatar_url),
+			users!inner(username, avatar_file_id),
 			posts_tags_rel(
 				posts_tags!inner(id, tag_name)
 			),
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				id,
 				user_id,
 				created_at,
-				users!inner(username, avatar_url)
+				users!inner(username, avatar_file_id)
 			),
 			posts_comments(
 				id,
@@ -66,7 +66,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				parent_id,
 				content,
 				is_deleted,
-				users!inner(username, avatar_url, full_name)
+				users!inner(username, avatar_file_id, full_name)
 			)
 		`
 		)

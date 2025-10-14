@@ -230,7 +230,7 @@ export const load = async ({ url, locals }) => {
 		.select(
 			`
 			*,
-			users!inner(username, avatar_url),
+			users!inner(username, avatar_file_id),
 			posts_tags_rel(
 				posts_tags!inner(tag_name)
 			)

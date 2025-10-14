@@ -3,9 +3,13 @@
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { getServiceTags } from '$lib/utils/serviceCategories';
+	import { FileStorage } from '$lib/services/storage';
 	import type { Service } from '$lib/utils/services';
 
-	let { service, studioId }: { service: Service; studioId?: number } = $props();
+	let { service, studioId, supabase } = $props();
+
+	// Add state for cover URL - this assumes supabase is passed in
+	let coverUrl = $state<string | null>(null);
 
 	// Helper function to get studio name regardless of data structure
 	function getStudioName(studios: Service['studios']): string | undefined {
@@ -18,8 +22,8 @@
 			return firstStudio.name || undefined;
 		}
 		// Handle object format
-		if (typeof studios === 'object') {
-			return (studios as any).name || undefined;
+		if (typeof studios === 'object' && studios && 'name' in studios) {
+			return (studios as { name: string }).name || undefined;
 		}
 		return undefined;
 	}
@@ -50,16 +54,32 @@
 				return 'secondary';
 		}
 	}
+
+	// Asynchronously get service cover URL
+	$effect(() => {
+		const fetchCoverUrl = async () => {
+			if (service.cover_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(service.cover_file_id);
+				coverUrl = url || null;
+			}
+		};
+		fetchCoverUrl();
+	});
 </script>
 
 <a href="/services/{service.id}" class="block h-full">
 	<Card class="flex h-full flex-col transition-shadow hover:shadow-lg">
-		{#if service.cover_url}
-			<img
-				src={service.cover_url}
-				alt={service.name}
-				class="h-48 w-full rounded-t-lg object-cover"
-			/>
+		{#if service.cover_file_id}
+			{#if coverUrl}
+				<img
+					src={coverUrl}
+					alt={service.name}
+					class="h-48 w-full rounded-t-lg object-cover"
+				/>
+			{:else}
+				<div class="h-48 w-full bg-muted animate-pulse rounded-t-lg" />
+			{/if}
 		{/if}
 		<CardHeader>
 			<div class="flex items-start justify-between">

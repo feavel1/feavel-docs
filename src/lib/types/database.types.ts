@@ -250,7 +250,6 @@ export type Database = {
 					created_at: string;
 					embedded_file_ids: string[] | null;
 					id: number;
-					post_cover: string | null;
 					post_views: number;
 					public_visibility: boolean;
 					title: string | null;
@@ -262,7 +261,6 @@ export type Database = {
 					created_at?: string;
 					embedded_file_ids?: string[] | null;
 					id?: number;
-					post_cover?: string | null;
 					post_views?: number;
 					public_visibility?: boolean;
 					title?: string | null;
@@ -274,7 +272,6 @@ export type Database = {
 					created_at?: string;
 					embedded_file_ids?: string[] | null;
 					id?: number;
-					post_cover?: string | null;
 					post_views?: number;
 					public_visibility?: boolean;
 					title?: string | null;
@@ -442,7 +439,6 @@ export type Database = {
 			services: {
 				Row: {
 					cover_file_id: string | null;
-					cover_url: string | null;
 					created_at: string;
 					created_by: number;
 					description: Json;
@@ -456,7 +452,6 @@ export type Database = {
 				};
 				Insert: {
 					cover_file_id?: string | null;
-					cover_url?: string | null;
 					created_at?: string;
 					created_by: number;
 					description: Json;
@@ -470,7 +465,6 @@ export type Database = {
 				};
 				Update: {
 					cover_file_id?: string | null;
-					cover_url?: string | null;
 					created_at?: string;
 					created_by?: number;
 					description?: Json;
@@ -597,7 +591,6 @@ export type Database = {
 			users: {
 				Row: {
 					avatar_file_id: string | null;
-					avatar_url: string | null;
 					birthday: string | null;
 					description: string | null;
 					full_name: string | null;
@@ -606,7 +599,6 @@ export type Database = {
 				};
 				Insert: {
 					avatar_file_id?: string | null;
-					avatar_url?: string | null;
 					birthday?: string | null;
 					description?: string | null;
 					full_name?: string | null;
@@ -615,7 +607,6 @@ export type Database = {
 				};
 				Update: {
 					avatar_file_id?: string | null;
-					avatar_url?: string | null;
 					birthday?: string | null;
 					description?: string | null;
 					full_name?: string | null;

@@ -23,7 +23,7 @@ declare global {
 				id: string;
 				username: string | null;
 				full_name: string | null;
-				avatar_url: string | null;
+				avatar_file_id: string | null;
 				birthday: string | null;
 				description: string | null;
 			} | null;

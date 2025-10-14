@@ -15,7 +15,7 @@ export interface PostComment {
 	is_deleted: boolean;
 	users?: {
 		username: string;
-		avatar_url: string | null;
+		avatar_file_id: string | null;
 		full_name: string | null;
 	} | null;
 	replies?: PostComment[];
@@ -27,7 +27,7 @@ export interface PostComment {
 
 const COMMENT_FIELDS = `
 	*,
-	users!inner(username, avatar_url, full_name)
+	users!inner(username, avatar_file_id, full_name)
 `;
 
 // Helper function to get reply counts for multiple comments in a single query

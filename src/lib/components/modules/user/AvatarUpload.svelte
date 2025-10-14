@@ -3,18 +3,46 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card, CardContent } from '$lib/components/ui/card';
-	import { uploadAvatar, deleteAvatar, getAvatarUrl } from '$lib/utils/storage';
+	import { FileStorage, ImageProcessor } from '$lib/services/storage';
 	import { toast } from 'svelte-sonner';
 
 	const { supabase, userId, username, currentAvatarUrl } = $props();
 	const dispatch = createEventDispatcher();
 	let uploading = $state(false);
 	let fileInput: HTMLInputElement;
+	// Initialize with the avatar file ID which is our new standard
 	let currentAvatar = $state(currentAvatarUrl);
 
-	const avatarDisplayUrl = $derived(currentAvatar ? getAvatarUrl(currentAvatar, supabase) : '');
+	// Create storage instance once for the operations
+	let storage: FileStorage;
 
-	import { compressImage } from '$lib/utils/storage';
+	// Initialize storage and get display URL
+	$effect(() => {
+		if (supabase) {
+			storage = new FileStorage(supabase);
+		}
+	});
+
+	let avatarDisplayUrl = $state('');
+
+	// Update the display URL whenever currentAvatar changes
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (currentAvatar && storage) {
+				console.log('FEAVEL');
+
+				const url = await storage.getUrl(currentAvatar);
+				avatarDisplayUrl = url || '';
+			} else if (currentAvatarUrl && !currentAvatarUrl.includes('/')) {
+				// If currentAvatarUrl is likely a file ID (doesn't contain URL characters), treat it as a file ID
+				const url = await storage.getUrl(currentAvatarUrl);
+				avatarDisplayUrl = url || '';
+			} else {
+				avatarDisplayUrl = currentAvatarUrl || '';
+			}
+		};
+		fetchAvatarUrl();
+	});
 
 	async function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -35,15 +63,45 @@
 		uploading = true;
 
 		try {
-			const compressedFile = await compressImage(file);
-			const result = await uploadAvatar(supabase, compressedFile, userId);
+			// Image compression using the new ImageProcessor service
+			const compressedFile = await ImageProcessor.compressImage(file, 400, 400, 0.8);
 
-			if (result) {
-				toast.success('Avatar uploaded successfully');
-				currentAvatar = result.path;
-				dispatch('avatarUpdated', { avatarUrl: result.path });
+			if (storage) {
+				const result = await storage.upload({
+					file: compressedFile,
+					options: {
+						folder: 'users/avatars',
+						entity_type: 'user',
+						entity_id: userId,
+						is_public: true,
+						upsert: true
+					}
+				});
+
+				if (result) {
+					// Update user profile to set avatar_file_id to the storage ID
+					const { error } = await supabase
+						.from('users')
+						.update({ avatar_file_id: result.storage_id })
+						.eq('id', userId);
+
+					if (error) {
+						console.error('Failed to update avatar_file_id in database:', error.message);
+						// Still use the storage ID as the avatar reference but show an error message
+						currentAvatar = result.storage_id;
+						dispatch('avatarUpdated', { avatarUrl: result.storage_id });
+						toast.error('Avatar uploaded but database update failed');
+					} else {
+						toast.success('Avatar uploaded successfully');
+						// Use the storage ID as the avatar reference
+						currentAvatar = result.storage_id;
+						dispatch('avatarUpdated', { avatarUrl: result.storage_id });
+					}
+				} else {
+					toast.error('Failed to upload avatar');
+				}
 			} else {
-				toast.error('Failed to upload avatar');
+				toast.error('Storage not initialized');
 			}
 		} catch (error) {
 			console.error('Upload error:', error);
@@ -60,14 +118,29 @@
 		uploading = true;
 
 		try {
-			const success = await deleteAvatar(supabase, userId, currentAvatar);
+			if (storage) {
+				const success = await storage.delete(currentAvatar);
 
-			if (success) {
-				toast.success('Avatar removed successfully');
-				currentAvatar = null;
-				dispatch('avatarUpdated', { avatarUrl: null });
+				if (success) {
+					// Update user profile to clear avatar_file_id reference
+					const { error } = await supabase
+						.from('users')
+						.update({ avatar_file_id: null })
+						.eq('id', userId);
+
+					if (error) {
+						console.error('Failed to clear avatar_file_id in database:', error.message);
+						// Still proceed with UI update if file deletion succeeded
+					}
+
+					toast.success('Avatar removed successfully');
+					currentAvatar = null;
+					dispatch('avatarUpdated', { avatarUrl: null });
+				} else {
+					toast.error('Failed to remove avatar');
+				}
 			} else {
-				toast.error('Failed to remove avatar');
+				toast.error('Storage not initialized');
 			}
 		} catch (error) {
 			console.error('Remove error:', error);

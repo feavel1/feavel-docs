@@ -1,12 +1,12 @@
 import type { Tables } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { updatePostTags, getTags } from './tags';
-import { uploadPostCover } from './storage';
+import { FileStorage, ImageProcessor } from '$lib/services/storage';
 
 export type Post = Tables<'posts'> & {
 	users?: {
 		username: string | null;
-		avatar_url: string | null;
+		avatar_file_id: string | null;
 	} | null;
 	posts_tags_rel?:
 		| {
@@ -23,7 +23,7 @@ export type Post = Tables<'posts'> & {
 				created_at: string;
 				users?: {
 					username: string | null;
-					avatar_url: string | null;
+					avatar_file_id: string | null;
 				} | null;
 		  }[]
 		| null;
@@ -38,8 +38,8 @@ export type Post = Tables<'posts'> & {
 				is_deleted: boolean;
 				users?: {
 					username: string | null;
-					avatar_url: string | null;
 					full_name: string | null;
+					avatar_file_id: string | null;
 				} | null;
 		  }[]
 		| null;
@@ -121,7 +121,7 @@ interface PostData {
 	id?: number;
 	title: string | null;
 	content: any;
-	cover?: string | null;
+	cover_file_id?: string | null;  // New field for foreign key reference
 	public_visibility: boolean;
 	tags: string[];
 }
@@ -144,7 +144,7 @@ export async function createPost(
 			.insert({
 				title: postData.title?.trim() || null,
 				content_v2: postData.content || null,
-				post_cover: postData.cover?.trim() || null,
+				cover_file_id: postData.cover_file_id || null,
 				public_visibility: postData.public_visibility || false,
 				user_id: userId
 			})
@@ -187,12 +187,22 @@ export async function updatePost(
 	postData: Partial<PostData>
 ): Promise<{ success: boolean; error: string | null }> {
 	try {
+		// Additional validation: ensure cover_file_id is a valid UUID if provided
+		if (postData.cover_file_id && postData.cover_file_id !== null) {
+			// Check if this is a valid UUID format
+			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+			if (!uuidRegex.test(postData.cover_file_id)) {
+				console.error('Invalid UUID format for cover_file_id:', postData.cover_file_id);
+				return { success: false, error: 'Invalid cover file ID format' };
+			}
+		}
+
 		const { error: postError } = await supabase
 			.from('posts')
 			.update({
 				title: postData.title?.trim() || null,
 				content_v2: postData.content || null,
-				post_cover: postData.cover?.trim() || null,
+				cover_file_id: postData.cover_file_id || null,
 				public_visibility: postData.public_visibility || false
 			})
 			.eq('id', postId)
@@ -258,15 +268,35 @@ export async function deletePost(
  * Handle post cover upload
  * @param supabase Supabase client instance
  * @param coverFile File to upload
- * @returns Filename of uploaded file or null if failed
+ * @param postId Post ID that will be associated with the cover
+ * @returns cover_file_id string or null if failed
  */
 export async function handlePostCoverUpload(
 	supabase: SupabaseClient,
-	coverFile: File
+	coverFile: File,
+	postId: number
 ): Promise<string | null> {
 	try {
-		const filename = await uploadPostCover(supabase, coverFile);
-		return filename;
+		// Image compression using the new service
+		const compressedFile = await ImageProcessor.compressImage(coverFile);
+
+		// Use new FileStorage service
+		const storage = new FileStorage(supabase);
+		const result = await storage.upload({
+			file: compressedFile,
+			options: {
+				folder: 'posts/covers',
+				entity_type: 'post',
+				entity_id: postId.toString(), // Ensure entity_id is always a string
+				is_public: true,
+				upsert: true
+			}
+		});
+
+		if (!result) return null;
+
+		// Just return the storage ID - let the component handle updating the posts table
+		return result.storage_id;
 	} catch (error) {
 		console.error('Error uploading cover:', error);
 		return null;

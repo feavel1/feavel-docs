@@ -46,7 +46,7 @@ A modern, full-stack blogging platform built with SvelteKit, Supabase, and shadc
 
 ```sql
 -- Users (Supabase Auth)
-users (id, username, avatar_url, created_at)
+users (id, username, created_at)
 
 -- Posts
 posts (id, user_id, title, content_v2, post_cover, public_visibility, post_views, created_at)

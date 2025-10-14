@@ -7,7 +7,7 @@ type PostLike = {
 	created_at: string;
 	users: {
 		username: string;
-		avatar_url: string | null;
+		avatar_file_id: string | null;
 	};
 };
 
@@ -217,7 +217,7 @@ export async function getLikedUsers(
 		.select(
 			`
 			*,
-			users!inner(username, avatar_url)
+			users!inner(username, avatar_file_id)
 		`
 		)
 		.eq('post_id', numericPostId)

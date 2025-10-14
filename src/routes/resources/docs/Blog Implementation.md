@@ -155,11 +155,14 @@ Paraglide.js integration for multi-language support:
 ## Database Schema (Current)
 
 ```sql
--- Users table (Supabase Auth)
+-- Users table
 users (
   id: uuid PRIMARY KEY,
   username: text UNIQUE,
-  avatar_url: text,
+  avatar_file_id: uuid REFERENCES file_storage(id), -- Foreign key to file_storage
+  full_name: text,
+  description: text,
+  birthday: text,
   created_at: timestamptz DEFAULT now()
 )
 
@@ -168,12 +171,31 @@ posts (
   id: bigint PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
   title: text,
-  content: jsonb,           -- Legacy content
   content_v2: jsonb,        -- Editor.js content
-  post_cover: text,         -- Cover image URL
+  cover_file_id: uuid REFERENCES file_storage(id), -- Foreign key to file_storage
+  embedded_file_ids: uuid[] REFERENCES file_storage(id), -- Array of embedded file IDs
   public_visibility: boolean DEFAULT false,
   post_views: bigint DEFAULT 1,
   created_at: timestamptz DEFAULT now()
+)
+
+-- File Storage table for all file references
+file_storage (
+  id: uuid PRIMARY KEY,
+  original_filename: text,
+  storage_path: text,
+  bucket_name: text,
+  file_size: bigint,
+  file_type: text,
+  mime_type: text,
+  is_public: boolean,
+  entity_type: text,        -- 'user', 'post', 'service', etc.
+  entity_id: uuid,          -- The ID of the entity that owns the file
+  metadata: jsonb,
+  access_limit: bigint,
+  access_count: bigint,
+  expires_at: timestamptz,
+  uploaded_at: timestamptz DEFAULT now()
 )
 
 -- Tags table
@@ -246,11 +268,14 @@ validation
 
 ## Utilities (Implemented)
 
-### 1. Supabase Utilities
+### 1. File Storage Service
 
 ```typescript
-// src/lib/utils/supabase.ts
--uploadFile() - downloadFile() - deleteFile() - getFileUrl() - uploadAvatar() - deleteAvatar();
+// src/lib/services/storage/index.ts
+- FileStorage class with upload(), delete(), getUrl() methods
+- ImageProcessor class with compression capabilities
+- Proper file validation and security checks
+- Integration with file_storage table for file relations
 ```
 
 ### 2. User Utilities

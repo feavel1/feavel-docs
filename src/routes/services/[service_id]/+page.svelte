@@ -4,9 +4,10 @@
 	import { ArrowLeft, Calendar, User, Phone, Edit } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { getServiceTags } from '$lib/utils/serviceCategories';
+	import { FileStorage } from '$lib/services/storage';
 
 	let { data } = $props();
-	let { service, userProfile } = data;
+	let { service, userProfile, supabase } = data;
 
 	// Simplified studio data access - based on our query, studios is an object with name, description, and contact_phone
 	let studio = $derived(service?.studios || null);
@@ -18,6 +19,20 @@
 
 	// Derived values
 	let tags = $derived(service ? getServiceTags(service) : []);
+
+	// State for resolved cover URL
+	let coverUrl = $state('');
+
+	$effect(() => {
+		const fetchCoverUrl = async () => {
+			if (service?.cover_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(service.cover_file_id);
+				coverUrl = url || '';
+			}
+		};
+		fetchCoverUrl();
+	});
 
 	function handleOrderService() {
 		if (!userProfile) {
@@ -83,10 +98,10 @@
 				</div>
 			</div>
 
-			{#if service.cover_url}
+			{#if coverUrl}
 				<div class="mb-6 overflow-hidden rounded-lg">
 					<img
-						src={service.cover_url}
+						src={coverUrl}
 						alt={service.name}
 						class="h-64 w-full object-cover md:h-96"
 					/>

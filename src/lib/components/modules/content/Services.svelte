@@ -136,7 +136,7 @@
 					id,
 					name,
 					price,
-					cover_url,
+					cover_file_id,
 					highlights,
 					type,
 					status,
@@ -260,7 +260,7 @@
 {:else if displayedServices.length > 0}
 	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 		{#each displayedServices as service (service.id)}
-			<ServiceCard {service} {studioId} />
+			<ServiceCard {service} {studioId} {supabase} />
 		{/each}
 	</div>
 

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Json } from '$lib/types/database.types';
-import { uploadServiceCover } from './storage';
+import { FileStorage, ImageProcessor } from '$lib/services/storage';
 
 // Simplified service type
 export interface Service {
@@ -8,7 +8,7 @@ export interface Service {
 	name: string;
 	price: number;
 	description: Json | null;
-	cover_url: string | null;
+	cover_file_id: string | null;
 	highlights: Json;
 	type: string;
 	status: string;
@@ -61,9 +61,45 @@ export function isServiceOwner(service: Service, studioId?: number): boolean {
 // Service cover upload handler
 export async function handleServiceCoverUpload(
 	supabase: SupabaseClient,
-	file: File
+	file: File,
+	serviceId: string
 ): Promise<string | null> {
-	return await uploadServiceCover(supabase, file);
+	try {
+		// Image compression using the new service
+		const compressedFile = await ImageProcessor.compressImage(file);
+
+		// Use new FileStorage service
+		const storage = new FileStorage(supabase);
+		const result = await storage.upload({
+			file: compressedFile,
+			options: {
+				folder: 'services/covers',
+				entity_type: 'service',
+				entity_id: serviceId,
+				is_public: true,
+				upsert: true
+			}
+		});
+
+		if (!result) return null;
+
+		// Update the services table to set the cover_file_id to the storage ID
+		const { error } = await supabase
+			.from('services')
+			.update({ cover_file_id: result.storage_id })
+			.eq('id', serviceId);
+
+		if (error) {
+			console.error('Failed to update service cover_file_id in database:', error.message);
+			// Could optionally delete the file if the database update fails, but for now just return the ID
+			return result.storage_id;
+		}
+
+		return result.storage_id;
+	} catch (error) {
+		console.error('Error uploading service cover:', error);
+		return null;
+	}
 }
 
 // Valid service types according to database enum
@@ -80,7 +116,7 @@ export async function createService(
 		description: string | null;
 		type: string;
 		highlights: string[];
-		cover_url: string | null;
+		cover_file_id: string | null;
 	}
 ): Promise<{ service: Service | null; error: string | null }> {
 	try {
@@ -101,7 +137,7 @@ export async function createService(
 					description: serviceData.description,
 					type: serviceData.type,
 					highlights: serviceData.highlights,
-					cover_url: serviceData.cover_url,
+					cover_file_id: serviceData.cover_file_id,
 					created_by: studioId,
 					enabled: true,
 					status: 'approved' // Default status for new services
@@ -133,7 +169,7 @@ export async function updateService(
 		description: string | null;
 		type: string;
 		highlights: string[];
-		cover_url: string | null;
+		cover_file_id: string | null;
 	}
 ): Promise<{ success: boolean; error: string | null }> {
 	try {
@@ -166,7 +202,7 @@ export async function updateService(
 				description: serviceData.description,
 				type: serviceData.type,
 				highlights: serviceData.highlights,
-				cover_url: serviceData.cover_url
+				cover_file_id: serviceData.cover_file_id
 			})
 			.eq('id', serviceId);
 

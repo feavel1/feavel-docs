@@ -3,18 +3,34 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Send, Loader2 } from '@lucide/svelte';
-	import { getAvatarUrl } from '$lib/utils/user';
+	import { FileStorage } from '$lib/services/storage';
 
 	let {
 		parentId,
 		onSubmit,
 		user,
 		placeholder = 'Write a comment...',
-		buttonText = 'Comment'
+		buttonText = 'Comment',
+		supabase
 	} = $props();
 
 	let content = $state('');
 	let isSubmitting = $state(false);
+	let resolvedAvatarUrl = $state('');
+
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (user?.avatar_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(user.avatar_file_id);
+				resolvedAvatarUrl = url || resolvedAvatarUrl;
+			} else {
+				// Generate default avatar based on username when no file_id exists
+				resolvedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.user_metadata?.username || user?.username || 'default')}`;
+			}
+		};
+		fetchAvatarUrl();
+	});
 
 	async function handleSubmit() {
 		if (!content.trim() || isSubmitting) return;
@@ -42,7 +58,7 @@
 
 <div class="flex gap-2">
 	<Avatar class="h-7 w-7 flex-shrink-0">
-		<AvatarImage src={getAvatarUrl(user?.avatar_url, user?.username)} alt={user?.username} />
+		<AvatarImage src={resolvedAvatarUrl} alt={user?.username} />
 		<AvatarFallback class="text-xs">
 			{user?.username?.charAt(0)?.toUpperCase() || 'U'}
 		</AvatarFallback>

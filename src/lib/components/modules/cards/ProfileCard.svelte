@@ -1,10 +1,20 @@
 <script lang="ts">
-	import { getAvatarUrl } from '$lib/utils/user';
-
+	import { FileStorage } from '$lib/services/storage';
 	import { Card, CardContent, CardFooter, CardHeader } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 
-	const { userProfile, supabase, isOwnProfile = false, stats = null } = $props();
+	let { userProfile, supabase, isOwnProfile = false, stats = null } = $props();
+
+	let avatarUrl = $state<string | null>(null);
+
+	// Asynchronously get user avatar URL
+	(async () => {
+		if (userProfile.avatar_file_id && supabase) {
+			const storage = new FileStorage(supabase);
+			const url = await storage.getUrl(userProfile.avatar_file_id);
+			avatarUrl = url || null;
+		}
+	})();
 
 	function handleImageError(event: Event) {
 		const img = event.target as HTMLImageElement;
@@ -23,12 +33,21 @@
 			<div
 				class="ring-opacity-50 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 shadow-md ring-4 ring-white dark:ring-gray-800"
 			>
-				<img
-					class="h-20 w-20 rounded-full border-2 border-white object-cover shadow-sm dark:border-gray-800"
-					src={getAvatarUrl(userProfile.avatar_url, userProfile.username, supabase)}
-					alt={userProfile.full_name || userProfile.username}
-					onerror={handleImageError}
-				/>
+				{#if avatarUrl}
+					<img
+						class="h-20 w-20 rounded-full border-2 border-white object-cover shadow-sm dark:border-gray-800"
+						src={avatarUrl}
+						alt={userProfile.full_name || userProfile.username}
+						onerror={handleImageError}
+					/>
+				{:else}
+					<!-- Fallback avatar while loading -->
+					<img
+						class="h-20 w-20 rounded-full border-2 border-white object-cover shadow-sm dark:border-gray-800"
+						src="https://api.dicebear.com/7.x/avataaars/svg?seed=default"
+						alt={userProfile.full_name || userProfile.username}
+					/>
+				{/if}
 				<span class="text-2xl font-bold text-gray-700 dark:text-gray-300" style="display: none;">
 					{(userProfile.full_name ?? userProfile.username ?? '').charAt(0).toUpperCase()}
 				</span>

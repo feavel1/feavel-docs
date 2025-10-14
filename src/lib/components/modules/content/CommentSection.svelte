@@ -282,6 +282,7 @@
 					parentId={undefined}
 					onSubmit={handleSubmitComment}
 					user={currentUser}
+					{supabase}
 					placeholder="Share your thoughts..."
 				/>
 			{:else}

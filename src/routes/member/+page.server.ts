@@ -5,7 +5,7 @@ export const load: ServerLoad = async ({ locals }) => {
 	// Fetch all public user profiles
 	const { data: userProfiles, error } = await locals.supabase
 		.from('users')
-		.select('id, username, full_name, avatar_url, description')
+		.select('id, username, full_name, avatar_file_id, description')
 		.order('username');
 
 	if (error) {

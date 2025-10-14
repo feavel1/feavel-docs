@@ -122,7 +122,7 @@
 				{supabase}
 				userId={session?.user.id}
 				username={userProfile?.username}
-				currentAvatarUrl={userProfile?.avatar_url}
+				currentAvatarUrl={userProfile?.avatar_file_id}
 				on:avatarUpdated={() => invalidate('app:user')}
 			/>
 		</CardContent>

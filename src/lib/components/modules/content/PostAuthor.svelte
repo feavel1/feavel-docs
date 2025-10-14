@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
-	import { getAvatarUrl } from '$lib/utils/user';
 	import type { Post } from '$lib/utils/posts';
 	import type { SupabaseClient } from '@supabase/supabase-js';
+	import { FileStorage } from '$lib/services/storage';
 
 	interface Props {
 		post: Post;
@@ -10,6 +10,23 @@
 	}
 
 	let { post, supabase }: Props = $props();
+
+	// State for resolved avatar URL
+	let resolvedAvatarUrl = $state('');
+
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (post.users?.avatar_file_id) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(post.users.avatar_file_id);
+				resolvedAvatarUrl = url || resolvedAvatarUrl;
+			} else {
+				// Generate default avatar based on username
+				resolvedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(post.users?.username || 'default')}`;
+			}
+		};
+		fetchAvatarUrl();
+	});
 </script>
 
 <Card class="mt-6">
@@ -22,7 +39,7 @@
 				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
 					<img
 						class="h-12 w-12 rounded-full object-cover"
-						src={getAvatarUrl(post.users?.avatar_url, post.users?.username || undefined, supabase)}
+						src={resolvedAvatarUrl}
 						alt={post.users?.username || 'Author'}
 						onerror={(e) => {
 							const target = e.target as HTMLImageElement;

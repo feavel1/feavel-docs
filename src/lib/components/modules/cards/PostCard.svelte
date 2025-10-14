@@ -4,8 +4,7 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Eye, Heart, MessageCircle } from '@lucide/svelte';
 	import type { Post } from '$lib/utils/posts';
-	import { getPostCoverUrl } from '$lib/utils/storage';
-	import { getAvatarUrl } from '$lib/utils/user';
+	import { FileStorage } from '$lib/services/storage';
 
 	interface Props {
 		post: Post;
@@ -13,17 +12,47 @@
 	}
 
 	let { post, supabase }: Props = $props();
+	let postCoverUrl = $state<string | null>(null);
+	let userAvatarUrl = $state<string | null>(null);
+
+	// Asynchronously get cover URL
+	$effect(() => {
+		const fetchCoverUrl = async () => {
+			if (post.cover_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(post.cover_file_id);
+				postCoverUrl = url || null;
+			}
+		};
+		fetchCoverUrl();
+	});
+
+	// Asynchronously get user avatar URL
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (post.users?.avatar_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const avatarUrl = await storage.getUrl(post.users.avatar_file_id);
+				userAvatarUrl = avatarUrl || null;
+			}
+		};
+		fetchAvatarUrl();
+	});
 </script>
 
 <Card class="group flex h-full flex-col overflow-hidden transition-all hover:shadow-lg">
-	{#if post.post_cover}
+	{#if post.cover_file_id}
 		<div class="aspect-video overflow-hidden">
-			<img
-				src={getPostCoverUrl(post.post_cover || '', supabase)}
-				alt={post.title}
-				loading="lazy"
-				class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-			/>
+			{#if postCoverUrl}
+				<img
+					src={postCoverUrl}
+					alt={post.title}
+					loading="lazy"
+					class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+				/>
+			{:else}
+				<div class="h-full w-full animate-pulse bg-muted" />
+			{/if}
 		</div>
 	{:else}
 		<div
@@ -39,10 +68,10 @@
 		<div class="mt-3 flex items-center justify-between">
 			<div class="flex items-center gap-2">
 				<Avatar class="size-8">
-					{#if post.users?.avatar_url}
+					{#if userAvatarUrl}
 						<AvatarImage
-							src={getAvatarUrl(post.users?.avatar_url || '', post.users?.username || '', supabase)}
-							alt={post.users.username}
+							src={userAvatarUrl}
+							alt={post.users?.username || ''}
 						/>
 					{/if}
 					<AvatarFallback class="text-xs font-medium">
@@ -64,9 +93,9 @@
 				?.map((rel) => rel.posts_tags?.tag_name)
 				.filter(Boolean) || []).length > 0}
 			<div class="mb-3 flex flex-wrap gap-1">
-				{#each post.posts_tags_rel
+				{#each (post.posts_tags_rel
 					?.map((rel) => rel.posts_tags?.tag_name)
-					.filter(Boolean) || [] as tag, i}
+					.filter(Boolean) || []) as tag, i}
 					{#if i < 3}
 						<Button
 							variant="outline"

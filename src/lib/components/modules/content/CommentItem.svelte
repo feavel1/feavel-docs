@@ -15,11 +15,11 @@
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
-	import { getAvatarUrl } from '$lib/utils/user';
 	import { formatCommentDate } from '$lib/utils/comments';
 	import Self from './CommentItem.svelte';
 	import CommentForm from './CommentForm.svelte';
 	import type { CommentFormData } from '$lib/utils/comments';
+	import { FileStorage } from '$lib/services/storage';
 
 	let {
 		comment,
@@ -34,6 +34,23 @@
 
 	// Extract values from context
 	const { currentUserId, postAuthorId, supabase, currentUser } = context;
+
+	// State for resolved avatar URL
+	let resolvedAvatarUrl = $state('');
+
+	$effect(() => {
+		const fetchAvatarUrl = async () => {
+			if (comment.users?.avatar_file_id) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(comment.users.avatar_file_id);
+				resolvedAvatarUrl = url || resolvedAvatarUrl;
+			} else {
+				// Generate default avatar based on username
+				resolvedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.users?.username || 'default')}`;
+			}
+		};
+		fetchAvatarUrl();
+	});
 
 	let isEditing = $state(false);
 	let editContent = $state(comment.content);
@@ -95,7 +112,7 @@
 	<div class="flex-shrink-0">
 		<img
 			class="h-8 w-8 rounded-full bg-gray-100 object-cover"
-			src={getAvatarUrl(comment.users?.avatar_url, comment.users?.username, supabase)}
+			src={resolvedAvatarUrl}
 			alt={comment.users?.full_name || comment.users?.username}
 			onerror={handleAvatarError}
 		/>
@@ -221,6 +238,7 @@
 						return result;
 					}}
 					user={currentUser}
+					{supabase}
 					placeholder="Write a reply..."
 					buttonText="Reply"
 				/>

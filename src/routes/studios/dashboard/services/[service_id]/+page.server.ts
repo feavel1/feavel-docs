@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				description: '',
 				type: 'video', // Default to 'video' instead of empty string
 				highlights: [],
-				cover_url: null
+				cover_file_id: null
 			}
 		);
 

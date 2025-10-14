@@ -8,7 +8,8 @@
 		description: z.string().max(1000).optional(),
 		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
-		cover_url: z.string().max(255).optional()
+		cover_file_id: z.string().max(255).optional(),
+		cover_url: z.string().max(255).optional()  // Legacy field for compatibility
 	});
 
 	export type ServiceSchema = typeof serviceSchema;
@@ -26,7 +27,7 @@
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { handleServiceCoverUpload, updateService, deleteService } from '$lib/utils/services';
 	import { goto } from '$app/navigation';
-	import { getServiceCoverUrl } from '$lib/utils/storage';
+	import { FileStorage } from '$lib/services/storage';
 
 	let { data } = $props();
 	const { service, supabase, studio } = data;
@@ -47,7 +48,7 @@
 		: '';
 
 	// Set default type to 'video' if creating new service, otherwise use existing type
-	const serviceType = service?.type && service.type !== '' ? service.type : 'video';
+	const serviceType = 'video';
 
 	const initialFormData = {
 		id: service?.id,
@@ -56,7 +57,7 @@
 		description: serviceDescription,
 		type: serviceType,
 		highlights: serviceHighlights || [],
-		cover_url: service?.cover_url || null
+		cover_file_id: service?.cover_file_id || null
 	};
 
 	const form = superForm(initialFormData, {
@@ -82,11 +83,36 @@
 	let saveSuccess = $state(false);
 	let newHighlight = $state('');
 
-	const coverUrl = $derived(
-		coverPreview ||
-			($formValues.cover_url ? getServiceCoverUrl($formValues.cover_url, supabase) : null) ||
-			(service?.cover_url ? getServiceCoverUrl(service.cover_url, supabase) : null)
-	);
+	let coverUrl = $state('');
+
+	// Update coverUrl whenever related values change
+	$effect(() => {
+		const fetchCoverUrl = async () => {
+			if (coverPreview) {
+				coverUrl = coverPreview;
+				return;
+			}
+
+			// Check form values first
+			if ($formValues.cover_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl($formValues.cover_file_id);
+				coverUrl = url || '';
+				return;
+			}
+
+			// Fallback to service cover from initial load
+			if (service?.cover_file_id && supabase) {
+				const storage = new FileStorage(supabase);
+				const url = await storage.getUrl(service.cover_file_id);
+				coverUrl = url || '';
+				return;
+			}
+
+			coverUrl = '';
+		};
+		fetchCoverUrl();
+	});
 
 	function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -103,10 +129,12 @@
 			return;
 		}
 
-		handleServiceCoverUpload(supabase, file).then((filename) => {
+		handleServiceCoverUpload(supabase, file, service.id).then(async (filename) => {
 			if (filename) {
-				$formValues.cover_url = filename;
-				coverPreview = getServiceCoverUrl(filename, supabase);
+				$formValues.cover_file_id = filename;
+				// Create new storage instance for the URL
+				const storage = new FileStorage(supabase);
+				coverPreview = await storage.getUrl(filename) || '';
 				toast.success('Cover image uploaded successfully');
 			} else {
 				toast.error('Failed to upload cover image');
@@ -116,7 +144,7 @@
 
 	function handleCoverRemove() {
 		coverPreview = '';
-		$formValues.cover_url = null;
+		$formValues.cover_file_id = null;
 	}
 
 	function addHighlight() {
@@ -146,7 +174,7 @@
 				description: $formValues.description,
 				type: $formValues.type,
 				highlights: $formValues.highlights,
-				cover_url: $formValues.cover_url
+				cover_file_id: $formValues.cover_file_id
 			};
 
 			if (service?.id) {
@@ -311,7 +339,7 @@
 							onchange={handleCoverFileSelect}
 							class="hidden"
 						/>
-						{#if $formValues.cover_url || coverPreview}
+						{#if $formValues.cover_file_id || coverPreview}
 							<Button
 								type="button"
 								variant="outline"
