@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card, CardContent } from '$lib/components/ui/card';
@@ -7,41 +6,36 @@
 	import { toast } from 'svelte-sonner';
 
 	const { supabase, userId, username, currentAvatarUrl } = $props();
-	const dispatch = createEventDispatcher();
 	let uploading = $state(false);
 	let fileInput: HTMLInputElement;
 	// Initialize with the avatar file ID which is our new standard
 	let currentAvatar = $state(currentAvatarUrl);
-
-	// Create storage instance once for the operations
+	let avatarDisplayUrl = $state('');
 	let storage: FileStorage;
 
-	// Initialize storage and get display URL
+	// Initialize storage only once when supabase is available
+
+	if (supabase) {
+		storage = new FileStorage(supabase);
+	}
+
+	// Update avatar display URL when either currentAvatar or supabase/storage becomes available
+	// This effect will run initially and whenever currentAvatar changes due to reactivity
 	$effect(() => {
-		if (supabase) {
-			storage = new FileStorage(supabase);
-		}
-	});
+		if (!supabase || !storage) return;
 
-	let avatarDisplayUrl = $state('');
-
-	// Update the display URL whenever currentAvatar changes
-	$effect(() => {
-		const fetchAvatarUrl = async () => {
-			if (currentAvatar && storage) {
-				console.log('FEAVEL');
-
+		// We use an IIFE (immediately invoked function expression) for the async operation
+		(async () => {
+			if (currentAvatar) {
 				const url = await storage.getUrl(currentAvatar);
 				avatarDisplayUrl = url || '';
-			} else if (currentAvatarUrl && !currentAvatarUrl.includes('/')) {
-				// If currentAvatarUrl is likely a file ID (doesn't contain URL characters), treat it as a file ID
-				const url = await storage.getUrl(currentAvatarUrl);
-				avatarDisplayUrl = url || '';
+			} else if (currentAvatarUrl) {
+				// Fallback to the original avatar URL
+				avatarDisplayUrl = currentAvatarUrl;
 			} else {
-				avatarDisplayUrl = currentAvatarUrl || '';
+				avatarDisplayUrl = '';
 			}
-		};
-		fetchAvatarUrl();
+		})();
 	});
 
 	async function handleFileSelect(event: Event) {
@@ -89,13 +83,11 @@
 						console.error('Failed to update avatar_file_id in database:', error.message);
 						// Still use the storage ID as the avatar reference but show an error message
 						currentAvatar = result.storage_id;
-						dispatch('avatarUpdated', { avatarUrl: result.storage_id });
 						toast.error('Avatar uploaded but database update failed');
 					} else {
 						toast.success('Avatar uploaded successfully');
 						// Use the storage ID as the avatar reference
 						currentAvatar = result.storage_id;
-						dispatch('avatarUpdated', { avatarUrl: result.storage_id });
 					}
 				} else {
 					toast.error('Failed to upload avatar');
@@ -135,7 +127,6 @@
 
 					toast.success('Avatar removed successfully');
 					currentAvatar = null;
-					dispatch('avatarUpdated', { avatarUrl: null });
 				} else {
 					toast.error('Failed to remove avatar');
 				}

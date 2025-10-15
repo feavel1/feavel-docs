@@ -46,10 +46,6 @@ export function filterServices(services: Service[], filters: ServiceFilters): Se
 	return filtered;
 }
 
-export function getServiceCategories(_service: Service): string[] {
-	return [];
-}
-
 export function formatServicePrice(price: number): string {
 	return `$${price.toFixed(2)}`;
 }
