@@ -25,6 +25,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
+	import * as Select from '$lib/components/ui/select';
 	import { handleServiceCoverUpload, updateService, deleteService } from '$lib/utils/services';
 	import { goto } from '$app/navigation';
 	import { FileStorage } from '$lib/services/storage';
@@ -305,16 +306,19 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Service Type</Form.Label>
-								<select
-									{...props}
-									bind:value={$formValues.type}
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-								>
-									<option value="video">Video</option>
-									<option value="download">Download</option>
-									<option value="event">Event</option>
-									<option value="subscription">Subscription</option>
-								</select>
+								<Select.Root {...props} bind:value={$formValues.type} type="single">
+									<Select.Trigger class="w-full">
+										{$formValues.type
+											? $formValues.type.charAt(0).toUpperCase() + $formValues.type.slice(1)
+											: 'Select service type'}
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value="video">Video</Select.Item>
+										<Select.Item value="download">Download</Select.Item>
+										<Select.Item value="event">Event</Select.Item>
+										<Select.Item value="subscription">Subscription</Select.Item>
+									</Select.Content>
+								</Select.Root>
 							{/snippet}
 						</Form.Control>
 					</Form.Field>

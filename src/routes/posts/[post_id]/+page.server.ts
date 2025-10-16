@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 
 		// Create a minimal draft post immediately with proper initial content_v2 structure
-		const { post: newPost, error: createError } = await createPost(
+		const result = await createPost(
 			locals.supabase,
 			session.user.id,
 			{
@@ -30,6 +30,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				tags: []
 			}
 		);
+		const newPost = result.data;
+		const createError = result.error;
 
 		if (createError || !newPost) {
 			throw error(500, 'Failed to create new post');

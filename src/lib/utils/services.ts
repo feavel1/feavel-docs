@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Json } from '$lib/types/database.types';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
-import { validateUUID, type ApiResponse } from './validation';
+import { validateUUID } from './validation';
 
 // Simplified service type
 export interface Service {
@@ -104,7 +104,7 @@ export async function createService(
 		highlights: string[];
 		cover_file_id: string | null;
 	}
-): Promise<ApiResponse<Service>> {
+): Promise<{ success: boolean; data?: Service; error?: string }> {
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
@@ -163,7 +163,7 @@ export async function updateService(
 		highlights: string[];
 		cover_file_id: string | null;
 	}
-): Promise<ApiResponse<null>> {
+): Promise<{ success: boolean; error?: string }> {
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
@@ -221,7 +221,7 @@ export async function deleteService(
 	supabase: SupabaseClient,
 	studioId: number,
 	serviceId: string
-): Promise<ApiResponse<null>> {
+): Promise<{ success: boolean; error?: string }> {
 	try {
 		// First check if the service belongs to this studio
 		const { data: service, error: fetchError } = await supabase

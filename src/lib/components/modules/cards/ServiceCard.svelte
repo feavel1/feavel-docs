@@ -74,7 +74,7 @@
 			{#if coverUrl}
 				<img src={coverUrl} alt={service.name} class="h-48 w-full rounded-t-lg object-cover" />
 			{:else}
-				<div class="h-48 w-full animate-pulse rounded-t-lg bg-muted" />
+				<div class="h-48 w-full animate-pulse rounded-t-lg bg-muted"></div>
 			{/if}
 		{/if}
 		<CardHeader>

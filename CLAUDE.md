@@ -190,15 +190,6 @@ The project uses Paraglide.js for internationalization:
 - Use `maybeSingle()` for optional single-record queries
 - Handle string/number ID type conversions explicitly
 
-## Studio System Patterns
-
-The studio system follows specific patterns for handling studio applications and dashboard access:
-
-- **Studio Status Management**: Studios have a status field with values: 'applied', 'approved', 'incomplete', 'disabled', 'blocked'
-- **Limited vs Full Access**: Users with 'applied' status get limited dashboard access, while 'approved' users get full access
-- **Duplicate Prevention**: Each user can only apply to become a studio once (enforced by unique user_id constraint)
-- **Dashboard Navigation**: Studio dashboard follows the same navigation pattern as member dashboard with links to settings, services, and orders pages
-
 ### Consolidated Data Access
 
 The user profile system has been optimized to consolidate user and studio data into a single query:
@@ -207,24 +198,6 @@ The user profile system has been optimized to consolidate user and studio data i
 - **getUserProfileWithStudio()**: A utility function that fetches both user and studio data in a single query, reducing database calls
 - **Access Patterns**: Use `userProfile.studio?.status` instead of separate `userStudio` variables
 - **Performance**: This approach reduces the number of database queries needed to fetch user information
-
-### Studio Application Form Handling
-
-Follow the standard form handling pattern with Zod validation for studio applications:
-
-```ts
-// Schema definition
-import { z } from 'zod/v4';
-
-export const studioApplicationSchema = z.object({
-	name: z.string().min(1).max(100),
-	description: z.string().min(1).max(500),
-	contact_phone: z.number().positive(),
-	salary_expectation: z.string().min(1).max(100)
-});
-
-export type StudioApplicationSchema = typeof studioApplicationSchema;
-```
 
 ## Security Directives
 
@@ -263,5 +236,6 @@ The project uses a standardized approach for file uploads and management:
 - **Component Pattern**: File uploads should be handled directly in components, with database updates performed inline rather than in utility functions
 - **Reference Implementation**: See `AvatarUpload.svelte` for the recommended implementation pattern
 - **Utility Functions**: Helper functions should only handle the file storage upload process, not database updates
+- **DEMO**: see AvatarUpload.svelte to understand how files work.
 
 See `.specify/memory/constitution.md` for the complete constitutional document.

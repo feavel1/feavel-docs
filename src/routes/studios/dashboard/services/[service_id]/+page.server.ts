@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Handle new service creation
 	if (service_id === 'new') {
 		// Create a minimal draft service immediately
-		const { service: newService, error: createError } = await createService(
+		const result = await createService(
 			locals.supabase,
 			studio.id,
 			{
@@ -29,6 +29,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				cover_file_id: null
 			}
 		);
+		const newService = result.data;
+		const createError = result.error;
 
 		if (createError || !newService) {
 			throw error(500, 'Failed to create new service');

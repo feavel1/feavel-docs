@@ -2,7 +2,7 @@ import type { Tables } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { updatePostTags, getTags } from './tags';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
-import { validateUUID, type ApiResponse } from './validation';
+import { validateUUID } from './validation';
 
 export type Post = Tables<'posts'> & {
 	users?: {
@@ -138,7 +138,7 @@ export async function createPost(
 	supabase: SupabaseClient,
 	userId: string,
 	postData: PostData
-): Promise<ApiResponse<Post>> {
+): Promise<{ success: boolean; data?: Post; error?: string }> {
 	try {
 		const { data: post, error: postError } = await supabase
 			.from('posts')
@@ -186,7 +186,7 @@ export async function updatePost(
 	userId: string,
 	postId: number,
 	postData: Partial<PostData>
-): Promise<ApiResponse<null>> {
+): Promise<{ success: boolean; error?: string }> {
 	try {
 		// Additional validation: ensure cover_file_id is a valid UUID if provided
 		const coverIdError = validateUUID(postData.cover_file_id, 'cover file ID');
@@ -237,7 +237,7 @@ export async function deletePost(
 	supabase: SupabaseClient,
 	userId: string,
 	postId: number
-): Promise<ApiResponse<null>> {
+): Promise<{ success: boolean; error?: string }> {
 	try {
 		// Remove tags first
 		await updatePostTags(supabase, postId, []);
@@ -299,7 +299,6 @@ export async function handlePostCoverUpload(
 		return null;
 	}
 }
-
 
 /**
  * Fetch all available tags

@@ -37,7 +37,7 @@
 		</div>
 	</header>
 
-	<main class="mx-auto min-h-dvh pt-20">
+	<main class="mx-auto pt-20">
 		{@render children()}
 		<CloudBackground />
 	</main>
