@@ -114,7 +114,7 @@
 		fetchCoverUrl();
 	});
 
-	function handleCoverFileSelect(event: Event) {
+	async function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (!file) return;
@@ -129,22 +129,55 @@
 			return;
 		}
 
-		handleServiceCoverUpload(supabase, file, service.id).then(async (filename) => {
-			if (filename) {
-				$formValues.cover_file_id = filename;
-				// Create new storage instance for the URL
+		try {
+			// Upload the file using the utility function
+			const storageId = await handleServiceCoverUpload(supabase, file, service.id);
+
+			if (storageId) {
+				// Update the form value with the storage ID
+				$formValues.cover_file_id = storageId;
+
+				// Get the URL for the uploaded file
 				const storage = new FileStorage(supabase);
-				coverPreview = (await storage.getUrl(filename)) || '';
-				toast.success('Cover image uploaded successfully');
+				coverPreview = (await storage.getUrl(storageId)) || '';
+
+				// Update the services table with the new cover_file_id
+				const { error } = await supabase
+					.from('services')
+					.update({ cover_file_id: storageId })
+					.eq('id', service.id);
+
+				if (error) {
+					console.error('Failed to update service cover_file_id in database:', error.message);
+					toast.error('Cover uploaded but failed to save to database');
+				} else {
+					toast.success('Cover image uploaded successfully');
+				}
 			} else {
 				toast.error('Failed to upload cover image');
 			}
-		});
+		} catch (error) {
+			console.error('Error during cover upload:', error);
+			toast.error('Failed to upload cover image');
+		}
 	}
 
-	function handleCoverRemove() {
+	async function handleCoverRemove() {
 		coverPreview = '';
 		$formValues.cover_file_id = null;
+
+		// Update the services table to remove the cover_file_id
+		const { error } = await supabase
+			.from('services')
+			.update({ cover_file_id: null })
+			.eq('id', service.id);
+
+		if (error) {
+			console.error('Failed to remove cover from database:', error.message);
+			toast.error('Failed to remove cover');
+		} else {
+			toast.success('Cover removed successfully');
+		}
 	}
 
 	function addHighlight() {

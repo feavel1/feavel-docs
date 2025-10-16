@@ -255,4 +255,13 @@ This project follows the Feavel Docs Constitution (v1.2.0) which establishes cle
    - Child +page.svelte files can access inherited data directly through props
    - This eliminates the need for redundant data fetching in individual page server files
 
+## File Handling Best Practices
+
+The project uses a standardized approach for file uploads and management:
+
+- **Upload Process**: Use `FileStorage` service → Image compression (when appropriate) → Database record creation → Entity field update
+- **Component Pattern**: File uploads should be handled directly in components, with database updates performed inline rather than in utility functions
+- **Reference Implementation**: See `AvatarUpload.svelte` for the recommended implementation pattern
+- **Utility Functions**: Helper functions should only handle the file storage upload process, not database updates
+
 See `.specify/memory/constitution.md` for the complete constitutional document.

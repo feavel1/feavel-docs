@@ -2,6 +2,7 @@ import type { Tables } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { updatePostTags, getTags } from './tags';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
+import { validateUUID, type ApiResponse } from './validation';
 
 export type Post = Tables<'posts'> & {
 	users?: {
@@ -137,7 +138,7 @@ export async function createPost(
 	supabase: SupabaseClient,
 	userId: string,
 	postData: PostData
-): Promise<{ post: Post | null; error: string | null }> {
+): Promise<ApiResponse<Post>> {
 	try {
 		const { data: post, error: postError } = await supabase
 			.from('posts')
@@ -153,7 +154,7 @@ export async function createPost(
 
 		if (postError) {
 			console.error('Error creating post:', postError);
-			return { post: null, error: 'Failed to create post' };
+			return { success: false, error: 'Failed to create post' };
 		}
 
 		// Handle tags if provided
@@ -165,10 +166,10 @@ export async function createPost(
 			}
 		}
 
-		return { post, error: null };
+		return { success: true, data: post };
 	} catch (error) {
 		console.error('Error in post creation:', error);
-		return { post: null, error: 'Failed to create post' };
+		return { success: false, error: 'Failed to create post' };
 	}
 }
 
@@ -185,17 +186,12 @@ export async function updatePost(
 	userId: string,
 	postId: number,
 	postData: Partial<PostData>
-): Promise<{ success: boolean; error: string | null }> {
+): Promise<ApiResponse<null>> {
 	try {
 		// Additional validation: ensure cover_file_id is a valid UUID if provided
-		if (postData.cover_file_id && postData.cover_file_id !== null) {
-			// Check if this is a valid UUID format
-			const uuidRegex =
-				/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-			if (!uuidRegex.test(postData.cover_file_id)) {
-				console.error('Invalid UUID format for cover_file_id:', postData.cover_file_id);
-				return { success: false, error: 'Invalid cover file ID format' };
-			}
+		const coverIdError = validateUUID(postData.cover_file_id, 'cover file ID');
+		if (coverIdError) {
+			return { success: false, error: coverIdError };
 		}
 
 		const { error: postError } = await supabase
@@ -223,7 +219,7 @@ export async function updatePost(
 			}
 		}
 
-		return { success: true, error: null };
+		return { success: true };
 	} catch (error) {
 		console.error('Error in post update:', error);
 		return { success: false, error: 'Failed to update post' };
@@ -241,7 +237,7 @@ export async function deletePost(
 	supabase: SupabaseClient,
 	userId: string,
 	postId: number
-): Promise<{ success: boolean; error: string | null }> {
+): Promise<ApiResponse<null>> {
 	try {
 		// Remove tags first
 		await updatePostTags(supabase, postId, []);
@@ -258,7 +254,7 @@ export async function deletePost(
 			return { success: false, error: 'Failed to delete post' };
 		}
 
-		return { success: true, error: null };
+		return { success: true };
 	} catch (error) {
 		console.error('Error in post deletion:', error);
 		return { success: false, error: 'Failed to delete post' };
@@ -304,50 +300,6 @@ export async function handlePostCoverUpload(
 	}
 }
 
-/**
- * Update only the cover image of a post
- * @param supabase Supabase client instance
- * @param userId ID of the user updating the post
- * @param postId ID of the post to update
- * @param coverId New cover file ID (null to remove cover)
- * @returns Success status and error message if any
- */
-export async function updatePostCover(
-	supabase: SupabaseClient,
-	userId: string,
-	postId: number,
-	coverId: string | null
-): Promise<{ success: boolean; error: string | null }> {
-	try {
-		// If coverId is provided, validate UUID format
-		if (coverId && coverId !== null) {
-			const uuidRegex =
-				/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-			if (!uuidRegex.test(coverId)) {
-				console.error('Invalid UUID format for cover_file_id:', coverId);
-				return { success: false, error: 'Invalid cover file ID format' };
-			}
-		}
-
-		const { error: postError } = await supabase
-			.from('posts')
-			.update({
-				cover_file_id: coverId
-			})
-			.eq('id', postId)
-			.eq('user_id', userId);
-
-		if (postError) {
-			console.error('Error updating post cover:', postError);
-			return { success: false, error: 'Failed to update post cover' };
-		}
-
-		return { success: true, error: null };
-	} catch (error) {
-		console.error('Error in post cover update:', error);
-		return { success: false, error: 'Failed to update post cover' };
-	}
-}
 
 /**
  * Fetch all available tags

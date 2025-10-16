@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Json } from '$lib/types/database.types';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
+import { validateUUID, type ApiResponse } from './validation';
 
 // Simplified service type
 export interface Service {
@@ -79,18 +80,7 @@ export async function handleServiceCoverUpload(
 
 		if (!result) return null;
 
-		// Update the services table to set the cover_file_id to the storage ID
-		const { error } = await supabase
-			.from('services')
-			.update({ cover_file_id: result.storage_id })
-			.eq('id', serviceId);
-
-		if (error) {
-			console.error('Failed to update service cover_file_id in database:', error.message);
-			// Could optionally delete the file if the database update fails, but for now just return the ID
-			return result.storage_id;
-		}
-
+		// Just return the storage ID - let the component handle updating the services table
 		return result.storage_id;
 	} catch (error) {
 		console.error('Error uploading service cover:', error);
@@ -114,14 +104,20 @@ export async function createService(
 		highlights: string[];
 		cover_file_id: string | null;
 	}
-): Promise<{ service: Service | null; error: string | null }> {
+): Promise<ApiResponse<Service>> {
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
 			return {
-				service: null,
+				success: false,
 				error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`
 			};
+		}
+
+		// Validate cover_file_id if provided
+		const coverIdError = validateUUID(serviceData.cover_file_id, 'cover file ID');
+		if (coverIdError) {
+			return { success: false, error: coverIdError };
 		}
 
 		const { data, error } = await supabase
@@ -144,13 +140,13 @@ export async function createService(
 
 		if (error) {
 			console.error('Error creating service:', error);
-			return { service: null, error: error.message };
+			return { success: false, error: error.message };
 		}
 
-		return { service: data as Service, error: null };
+		return { success: true, data: data as Service };
 	} catch (error: any) {
 		console.error('Error creating service:', error);
-		return { service: null, error: error.message || 'Failed to create service' };
+		return { success: false, error: error.message || 'Failed to create service' };
 	}
 }
 
@@ -167,7 +163,7 @@ export async function updateService(
 		highlights: string[];
 		cover_file_id: string | null;
 	}
-): Promise<{ success: boolean; error: string | null }> {
+): Promise<ApiResponse<null>> {
 	try {
 		// Validate service type
 		if (!VALID_SERVICE_TYPES.includes(serviceData.type as ServiceType)) {
@@ -175,6 +171,12 @@ export async function updateService(
 				success: false,
 				error: `Invalid service type: ${serviceData.type}. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`
 			};
+		}
+
+		// Validate cover_file_id if provided
+		const coverIdError = validateUUID(serviceData.cover_file_id, 'cover file ID');
+		if (coverIdError) {
+			return { success: false, error: coverIdError };
 		}
 
 		// First check if the service belongs to this studio
@@ -207,7 +209,7 @@ export async function updateService(
 			return { success: false, error: error.message };
 		}
 
-		return { success: true, error: null };
+		return { success: true };
 	} catch (error: any) {
 		console.error('Error updating service:', error);
 		return { success: false, error: error.message || 'Failed to update service' };
@@ -219,7 +221,7 @@ export async function deleteService(
 	supabase: SupabaseClient,
 	studioId: number,
 	serviceId: string
-): Promise<{ success: boolean; error: string | null }> {
+): Promise<ApiResponse<null>> {
 	try {
 		// First check if the service belongs to this studio
 		const { data: service, error: fetchError } = await supabase
@@ -241,7 +243,7 @@ export async function deleteService(
 			return { success: false, error: error.message };
 		}
 
-		return { success: true, error: null };
+		return { success: true };
 	} catch (error: any) {
 		console.error('Error deleting service:', error);
 		return { success: false, error: error.message || 'Failed to delete service' };

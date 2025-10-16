@@ -37,7 +37,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import * as Form from '$lib/components/ui/form';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { handlePostCoverUpload, updatePost, updatePostCover, deletePost } from '$lib/utils/posts';
+	import { handlePostCoverUpload, updatePost, deletePost } from '$lib/utils/posts';
 	import { FileStorage } from '$lib/services/storage';
 	import LikeButton from '$lib/components/modules/interactive/LikeButton.svelte';
 	import GradientGenerator from '$lib/components/modules/content/GradientGenerator.svelte';
@@ -188,7 +188,7 @@
 		};
 	});
 
-	function handleCoverFileSelect(event: Event) {
+	async function handleCoverFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (!file) return;
@@ -211,59 +211,55 @@
 		const loadingId = 'loading-' + Date.now();
 		coverPreview = loadingId;
 
-		handlePostCoverUpload(supabase, file, post.id)
-			.then(async (storageId) => {
-				if (storageId) {
-					// Check if this is a valid UUID format before assigning
-					const uuidRegex =
-						/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-					if (!uuidRegex.test(storageId)) {
-						toast.error('Invalid storage ID format received from server');
-						coverPreview = coverUrl; // Revert to previous cover
-						return;
-					}
+		try {
+			// Upload the file using the utility function
+			const storageId = await handlePostCoverUpload(supabase, file, post.id);
 
-					$formValues.cover_file_id = storageId;
-					coverPreview = (await storage.getUrl(storageId)) || '';
-					toast.success('Cover image uploaded successfully');
+			if (storageId) {
+				// Update the form value with the storage ID
+				$formValues.cover_file_id = storageId;
 
-					// Update only the cover field instead of all post data
-					updatePostCover(supabase, session?.user?.id!, post.id, storageId).then(
-						({ success, error }) => {
-							if (success) {
-								saveStatus = 'Cover saved';
-							} else {
-								saveStatus = 'Error saving cover';
-								toast.error(error || 'Failed to save cover');
-							}
-						}
-					);
+				// Get the URL for the uploaded file
+				coverPreview = (await storage.getUrl(storageId)) || '';
+
+				// Update the posts table with the new cover_file_id
+				const { error } = await supabase
+					.from('posts')
+					.update({ cover_file_id: storageId })
+					.eq('id', post.id)
+					.eq('user_id', session?.user?.id!);
+
+				if (error) {
+					console.error('Failed to update post cover_file_id in database:', error.message);
+					toast.error('Cover uploaded but failed to save to database');
+					saveStatus = 'Error saving cover';
 				} else {
-					// Revert to original cover on failure
-					$formValues.cover_file_id = originalCover;
-					// Update coverPreview to original
-					if (originalCover) {
-						coverPreview = (await storage.getUrl(originalCover)) || '';
-					} else {
-						coverPreview = '';
-					}
-					toast.error('Failed to upload cover image');
+					toast.success('Cover image uploaded successfully');
+					saveStatus = 'Cover saved';
 				}
-			})
-			.catch((error) => {
-				console.error('Error during cover upload:', error);
-				// Revert to original cover
+			} else {
+				// Revert to original cover on failure
 				$formValues.cover_file_id = originalCover;
 				// Update coverPreview to original
 				if (originalCover) {
-					storage.getUrl(originalCover).then((url) => {
-						coverPreview = url || '';
-					});
+					coverPreview = (await storage.getUrl(originalCover)) || '';
 				} else {
 					coverPreview = '';
 				}
 				toast.error('Failed to upload cover image');
-			});
+			}
+		} catch (error) {
+			console.error('Error during cover upload:', error);
+			// Revert to original cover
+			$formValues.cover_file_id = originalCover;
+			// Update coverPreview to original
+			if (originalCover) {
+				coverPreview = (await storage.getUrl(originalCover)) || '';
+			} else {
+				coverPreview = '';
+			}
+			toast.error('Failed to upload cover image');
+		}
 	}
 
 	async function handleDelete() {
@@ -303,19 +299,25 @@
 		debouncedSave(); // Trigger real-time save when content changes
 	}
 
-	function handleCoverRemove() {
+	async function handleCoverRemove() {
 		coverPreview = '';
 		$formValues.cover_file_id = null as any;
 
-		// Update only the cover field instead of all post data
-		updatePostCover(supabase, session?.user?.id!, post.id, null).then(({ success, error }) => {
-			if (success) {
-				saveStatus = 'Cover saved';
-			} else {
-				saveStatus = 'Error saving cover';
-				toast.error(error || 'Failed to save cover');
-			}
-		});
+		// Update the posts table to remove the cover_file_id
+		const { error } = await supabase
+			.from('posts')
+			.update({ cover_file_id: null })
+			.eq('id', post.id)
+			.eq('user_id', session?.user?.id!);
+
+		if (error) {
+			console.error('Failed to remove cover from database:', error.message);
+			saveStatus = 'Error saving cover';
+			toast.error('Failed to remove cover');
+		} else {
+			saveStatus = 'Cover saved';
+			toast.success('Cover removed successfully');
+		}
 	}
 </script>
 
