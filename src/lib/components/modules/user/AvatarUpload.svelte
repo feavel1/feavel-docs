@@ -8,7 +8,6 @@
 	const { supabase, userId, username, currentAvatarUrl } = $props();
 	let uploading = $state(false);
 	let fileInput: HTMLInputElement;
-	// Initialize with the avatar file ID which is our new standard
 	let currentAvatar = $state(currentAvatarUrl);
 	let avatarDisplayUrl = $state('');
 	let storage: FileStorage;
@@ -19,11 +18,9 @@
 		storage = new FileStorage(supabase);
 	}
 
-	// Update avatar display URL when either currentAvatar or supabase/storage becomes available
+	// Update avatar display URL when either currentAvatar
 	// This effect will run initially and whenever currentAvatar changes due to reactivity
 	$effect(() => {
-		if (!supabase || !storage) return;
-
 		// We use an IIFE (immediately invoked function expression) for the async operation
 		(async () => {
 			if (currentAvatar) {

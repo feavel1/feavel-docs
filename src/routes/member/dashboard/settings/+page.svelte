@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { invalidate } from '$app/navigation';
 	import AvatarUpload from '$lib/components/modules/user/AvatarUpload.svelte';
 	import {
 		Card,
@@ -47,6 +46,24 @@
 </script>
 
 <div class="space-y-6">
+	<Card>
+		<CardHeader>
+			<CardTitle class="flex items-center gap-2">
+				<User class="h-5 w-5" />
+				Profile Picture
+			</CardTitle>
+			<CardDescription>Update your profile picture</CardDescription>
+		</CardHeader>
+		<CardContent>
+			<AvatarUpload
+				{supabase}
+				userId={session?.user.id}
+				username={userProfile?.username}
+				currentAvatarUrl={userProfile?.avatar_file_id}
+			/>
+		</CardContent>
+	</Card>
+
 	<form method="POST" class="space-y-6" use:enhance>
 		<Card>
 			<CardHeader>
@@ -108,25 +125,6 @@
 			</CardContent>
 		</Card>
 	</form>
-
-	<Card>
-		<CardHeader>
-			<CardTitle class="flex items-center gap-2">
-				<User class="h-5 w-5" />
-				Profile Picture
-			</CardTitle>
-			<CardDescription>Update your profile picture</CardDescription>
-		</CardHeader>
-		<CardContent>
-			<AvatarUpload
-				{supabase}
-				userId={session?.user.id}
-				username={userProfile?.username}
-				currentAvatarUrl={userProfile?.avatar_file_id}
-				on:avatarUpdated={() => invalidate('app:user')}
-			/>
-		</CardContent>
-	</Card>
 
 	<Card>
 		<CardHeader>
