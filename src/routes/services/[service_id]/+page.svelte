@@ -175,11 +175,7 @@
 
 		<!-- Download Files (for download-type services) -->
 		{#if service.type === 'download'}
-			<ServiceFileDisplay
-				{supabase}
-				serviceId={service.id}
-				canAccessProduct={canAccessProduct}
-			/>
+			<ServiceFileDisplay {supabase} serviceId={service.id} {canAccessProduct} />
 		{/if}
 
 		<!-- Studio Info -->

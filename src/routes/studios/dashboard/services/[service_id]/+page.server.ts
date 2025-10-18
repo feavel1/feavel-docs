@@ -17,18 +17,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Handle new service creation
 	if (service_id === 'new') {
 		// Create a minimal draft service immediately
-		const result = await createService(
-			locals.supabase,
-			studio.id,
-			{
-				name: 'New Service',
-				price: 0,
-				description: '',
-				type: 'video', // Default to 'video' instead of empty string
-				highlights: [],
-				cover_file_id: null
-			}
-		);
+		const result = await createService(locals.supabase, studio.id, {
+			name: 'New Service',
+			price: 0,
+			description: '',
+			type: 'video', // Default to 'video' instead of empty string
+			highlights: [],
+			cover_file_id: null
+		});
 		const newService = result.data;
 		const createError = result.error;
 

@@ -259,6 +259,7 @@ For services with download type, studios can upload two files: preview (public) 
 - **File Display**: Use the `ServiceFileDisplay.svelte` component to show files on service pages, with appropriate access controls for product files.
 
 **Reference Implementation**:
+
 - Utility class: `src/lib/utils/serviceDownloads.ts`
 - UI components: `src/lib/components/modules/services/PreviewFileUpload.svelte`, `src/lib/components/modules/services/ProductFileUpload.svelte`, `src/lib/components/modules/services/ServiceFileDisplay.svelte`, `src/lib/components/modules/services/ServiceFileManager.svelte`
 - Integration examples: `src/routes/studios/dashboard/services/[service_id]/+page.svelte`, `src/routes/services/[service_id]/+page.svelte`

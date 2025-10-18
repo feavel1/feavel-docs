@@ -5,6 +5,7 @@ This document provides detailed information about the service file upload functi
 ## Overview
 
 For services with the "download" type, studios can upload two types of files:
+
 1. **Preview File**: A public file that users can access to preview the service
 2. **Product File**: A private file that only purchasers can access
 
@@ -15,6 +16,7 @@ For services with the "download" type, studios can upload two types of files:
 The `ServiceDownloads` class (`src/lib/utils/serviceDownloads.ts`) is the core utility for handling all service file operations.
 
 Key methods:
+
 - `getServiceFiles(serviceId: string)`: Retrieve file information for a service
 - `uploadPreviewFile(serviceId: string, file: File, maxFileSize?: number, allowedTypes?: string[])`: Upload a preview file
 - `uploadProductFile(serviceId: string, file: File, maxFileSize?: number, allowedTypes?: string[])`: Upload a product file
@@ -28,6 +30,7 @@ Key methods:
 The `PreviewFileUpload.svelte` component (`src/lib/components/modules/services/PreviewFileUpload.svelte`) provides the UI for uploading and managing preview files.
 
 Features:
+
 - File selection with validation
 - Upload progress feedback
 - File preview display
@@ -39,6 +42,7 @@ Features:
 The `ProductFileUpload.svelte` component (`src/lib/components/modules/services/ProductFileUpload.svelte`) provides the UI for uploading and managing product files.
 
 Features:
+
 - File selection with validation
 - Upload progress feedback
 - File information display (without preview for security)
@@ -50,6 +54,7 @@ Features:
 The `ServiceFileManager.svelte` component (`src/lib/components/modules/services/ServiceFileManager.svelte`) provides a unified interface for managing both preview and product files.
 
 Features:
+
 - Tab-based navigation between preview and product file management
 - Service type validation
 - Integration with both upload components
@@ -59,6 +64,7 @@ Features:
 The `ServiceFileDisplay.svelte` component (`src/lib/components/modules/services/ServiceFileDisplay.svelte`) displays files on service pages with appropriate access controls.
 
 Features:
+
 - Preview file display with download button
 - Product file display with conditional access
 - Access validation for product files
@@ -69,6 +75,7 @@ Features:
 ### Database Schema
 
 The `service_downloads` table links services to their files:
+
 - `service_id`: Foreign key to the services table
 - `preview_file_id`: Storage ID for the preview file
 - `product_file_id`: Storage ID for the product file
@@ -76,12 +83,14 @@ The `service_downloads` table links services to their files:
 ### File Storage
 
 Files are stored using the `FileStorage` service with the following configuration:
+
 - Preview files: `is_public: true`
 - Product files: `is_public: false`
 
 ### Error Handling
 
 The system implements manual cleanup for partial failures:
+
 1. If a file is uploaded but the database operation fails, the file is automatically deleted from storage
 2. If a database record is created but the file upload fails, the record is cleaned up
 3. All operations include comprehensive error logging

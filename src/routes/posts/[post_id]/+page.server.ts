@@ -17,19 +17,15 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 
 		// Create a minimal draft post immediately with proper initial content_v2 structure
-		const result = await createPost(
-			locals.supabase,
-			session.user.id,
-			{
-				title: null,
-				content: {
-					blocks: [],
-					version: '2.27.2' // Editor.js version
-				},
-				public_visibility: false,
-				tags: []
-			}
-		);
+		const result = await createPost(locals.supabase, session.user.id, {
+			title: null,
+			content: {
+				blocks: [],
+				version: '2.27.2' // Editor.js version
+			},
+			public_visibility: false,
+			tags: []
+		});
 		const newPost = result.data;
 		const createError = result.error;
 
