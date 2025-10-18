@@ -29,6 +29,7 @@
 	import { handleServiceCoverUpload, updateService, deleteService } from '$lib/utils/services';
 	import { goto } from '$app/navigation';
 	import { FileStorage } from '$lib/services/storage';
+	import ServiceFileManager from '$lib/components/modules/services/ServiceFileManager.svelte';
 
 	let { data } = $props();
 	const { service, supabase, studio } = data;
@@ -48,8 +49,8 @@
 			: JSON.stringify(service.description)
 		: '';
 
-	// Set default type to 'video' if creating new service, otherwise use existing type
-	const serviceType = 'video';
+	// Use the actual service type if it exists, otherwise default to 'video' for new services
+	const serviceType = service?.type || 'video';
 
 	const initialFormData = {
 		id: service?.id,
@@ -448,6 +449,11 @@
 				{/if}
 			</CardContent>
 		</Card>
+
+		<!-- File Management for Download Services -->
+		{#if $formValues.type === 'download'}
+			<ServiceFileManager {supabase} serviceId={service.id} />
+		{/if}
 
 		<!-- Actions -->
 		<div class="flex justify-between">

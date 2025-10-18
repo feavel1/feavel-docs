@@ -5,9 +5,10 @@
 	import { goto } from '$app/navigation';
 	import { getServiceTags } from '$lib/utils/serviceCategories';
 	import { FileStorage } from '$lib/services/storage';
+	import ServiceFileDisplay from '$lib/components/modules/services/ServiceFileDisplay.svelte';
 
 	let { data } = $props();
-	let { service, userProfile, supabase } = data;
+	let { service, userProfile, supabase, canAccessProduct } = data;
 
 	// Simplified studio data access - based on our query, studios is an object with name, description, and contact_phone
 	let studio = $derived(service?.studios || null);
@@ -151,10 +152,8 @@
 			{@const highlightsArray = Array.isArray(service.highlights)
 				? service.highlights
 				: typeof service.highlights === 'string'
-					? JSON.parse(service.highlights)
-					: Array.isArray(service.highlights)
-						? service.highlights
-						: []}
+					? JSON.parse(service.highlights) || []
+					: []}
 			{#if highlightsArray.length > 0}
 				<Card class="mb-8">
 					<CardHeader>
@@ -165,15 +164,22 @@
 							{#each highlightsArray as highlight}
 								<li class="flex items-start">
 									<span class="mr-2">•</span>
-									<span
-										>{typeof highlight === 'string' ? highlight : JSON.stringify(highlight)}</span
-									>
+									<span>{highlight}</span>
 								</li>
 							{/each}
 						</ul>
 					</CardContent>
 				</Card>
 			{/if}
+		{/if}
+
+		<!-- Download Files (for download-type services) -->
+		{#if service.type === 'download'}
+			<ServiceFileDisplay
+				{supabase}
+				serviceId={service.id}
+				canAccessProduct={canAccessProduct}
+			/>
 		{/if}
 
 		<!-- Studio Info -->

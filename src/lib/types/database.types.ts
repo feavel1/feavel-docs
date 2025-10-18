@@ -436,6 +436,105 @@ export type Database = {
 					}
 				];
 			};
+			service_downloads: {
+				Row: {
+					created_at: string | null;
+					preview_file_id: string | null;
+					product_file_id: string | null;
+					service_id: string;
+				};
+				Insert: {
+					created_at?: string | null;
+					preview_file_id?: string | null;
+					product_file_id?: string | null;
+					service_id: string;
+				};
+				Update: {
+					created_at?: string | null;
+					preview_file_id?: string | null;
+					product_file_id?: string | null;
+					service_id?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'service_downloads_preview_file_id_fkey';
+						columns: ['preview_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'service_downloads_product_file_id_fkey';
+						columns: ['product_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'service_downloads_service_id_fkey';
+						columns: ['service_id'];
+						isOneToOne: true;
+						referencedRelation: 'services';
+						referencedColumns: ['id'];
+					}
+				];
+			};
+			service_videos: {
+				Row: {
+					created_at: string | null;
+					duration_sec: number | null;
+					service_id: string;
+					thumbnail_file_id: string | null;
+					trailer_file_id: string | null;
+					video_file_id: string | null;
+				};
+				Insert: {
+					created_at?: string | null;
+					duration_sec?: number | null;
+					service_id: string;
+					thumbnail_file_id?: string | null;
+					trailer_file_id?: string | null;
+					video_file_id?: string | null;
+				};
+				Update: {
+					created_at?: string | null;
+					duration_sec?: number | null;
+					service_id?: string;
+					thumbnail_file_id?: string | null;
+					trailer_file_id?: string | null;
+					video_file_id?: string | null;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'service_videos_service_id_fkey';
+						columns: ['service_id'];
+						isOneToOne: true;
+						referencedRelation: 'services';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'service_videos_thumbnail_file_id_fkey';
+						columns: ['thumbnail_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'service_videos_trailer_file_id_fkey';
+						columns: ['trailer_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'service_videos_video_file_id_fkey';
+						columns: ['video_file_id'];
+						isOneToOne: false;
+						referencedRelation: 'file_storage';
+						referencedColumns: ['id'];
+					}
+				];
+			};
 			services: {
 				Row: {
 					cover_file_id: string | null;

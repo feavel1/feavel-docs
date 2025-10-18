@@ -238,4 +238,29 @@ The project uses a standardized approach for file uploads and management:
 - **Utility Functions**: Helper functions should only handle the file storage upload process, not database updates
 - **DEMO**: see AvatarUpload.svelte to understand how files work.
 
+### Service File Upload Pattern
+
+For services with download type, studios can upload two files: preview (public) and product (private).
+
+**Service Files Upload Process**:
+
+- **Utility Class**: Use the `ServiceDownloads` class (`src/lib/utils/serviceDownloads.ts`) for all service file operations. This class handles file uploads, removals, and database linkage.
+- **Component Pattern**: Use the specialized components `PreviewFileUpload.svelte` and `ProductFileUpload.svelte` for UI interactions. These components use the `ServiceDownloads` utility class for all operations.
+- **Two-file pattern**: Implement separate upload functionality for preview and product files
+- **Public vs Private**:
+  - Preview files: `is_public: true` in FileStorage options
+  - Product files: `is_public: false` in FileStorage options
+- **Database linkage**: Use the `service_downloads` table to link services to their files:
+  - `preview_file_id` for the preview file storage ID
+  - `product_file_id` for the product file storage ID
+- **Service Type Check**: The `ServiceDownloads` class validates that the service has type "download" before allowing file operations
+- **Access Control**: Product files require purchase verification, preview files are publicly accessible if the service is public
+- **Error Handling**: The `ServiceDownloads` class implements manual cleanup if uploads or database operations fail partially. If a file is uploaded but the database operation fails, the file is automatically deleted from storage.
+- **File Display**: Use the `ServiceFileDisplay.svelte` component to show files on service pages, with appropriate access controls for product files.
+
+**Reference Implementation**:
+- Utility class: `src/lib/utils/serviceDownloads.ts`
+- UI components: `src/lib/components/modules/services/PreviewFileUpload.svelte`, `src/lib/components/modules/services/ProductFileUpload.svelte`, `src/lib/components/modules/services/ServiceFileDisplay.svelte`, `src/lib/components/modules/services/ServiceFileManager.svelte`
+- Integration examples: `src/routes/studios/dashboard/services/[service_id]/+page.svelte`, `src/routes/services/[service_id]/+page.svelte`
+
 See `.specify/memory/constitution.md` for the complete constitutional document.

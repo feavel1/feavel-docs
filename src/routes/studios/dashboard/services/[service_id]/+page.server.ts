@@ -41,7 +41,6 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 
 	// Handle existing service loading
-	// Use service_id directly as string for database queries
 	const { data: service, error: serviceError } = await locals.supabase
 		.from('services')
 		.select('*')
