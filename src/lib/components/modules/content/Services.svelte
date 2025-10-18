@@ -6,7 +6,7 @@
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import ServiceCard from '$lib/components/modules/cards/ServiceCard.svelte';
-	import type { ServiceCategory } from '$lib/utils/serviceCategories';
+	import type { ServiceCategory } from '$lib/utils/services';
 	import type { SupabaseClient } from '@supabase/supabase-js';
 	import { toast } from 'svelte-sonner';
 

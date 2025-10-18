@@ -3,7 +3,7 @@
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { ArrowLeft, Calendar, User, Phone, Edit } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import { getServiceTags } from '$lib/utils/serviceCategories';
+	import { getServiceTags } from '$lib/utils/services';
 	import { FileStorage } from '$lib/services/storage';
 	import ServiceFileDisplay from '$lib/components/modules/services/ServiceFileDisplay.svelte';
 
@@ -67,65 +67,63 @@
 
 	{#if service}
 		<!-- Service Header -->
-		<div class="mb-8">
-			<div class="flex items-start justify-between">
-				<div class="flex-1">
-					<h1 class="mb-4 text-4xl font-bold">{service.name}</h1>
-					<div class="mb-6 flex items-center gap-4 text-muted-foreground">
-						<div class="flex items-center gap-2">
-							<User class="h-4 w-4" />
-							<span
-								>{typeof studio === 'object' && studio !== null && 'name' in studio
-									? studio.name
-									: 'Unknown Studio'}</span
-							>
-						</div>
-						<div class="flex items-center gap-2">
-							<Calendar class="h-4 w-4" />
-							<span>{new Date(service.created_at || '').toLocaleDateString()}</span>
-						</div>
+
+		<div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+			<div class="min-w-0 flex-1">
+				<h1 class="mb-2 text-3xl font-bold break-words md:text-4xl">{service.name}</h1>
+				<div class="mb-4 flex flex-wrap items-center gap-4 text-muted-foreground">
+					<div class="flex min-w-0 items-center gap-2">
+						<User class="h-4 w-4 flex-shrink-0" />
+						<span class="truncate"
+							>{typeof studio === 'object' && studio !== null && 'name' in studio
+								? studio.name
+								: 'Unknown Studio'}</span
+						>
+					</div>
+					<div class="flex items-center gap-2">
+						<Calendar class="h-4 w-4 flex-shrink-0" />
+						<span>{new Date(service.created_at || '').toLocaleDateString()}</span>
 					</div>
 				</div>
-				<div class="flex gap-2">
-					{#if canEdit}
-						<Button href="/studios/dashboard/services/{service.id}" variant="outline">
-							<Edit class="mr-2 h-4 w-4" />
-							Edit
-						</Button>
-					{/if}
-					<Button onclick={handleOrderService}>
-						Order for {formatPrice(service.price)}
+			</div>
+
+			<div class="flex flex-shrink-0 gap-2">
+				{#if canEdit}
+					<Button
+						href="/studios/dashboard/services/{service.id}"
+						variant="outline"
+						class="flex-shrink-0"
+					>
+						<Edit class="mr-2 h-4 w-4" />
+						Edit
 					</Button>
-				</div>
+				{/if}
+				<Button onclick={handleOrderService} class="flex-shrink-0">
+					Order for {formatPrice(service.price)}
+				</Button>
 			</div>
-
-			{#if coverUrl}
-				<div class="mb-6 overflow-hidden rounded-lg">
-					<img src={coverUrl} alt={service.name} class="h-64 w-full object-cover md:h-96" />
-				</div>
-			{/if}
-
-			<div class="mb-4">
-				<span class="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-					{service.type}
-				</span>
-			</div>
-
-			{#if tags.length > 0}
-				<div class="mb-6 flex flex-wrap gap-2">
-					{#each tags as tag}
-						<Button
-							variant="outline"
-							size="sm"
-							href={`/services?categories=${encodeURIComponent(tag)}`}
-							class="h-7 px-3 text-xs"
-						>
-							{tag}
-						</Button>
-					{/each}
-				</div>
-			{/if}
 		</div>
+
+		{#if coverUrl}
+			<div class="mb-6 overflow-hidden rounded-lg">
+				<img src={coverUrl} alt={service.name} class="h-64 w-full object-cover md:h-96" />
+			</div>
+		{/if}
+
+		{#if tags.length > 0}
+			<div class="mb-6 flex flex-wrap gap-2">
+				{#each tags as tag}
+					<Button
+						variant="outline"
+						size="sm"
+						href={`/services?categories=${encodeURIComponent(tag)}`}
+						class="h-7 px-3 text-xs"
+					>
+						{tag}
+					</Button>
+				{/each}
+			</div>
+		{/if}
 
 		<!-- Service Content -->
 		<Card class="mb-8">
@@ -144,34 +142,30 @@
 				{:else}
 					<p class="text-muted-foreground">No description available.</p>
 				{/if}
+
+				<!-- Highlights -->
+				{#if service.highlights}
+					{@const highlightsArray = Array.isArray(service.highlights)
+						? service.highlights
+						: typeof service.highlights === 'string'
+							? JSON.parse(service.highlights) || []
+							: []}
+					{#if highlightsArray.length > 0}
+						<div class="mt-6">
+							<h3 class="mb-3 text-lg font-medium">Highlights</h3>
+							<ul class="space-y-1">
+								{#each highlightsArray as highlight}
+									<li class="flex items-start">
+										<span class="mt-1 mr-2">•</span>
+										<span>{highlight}</span>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+				{/if}
 			</CardContent>
 		</Card>
-
-		<!-- Highlights -->
-		{#if service.highlights}
-			{@const highlightsArray = Array.isArray(service.highlights)
-				? service.highlights
-				: typeof service.highlights === 'string'
-					? JSON.parse(service.highlights) || []
-					: []}
-			{#if highlightsArray.length > 0}
-				<Card class="mb-8">
-					<CardHeader>
-						<h2 class="text-2xl font-semibold">Highlights</h2>
-					</CardHeader>
-					<CardContent>
-						<ul class="space-y-2">
-							{#each highlightsArray as highlight}
-								<li class="flex items-start">
-									<span class="mr-2">•</span>
-									<span>{highlight}</span>
-								</li>
-							{/each}
-						</ul>
-					</CardContent>
-				</Card>
-			{/if}
-		{/if}
 
 		<!-- Download Files (for download-type services) -->
 		{#if service.type === 'download'}
@@ -194,14 +188,14 @@
 								</span>
 							</div>
 						</div>
-						<div class="flex-1">
-							<p class="font-medium">{studio.name}</p>
-							<p class="mb-2 text-sm text-muted-foreground">
+						<div class="min-w-0 flex-1">
+							<p class="truncate font-medium">{studio.name}</p>
+							<p class="mb-2 truncate text-sm text-muted-foreground">
 								{('description' in studio && studio.description) || 'No description available'}
 							</p>
 							<div class="flex items-center gap-2 text-sm">
-								<Phone class="h-4 w-4" />
-								<span>
+								<Phone class="h-4 w-4 flex-shrink-0" />
+								<span class="truncate">
 									{('contact_phone' in studio && studio.contact_phone) ||
 										'No contact phone available'}
 								</span>

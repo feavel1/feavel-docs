@@ -3,6 +3,11 @@ import type { Json } from '$lib/types/database.types';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
 import { validateUUID } from './validation';
 
+export interface ServiceCategory {
+	id: number;
+	category_name: string;
+}
+
 // Simplified service type
 export interface Service {
 	id: string;
@@ -248,4 +253,17 @@ export async function deleteService(
 		console.error('Error deleting service:', error);
 		return { success: false, error: error.message || 'Failed to delete service' };
 	}
+}
+
+/**
+ * Get service tags from service data
+ * This function is used by ServiceCard and service detail page
+ */
+export function getServiceTags(service: Service): string[] {
+	if (!service) return [];
+	return (
+		service.services_category_rel
+			?.map((rel: any) => rel.services_category?.category_name)
+			.filter(Boolean) || []
+	);
 }

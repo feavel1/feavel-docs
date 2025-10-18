@@ -75,13 +75,13 @@
 </script>
 
 {#if loading}
-	<Card>
+	<Card class="mb-8">
 		<CardContent class="flex h-24 items-center justify-center">
 			<p>Loading file information...</p>
 		</CardContent>
 	</Card>
 {:else if availableFiles.hasPreview || availableFiles.hasProduct}
-	<Card>
+	<Card class="mb-8">
 		<CardHeader>
 			<CardTitle>Download Files</CardTitle>
 		</CardHeader>

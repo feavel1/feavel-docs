@@ -271,6 +271,58 @@
 	<h1 class="mb-6 text-3xl font-bold">{$formValues.id ? 'Edit Service' : 'New Service'}</h1>
 
 	<form method="POST" use:enhance class="space-y-6">
+		<!-- Cover Image -->
+		<Card>
+			<CardHeader>
+				<h2 class="text-xl font-semibold">Cover Image</h2>
+			</CardHeader>
+			<CardContent>
+				<div class="mb-4 overflow-hidden rounded-lg">
+					<div class="group relative">
+						<button
+							type="button"
+							class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
+							onclick={() => document.getElementById('cover-input')?.click()}
+							aria-label="Change cover image"
+						>
+							<div class="relative h-full w-full">
+								{#if coverUrl}
+									<img src={coverUrl} alt="" class="h-full w-full object-cover" />
+								{:else}
+									<div class="flex h-full w-full items-center justify-center bg-muted">
+										<span class="text-muted-foreground">No cover image</span>
+									</div>
+								{/if}
+								<div
+									class="absolute inset-0 flex items-center justify-center opacity-50 transition-opacity hover:bg-gray-400"
+								>
+									<span class="text-lg font-medium text-white">Click to change cover image</span>
+								</div>
+							</div>
+						</button>
+						<Input
+							type="file"
+							id="cover-input"
+							accept="image/*"
+							onchange={handleCoverFileSelect}
+							class="hidden"
+						/>
+						{#if $formValues.cover_file_id || coverPreview}
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								onclick={handleCoverRemove}
+								class="absolute top-2 right-2"
+							>
+								Remove Cover
+							</Button>
+						{/if}
+					</div>
+				</div>
+			</CardContent>
+		</Card>
+
 		<!-- Basic Information -->
 		<Card>
 			<CardHeader>
@@ -338,58 +390,6 @@
 						{/snippet}
 					</Form.Control>
 				</Form.Field>
-			</CardContent>
-		</Card>
-
-		<!-- Cover Image -->
-		<Card>
-			<CardHeader>
-				<h2 class="text-xl font-semibold">Cover Image</h2>
-			</CardHeader>
-			<CardContent>
-				<div class="mb-4 overflow-hidden rounded-lg">
-					<div class="group relative">
-						<button
-							type="button"
-							class="h-48 w-full cursor-pointer border-0 bg-transparent p-0 sm:h-64"
-							onclick={() => document.getElementById('cover-input')?.click()}
-							aria-label="Change cover image"
-						>
-							<div class="relative h-full w-full">
-								{#if coverUrl}
-									<img src={coverUrl} alt="" class="h-full w-full object-cover" />
-								{:else}
-									<div class="flex h-full w-full items-center justify-center bg-muted">
-										<span class="text-muted-foreground">No cover image</span>
-									</div>
-								{/if}
-								<div
-									class="absolute inset-0 flex items-center justify-center opacity-50 transition-opacity hover:bg-gray-400"
-								>
-									<span class="text-lg font-medium text-white">Click to change cover image</span>
-								</div>
-							</div>
-						</button>
-						<Input
-							type="file"
-							id="cover-input"
-							accept="image/*"
-							onchange={handleCoverFileSelect}
-							class="hidden"
-						/>
-						{#if $formValues.cover_file_id || coverPreview}
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onclick={handleCoverRemove}
-								class="absolute top-2 right-2"
-							>
-								Remove Cover
-							</Button>
-						{/if}
-					</div>
-				</div>
 			</CardContent>
 		</Card>
 

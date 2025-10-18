@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import { Badge } from '$lib/components/ui/badge';
-	import { getServiceTags } from '$lib/utils/serviceCategories';
+	import { getServiceTags } from '$lib/utils/services';
 	import { FileStorage } from '$lib/services/storage';
 	import type { Service } from '$lib/utils/services';
 
@@ -39,22 +38,6 @@
 		}).format(price);
 	}
 
-	// Function to get status badge variant based on service status
-	function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-		switch (status) {
-			case 'approved':
-				return 'default';
-			case 'applied':
-				return 'secondary';
-			case 'disabled':
-				return 'outline';
-			case 'blocked':
-				return 'destructive';
-			default:
-				return 'secondary';
-		}
-	}
-
 	// Asynchronously get service cover URL
 	$effect(() => {
 		const fetchCoverUrl = async () => {
@@ -80,9 +63,6 @@
 		<CardHeader>
 			<div class="flex items-start justify-between">
 				<CardTitle class="line-clamp-1 text-lg leading-tight">{service.name}</CardTitle>
-				{#if service.status}
-					<Badge variant={getStatusVariant(service.status)}>{service.status}</Badge>
-				{/if}
 			</div>
 
 			<div class="mt-3 flex items-center justify-between">
@@ -99,7 +79,6 @@
 						<div class="text-xs text-muted-foreground">{formattedDate}</div>
 					</div>
 				</div>
-				<Badge variant="secondary">{service.type}</Badge>
 			</div>
 		</CardHeader>
 		<CardContent class="flex-grow">
@@ -123,16 +102,6 @@
 						{/if}
 					{/each}
 				</div>
-			{/if}
-			{#if service.highlights && Array.isArray(service.highlights) && service.highlights.length > 0}
-				<ul class="space-y-2">
-					{#each service.highlights as highlight}
-						<li class="flex items-start">
-							<span class="mr-2">•</span>
-							<span>{highlight}</span>
-						</li>
-					{/each}
-				</ul>
 			{/if}
 		</CardContent>
 		<CardFooter class="flex justify-between">
