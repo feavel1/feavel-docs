@@ -39,7 +39,12 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Handle existing service loading
 	const { data: service, error: serviceError } = await locals.supabase
 		.from('services')
-		.select('*')
+		.select(`
+			*,
+			services_category_rel(
+				services_category!inner(category_name)
+			)
+		`)
 		.eq('id', service_id)
 		.eq('created_by', studio.id)
 		.single();
@@ -48,8 +53,15 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		throw error(404, 'Service not found or access denied');
 	}
 
+	// Fetch all available categories for the MultiSelect component
+	const { data: categories } = await locals.supabase
+		.from('services_category')
+		.select('id, category_name')
+		.order('category_name');
+
 	return {
 		service,
-		studio
+		studio,
+		categories: categories || []
 	};
 };

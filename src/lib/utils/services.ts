@@ -267,3 +267,25 @@ export function getServiceTags(service: Service): string[] {
 			.filter(Boolean) || []
 	);
 }
+
+/**
+ * Update categories for a service (add new, remove old) using database function
+ */
+export async function updateServiceCategories(
+	supabase: SupabaseClient,
+	serviceId: string,
+	categoryNames: string[]
+): Promise<{ error: any }> {
+	try {
+		// Call the database function to update service categories
+		const { error } = await supabase.rpc('update_service_categories', {
+			service_id_param: serviceId,
+			category_names: categoryNames
+		});
+
+		return { error };
+	} catch (error) {
+		console.error('Error updating service categories:', error);
+		return { error };
+	}
+}

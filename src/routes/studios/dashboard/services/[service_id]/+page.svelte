@@ -8,6 +8,7 @@
 		description: z.string().max(1000).optional(),
 		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
+		categories: z.array(z.string().min(1).max(50)).max(10).optional(), // Add categories field
 		cover_file_id: z.string().max(255).optional(),
 		cover_url: z.string().max(255).optional() // Legacy field for compatibility
 	});
@@ -26,13 +27,19 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import * as Select from '$lib/components/ui/select';
-	import { handleServiceCoverUpload, updateService, deleteService } from '$lib/utils/services';
+	import {
+		handleServiceCoverUpload,
+		updateService,
+		deleteService,
+		updateServiceCategories
+	} from '$lib/utils/services';
 	import { goto } from '$app/navigation';
 	import { FileStorage } from '$lib/services/storage';
 	import ServiceFileManager from '$lib/components/modules/services/ServiceFileManager.svelte';
+	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 
 	let { data } = $props();
-	const { service, supabase, studio } = data;
+	const { service, supabase, studio, categories } = data;
 
 	// Prepare initial form data from service
 	// Ensure highlights is always an array of strings
@@ -52,6 +59,11 @@
 	// Use the actual service type if it exists, otherwise default to 'video' for new services
 	const serviceType = service?.type || 'video';
 
+	// Extract categories from service data
+	const serviceCategories = service?.services_category_rel
+		? service.services_category_rel.map((rel: any) => rel.services_category.category_name)
+		: [];
+
 	const initialFormData = {
 		id: service?.id,
 		name: service?.name || '',
@@ -59,6 +71,7 @@
 		description: serviceDescription,
 		type: serviceType,
 		highlights: serviceHighlights || [],
+		categories: serviceCategories || [],
 		cover_file_id: service?.cover_file_id || null
 	};
 
@@ -220,13 +233,25 @@
 					service.id,
 					serviceData
 				);
+
 				if (success) {
-					saveSuccess = true;
-					toast.success('Service saved successfully!');
-					// Reset success state after 2 seconds
-					setTimeout(() => {
-						saveSuccess = false;
-					}, 2000);
+					// Update service categories
+					const { error: categoryError } = await updateServiceCategories(
+						supabase,
+						service.id,
+						$formValues.categories || []
+					);
+
+					if (categoryError) {
+						toast.error('Service saved but failed to update categories');
+					} else {
+						saveSuccess = true;
+						toast.success('Service saved successfully!');
+						// Reset success state after 2 seconds
+						setTimeout(() => {
+							saveSuccess = false;
+						}, 2000);
+					}
 				} else {
 					toast.error(error || 'Failed to save service');
 				}
@@ -447,6 +472,24 @@
 				{#if $formValues.highlights.length >= 10}
 					<p class="mt-2 text-sm text-muted-foreground">Maximum of 10 highlights reached</p>
 				{/if}
+			</CardContent>
+		</Card>
+
+		<!-- Categories -->
+		<Card>
+			<CardHeader>
+				<h2 class="text-xl font-semibold">Categories</h2>
+			</CardHeader>
+			<CardContent>
+				<MultiSelect
+					items={categories}
+					bind:selectedItems={$formValues.categories}
+					itemNameProperty="category_name"
+					allowNewItems={true}
+				/>
+				<p class="mt-2 text-sm text-muted-foreground">
+					Select existing categories or type to create new ones
+				</p>
 			</CardContent>
 		</Card>
 
