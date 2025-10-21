@@ -57,7 +57,7 @@
 </script>
 
 <div class="flex gap-2">
-	<Avatar class="h-7 w-7 flex-shrink-0">
+	<Avatar class="h-7 w-7 shrink-0">
 		<AvatarImage src={resolvedAvatarUrl} alt={user?.username} />
 		<AvatarFallback class="text-xs">
 			{user?.username?.charAt(0)?.toUpperCase() || 'U'}

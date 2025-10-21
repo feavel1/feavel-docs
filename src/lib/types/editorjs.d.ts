@@ -58,6 +58,31 @@ declare module '@editorjs/marker' {
 	export default Marker;
 }
 
+declare module '@editorjs/attaches' {
+	const Attaches: any;
+	export default Attaches;
+}
+
+declare module '@editorjs/embed' {
+	const Embed: any;
+	export default Embed;
+}
+
+declare module '@editorjs/link' {
+	const Link: any;
+	export default Link;
+}
+
+declare module '@editorjs/warning' {
+	const Warning: any;
+	export default Warning;
+}
+
+declare module 'editorjs-color-picker' {
+	const ColorPicker: any;
+	export default ColorPicker;
+}
+
 declare module 'editorjs-drag-drop' {
 	const DragDrop: any;
 	export default DragDrop;
@@ -66,4 +91,9 @@ declare module 'editorjs-drag-drop' {
 declare module 'editorjs-undo' {
 	const Undo: any;
 	export default Undo;
+}
+
+declare module 'editorjs-multiblock-selection-plugin' {
+	const MultiblockSelection: any;
+	export default MultiblockSelection;
 }

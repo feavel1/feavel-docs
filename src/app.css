@@ -119,3 +119,143 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+.dark .ce-popover,
+.dark .ce-popover-item,
+.dark .ce-popover-item__icon,
+.dark .ce-popover-items,
+.dark .ce-popover__container .dark .ce-popover-item:hover {
+	--color-background-item-hover: var(--accent);
+	background-color: var(--accent);
+	border-color: var(--popover-foreground);
+	background: var(--background);
+}
+.dark .ce-popover__container {
+	background: var(--popover);
+}
+
+.dark .ce-popover--opened > .ce-popover__container {
+	border: 1px solid var(--border);
+}
+
+.dark .ce-popover-item-separator__line {
+	border: 1px solid var(--border);
+	display: none;
+}
+
+.dark .ce-toolbar__plus,
+.dark .ce-toolbar__settings-btn,
+.dark .ce-popover-item__title,
+.dark .ce-inline-tool .dark .ce-inline-tool--link .dark .ce-popover-item__icon {
+	color: var(--foreground);
+}
+
+.dark .cdx-search-field.ce-popover__search {
+	background-color: var(--muted) / 0.3;
+	border-color: var(--border);
+}
+
+.dark .cdx-search-field__input {
+	color: var(--foreground);
+}
+
+.dark .cdx-block,
+.dark .ce-block {
+	color: var(--foreground);
+}
+
+.dark .ce-inline-toolbar,
+.dark .ce-conversion-tool__icon,
+.dark .ce-popover-item__icon,
+.dark .tc-popover__item-icon {
+	color: var(--foreground);
+	background-color: var(--background);
+	border-color: var(--border);
+}
+
+.dark .ce-popover,
+.dark .ce-conversion-toolbar,
+.dark .ce-inline-toolbar,
+.dark .tc-popover {
+	background-color: var(--popover);
+	border-color: var(--border);
+	box-shadow: 0 3px 15px -3px var(--border) / 0.2;
+}
+
+.dark .ce-inline-tool {
+	color: var(--color-text-primary);
+}
+
+.dark .ce-inline-tool:hover,
+.dark .ce-inline-toolbar__dropdown:hover,
+.dark .ce-toolbar__plus:hover,
+.dark .ce-toolbar__settings-btn:hover,
+.dark .ce-conversion-tool:hover,
+.dark .ce-popover-item:hover {
+	background-color: var(--accent);
+}
+
+.dark *::selection,
+.dark .ce-block.ce-block--selected .ce-block__content {
+	background-color: var(--accent);
+	border-radius: 3px;
+}
+
+.dark .ce-popover__items {
+	scrollbar-color: var(--border) var(--background);
+}
+
+.ce-popover-item-html {
+	@apply bg-background transition-colors;
+}
+
+.dark .ce-popover-item-html {
+	@apply bg-popover;
+}
+
+.ce-popover-item-html:hover {
+	@apply bg-muted;
+}
+
+.dark .ce-popover-item-html:hover {
+	@apply bg-muted/30;
+}
+
+.ce-inline-tool {
+	@apply text-foreground transition-colors;
+}
+
+.dark .ce-inline-tool {
+	@apply text-foreground;
+}
+
+.ce-inline-tool--active {
+	@apply bg-accent text-accent-foreground;
+}
+
+.dark .ce-inline-tool--active {
+	@apply bg-accent text-accent-foreground;
+}
+
+.dark .ce-inline-tool-input,
+.dark .ce-inline-tool-input--showed {
+	@apply bg-popover text-popover-foreground;
+}
+
+.dark .tc-wrap,
+.dark .tc-wrap * {
+	--color-border: var(--border);
+	--color-text-secondary: var(--foreground);
+	--color-background: var(--accent) / 0.2;
+	--toggler-dots-color: var(--accent) / 0.2;
+	--toggler-dots-color-hovered: var(--foreground);
+}
+
+@media (max-width: 650px) {
+	.dark .ce-toolbar__settings-btn,
+	.dark .ce-toolbar__plus {
+		background-color: var(--popover);
+		border-color: var(--border);
+		box-shadow: 0 3px 15px -3px var(--border) / 0.2;
+	}
+}

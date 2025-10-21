@@ -326,7 +326,7 @@
 	<meta name="description" content={post.title || 'Blog post'} />
 </svelte:head>
 
-<div class="container mx-auto max-w-4xl px-4 py-8">
+<div class="container mx-auto max-w-5xl px-4 py-8">
 	<Button variant="ghost" class="mb-6" href="/posts">
 		<ArrowLeft class="mr-2 h-4 w-4" /> Back to Posts
 	</Button>
