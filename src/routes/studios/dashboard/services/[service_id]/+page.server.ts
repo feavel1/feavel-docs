@@ -39,12 +39,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Handle existing service loading
 	const { data: service, error: serviceError } = await locals.supabase
 		.from('services')
-		.select(`
+		.select(
+			`
 			*,
 			services_category_rel(
 				services_category!inner(category_name)
 			)
-		`)
+		`
+		)
 		.eq('id', service_id)
 		.eq('created_by', studio.id)
 		.single();

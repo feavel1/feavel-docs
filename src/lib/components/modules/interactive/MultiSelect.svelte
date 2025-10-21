@@ -20,7 +20,7 @@
 	}
 
 	let {
-		items,
+		items = $bindable(),
 		selectedItems = $bindable(),
 		itemNameProperty,
 		disabled = false,
@@ -29,13 +29,16 @@
 
 	let open = $state(false);
 	let searchValue = $state('');
+	let newItems = $state<SelectableItem[]>([]);
 
 	// Derived values
+	let allItems = $derived([...items, ...newItems]);
+
 	let filteredItems = $derived.by(() => {
-		if (!searchValue) return items;
+		if (!searchValue) return allItems;
 
 		const searchTerm = searchValue.toLowerCase();
-		const matchedItems = items.filter((item) =>
+		const matchedItems = allItems.filter((item) =>
 			item[itemNameProperty]?.toLowerCase().includes(searchTerm)
 		);
 
@@ -59,8 +62,15 @@
 		} else {
 			// Check if item exists in available items or if new items are allowed
 			const itemExists = items.some((item) => item[itemNameProperty] === itemName);
-			if (itemExists || allowNewItems) {
+			const newItemExists = newItems.some((item) => item[itemNameProperty] === itemName);
+
+			if (itemExists || newItemExists || allowNewItems) {
 				selectedItems = [...selectedItems, itemName];
+
+				// If it's a new item and doesn't exist in either items or newItems, add it to newItems
+				if (allowNewItems && !itemExists && !newItemExists) {
+					newItems = [...newItems, { [itemNameProperty]: itemName } as SelectableItem];
+				}
 			}
 		}
 		searchValue = '';
@@ -144,7 +154,7 @@
 							<span>{item[itemNameProperty]}</span>
 							{#if selectedItems.includes(item[itemNameProperty])}
 								<Check class="h-4 w-4" />
-							{:else if allowNewItems && !items.some((i) => i[itemNameProperty] === item[itemNameProperty])}
+							{:else if allowNewItems && !items.some((i) => i[itemNameProperty] === item[itemNameProperty]) && !newItems.some((i) => i[itemNameProperty] === item[itemNameProperty])}
 								<Tag class="h-4 w-4" />
 							{/if}
 						</Command.Item>
