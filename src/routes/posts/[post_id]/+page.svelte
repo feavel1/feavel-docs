@@ -492,6 +492,8 @@
 					readOnly={!canEdit}
 					onChange={canEdit ? handleContentChange : () => {}}
 					class="min-h-[500px]"
+					postId={post.id}
+					{supabase}
 				/>
 			</div>
 		{:else}
