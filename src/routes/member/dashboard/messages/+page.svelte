@@ -10,6 +10,12 @@
 	import UserIcon from '@lucide/svelte/icons/user';
 	import MessageInput from '$lib/components/modules/chat/MessageInput.svelte';
 	import MessageList from '$lib/components/modules/chat/MessageList.svelte';
+	import {
+		startConversation,
+		addAvatarUrlsToMessages,
+		addAvatarUrlsToChatParticipants,
+		getAvatarUrl
+	} from '$lib/utils/chatUtils';
 
 	// Props from page data
 	let { data } = $props();
@@ -21,7 +27,7 @@
 	let selectedChat = $state<any | null>(null);
 	let messages = $state<any[]>([]);
 	let searchQuery = $state('');
-	let newChatUserEmail = $state('');
+	let newChatUsername = $state('');
 	let isCreatingChat = $state(false);
 	let isLoading = $state(false);
 	let chatsWatcher: any = $state(null);
@@ -45,17 +51,8 @@
 					.single();
 
 				if (userData?.avatar_file_id) {
-					const { data: avatarData } = await data.supabase
-						.from('file_storage')
-						.select('storage_path')
-						.eq('id', userData.avatar_file_id)
-						.single();
-
-					if (avatarData?.storage_path) {
-						// This would be the public URL to the avatar
-						// You might need to adjust this based on your storage configuration
-						currentUserAvatar = avatarData.storage_path;
-					}
+					// Use our utility to get the avatar URL
+					currentUserAvatar = await getAvatarUrl(data.supabase, userData.avatar_file_id);
 				}
 			}
 
@@ -118,7 +115,9 @@
 
 			if (chatError) throw chatError;
 
-			chats = chatData || [];
+			// Add avatar URLs to chat participants
+			const chatsWithAvatars = await addAvatarUrlsToChatParticipants(data.supabase, chatData || []);
+			chats = chatsWithAvatars;
 		} catch (error) {
 			console.error('Error loading chats:', error);
 		} finally {
@@ -208,7 +207,9 @@
 
 			if (error) throw error;
 
-			messages = messageData || [];
+			// Add avatar URLs to messages
+			const messagesWithAvatars = await addAvatarUrlsToMessages(data.supabase, messageData || []);
+			messages = messagesWithAvatars;
 		} catch (error) {
 			console.error('Error loading messages:', error);
 		}
@@ -228,9 +229,11 @@
 					table: 'chat_messages',
 					filter: `conversation_id=eq.${chatId}`
 				},
-				(payload: any) => {
+				async (payload: any) => {
+					// Add avatar URL to the new message
+					const messagesWithAvatar = await addAvatarUrlsToMessages(data.supabase, [payload.new]);
 					// Add new message to the conversation
-					messages = [...messages, payload.new];
+					messages = [...messages, ...messagesWithAvatar];
 				}
 			)
 			.subscribe();
@@ -238,41 +241,18 @@
 
 	// Create a new chat with a user
 	async function createNewChat() {
-		if (!newChatUserEmail.trim() || !currentUserId || !data?.supabase) return;
+		if (!newChatUsername.trim() || !currentUserId || !data?.supabase) return;
 
 		isCreatingChat = true;
 		try {
-			// First, find the user by email
-			const { data: userData, error: userError } = await data.supabase
-				.from('users')
-				.select('id')
-				.eq('email', newChatUserEmail)
-				.single();
+			const result = await startConversation(data.supabase, currentUserId, newChatUsername);
 
-			if (userError) throw userError;
-			if (!userData) {
-				throw new Error('User not found');
+			if (!result.success) {
+				throw new Error(result.error || 'Failed to start conversation');
 			}
 
-			// Create new conversation
-			const { data: conversation, error: convError } = await data.supabase
-				.from('chat_conversations')
-				.insert([{}])
-				.select()
-				.single();
-
-			if (convError) throw convError;
-
-			// Add participants
-			const { error: partError } = await data.supabase.from('chat_participants').insert([
-				{ conversation_id: conversation.id, user_id: currentUserId },
-				{ conversation_id: conversation.id, user_id: userData.id }
-			]);
-
-			if (partError) throw partError;
-
 			// Clear input and refresh chats
-			newChatUserEmail = '';
+			newChatUsername = '';
 			await loadUserChats();
 		} catch (error) {
 			console.error('Error creating chat:', error);
@@ -301,495 +281,254 @@
 	}
 </script>
 
-<!-- Mobile view - show either chat list or chat view -->
-<div class="flex h-full flex-col md:hidden">
-	{#if selectedChat}
-		<!-- Mobile chat view -->
-		<div class="flex flex-1 flex-col">
-			<CardHeader class="flex items-center justify-between border-b">
-				{#if selectedChat}
-					{@const otherParticipant = getOtherParticipant(selectedChat)}
-					<div class="flex items-center gap-3">
-						<Button variant="ghost" size="sm" onclick={() => (selectedChat = null)}>← Back</Button>
-						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-							<UserIcon class="h-5 w-5 text-primary" />
-						</div>
-						<div>
-							<h3 class="font-medium">
-								{otherParticipant?.full_name || otherParticipant?.username || 'Unknown User'}
-							</h3>
-						</div>
-					</div>
-					<Sheet.Root bind:open={isChatListOpen}>
-						<Sheet.Trigger>
-							<Button variant="ghost" size="sm">Chats</Button>
-						</Sheet.Trigger>
-						<Sheet.Content side="left" class="w-4/5 p-0">
-							<Sheet.Header class="border-b p-4">
-								<Sheet.Title>Messages</Sheet.Title>
-							</Sheet.Header>
-							<!-- Chat list content here -->
-							<div class="flex h-[calc(100%-64px)] flex-1 flex-col">
-								<div class="border-b p-4">
-									<Button
-										size="sm"
-										variant="outline"
-										class="w-full"
-										onclick={() => (isCreatingChat = !isCreatingChat)}
-									>
-										<PlusIcon class="mr-2 h-4 w-4" />
-										New Chat
-									</Button>
-
-									{#if isCreatingChat}
-										<div class="mt-4 flex gap-2">
-											<Input
-												bind:value={newChatUserEmail}
-												placeholder="Enter user email..."
-												class="flex-1"
-											/>
-											<Button
-												onclick={createNewChat}
-												size="sm"
-												disabled={!newChatUserEmail.trim() || isCreatingChat}
-											>
-												Create
-											</Button>
-										</div>
-									{/if}
-
-									<div class="relative mt-4">
-										<SearchIcon
-											class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-										/>
-										<Input
-											bind:value={searchQuery}
-											placeholder="Search conversations..."
-											class="pl-10"
-										/>
-									</div>
-								</div>
-
-								<div class="flex-1 overflow-y-auto">
-									{#if isLoading}
-										<div class="p-4 text-center text-muted-foreground">
-											Loading conversations...
-										</div>
-									{:else if chats.length === 0}
-										<div class="p-8 text-center">
-											<div
-												class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
-											>
-												<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
-											</div>
-											<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
-											<p class="mt-2 text-sm text-muted-foreground">
-												Start a conversation by creating a new chat.
-											</p>
-										</div>
-									{:else}
-										<div class="divide-y">
-											{#each chats as chat}
-												<div
-													role="button"
-													tabindex="0"
-													class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
-													chat.id
-														? 'bg-muted'
-														: ''}"
-													onclick={() => selectChat(chat)}
-													onkeydown={(e) => {
-														if (e.key === 'Enter' || e.key === ' ') {
-															selectChat(chat);
-														}
-													}}
-												>
-													{#if chat}
-														{@const otherParticipant = getOtherParticipant(chat)}
-														<div class="flex items-center gap-3">
-															<div
-																class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
-															>
-																<UserIcon class="h-5 w-5 text-primary" />
-															</div>
-															<div class="min-w-0 flex-1">
-																<div class="flex items-center justify-between">
-																	<h4 class="truncate font-medium">
-																		{otherParticipant?.full_name ||
-																			otherParticipant?.username ||
-																			'Unknown User'}
-																	</h4>
-																	{#if chat.chat_messages?.[0]?.created_at}
-																		<span class="text-xs text-muted-foreground">
-																			{formatTime(chat.chat_messages[0].created_at)}
-																		</span>
-																	{/if}
-																</div>
-																{#if chat.chat_messages?.[0]?.message}
-																	<p class="truncate text-sm text-muted-foreground">
-																		{chat.chat_messages[0].message}
-																	</p>
-																{/if}
-															</div>
-														</div>
-													{/if}
-												</div>
-											{/each}
-										</div>
-									{/if}
-								</div>
-							</div>
-						</Sheet.Content>
-					</Sheet.Root>
-				{/if}
-			</CardHeader>
-
-			<CardContent class="flex-1 p-0">
-				<MessageList
-					initialMessages={messages}
-					currentUserId={currentUserId || ''}
-					currentUserAvatar={currentUserAvatar || ''}
-					height="100%"
-					class="p-4"
-				/>
-			</CardContent>
-
-			<div class="border-t p-4">
-				<MessageInput
-					supabase={data?.supabase}
-					conversationId={selectedChat.id}
-					currentUserId={currentUserId || ''}
-					on:messageSent={handleNewMessage}
-				/>
-			</div>
-		</div>
-	{:else}
-		<!-- Mobile chat list view with sheet trigger -->
-		<Sheet.Root bind:open={isChatListOpen}>
-			<Sheet.Trigger>
-				<div class="flex flex-1 flex-col">
-					<CardHeader class="border-b">
-						<div class="flex items-center justify-between">
-							<CardTitle>Messages</CardTitle>
-							<Button
-								size="sm"
-								variant="outline"
-								onclick={() => (isCreatingChat = !isCreatingChat)}
-							>
-								<PlusIcon class="h-4 w-4" />
-							</Button>
-						</div>
-
-						{#if isCreatingChat}
-							<div class="mt-4 flex gap-2">
-								<Input
-									bind:value={newChatUserEmail}
-									placeholder="Enter user email..."
-									class="flex-1"
-								/>
-								<Button
-									onclick={createNewChat}
-									size="sm"
-									disabled={!newChatUserEmail.trim() || isCreatingChat}
-								>
-									Create
-								</Button>
-							</div>
-						{/if}
-
-						<div class="relative mt-4">
-							<SearchIcon
-								class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-							/>
-							<Input bind:value={searchQuery} placeholder="Search conversations..." class="pl-10" />
-						</div>
-					</CardHeader>
-
-					<CardContent class="flex-1 overflow-y-auto p-0">
-						{#if isLoading}
-							<div class="p-4 text-center text-muted-foreground">Loading conversations...</div>
-						{:else if chats.length === 0}
-							<div class="p-8 text-center">
-								<div
-									class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
-								>
-									<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
-								</div>
-								<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
-								<p class="mt-2 text-sm text-muted-foreground">
-									Start a conversation by creating a new chat.
-								</p>
-							</div>
-						{:else}
-							<div class="divide-y">
-								{#each chats as chat}
-									<div
-										role="button"
-										tabindex="0"
-										class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
-										chat.id
-											? 'bg-muted'
-											: ''}"
-										onclick={() => selectChat(chat)}
-										onkeydown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												selectChat(chat);
-											}
-										}}
-									>
-										{#if chat}
-											{@const otherParticipant = getOtherParticipant(chat)}
-											<div class="flex items-center gap-3">
-												<div
-													class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
-												>
-													<UserIcon class="h-5 w-5 text-primary" />
-												</div>
-												<div class="min-w-0 flex-1">
-													<div class="flex items-center justify-between">
-														<h4 class="truncate font-medium">
-															{otherParticipant?.full_name ||
-																otherParticipant?.username ||
-																'Unknown User'}
-														</h4>
-														{#if chat.chat_messages?.[0]?.created_at}
-															<span class="text-xs text-muted-foreground">
-																{formatTime(chat.chat_messages[0].created_at)}
-															</span>
-														{/if}
-													</div>
-													{#if chat.chat_messages?.[0]?.message}
-														<p class="truncate text-sm text-muted-foreground">
-															{chat.chat_messages[0].message}
-														</p>
-													{/if}
-												</div>
-											</div>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						{/if}
-					</CardContent>
-				</div>
-			</Sheet.Trigger>
-			<Sheet.Content side="left" class="w-4/5 p-0">
-				<Sheet.Header class="border-b p-4">
-					<Sheet.Title>Messages</Sheet.Title>
-				</Sheet.Header>
-				<!-- Chat list content here -->
-				<div class="flex h-[calc(100%-64px)] flex-1 flex-col">
-					<div class="border-b p-4">
-						<Button
-							size="sm"
-							variant="outline"
-							class="w-full"
-							onclick={() => (isCreatingChat = !isCreatingChat)}
-						>
-							<PlusIcon class="mr-2 h-4 w-4" />
-							New Chat
-						</Button>
-
-						{#if isCreatingChat}
-							<div class="mt-4 flex gap-2">
-								<Input
-									bind:value={newChatUserEmail}
-									placeholder="Enter user email..."
-									class="flex-1"
-								/>
-								<Button
-									onclick={createNewChat}
-									size="sm"
-									disabled={!newChatUserEmail.trim() || isCreatingChat}
-								>
-									Create
-								</Button>
-							</div>
-						{/if}
-
-						<div class="relative mt-4">
-							<SearchIcon
-								class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-							/>
-							<Input bind:value={searchQuery} placeholder="Search conversations..." class="pl-10" />
-						</div>
-					</div>
-
-					<div class="flex-1 overflow-y-auto">
-						{#if isLoading}
-							<div class="p-4 text-center text-muted-foreground">Loading conversations...</div>
-						{:else if chats.length === 0}
-							<div class="p-8 text-center">
-								<div
-									class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
-								>
-									<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
-								</div>
-								<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
-								<p class="mt-2 text-sm text-muted-foreground">
-									Start a conversation by creating a new chat.
-								</p>
-							</div>
-						{:else}
-							<div class="divide-y">
-								{#each chats as chat}
-									<div
-										role="button"
-										tabindex="0"
-										class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
-										chat.id
-											? 'bg-muted'
-											: ''}"
-										onclick={() => selectChat(chat)}
-										onkeydown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												selectChat(chat);
-											}
-										}}
-									>
-										{#if chat}
-											{@const otherParticipant = getOtherParticipant(chat)}
-											<div class="flex items-center gap-3">
-												<div
-													class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
-												>
-													<UserIcon class="h-5 w-5 text-primary" />
-												</div>
-												<div class="min-w-0 flex-1">
-													<div class="flex items-center justify-between">
-														<h4 class="truncate font-medium">
-															{otherParticipant?.full_name ||
-																otherParticipant?.username ||
-																'Unknown User'}
-														</h4>
-														{#if chat.chat_messages?.[0]?.created_at}
-															<span class="text-xs text-muted-foreground">
-																{formatTime(chat.chat_messages[0].created_at)}
-															</span>
-														{/if}
-													</div>
-													{#if chat.chat_messages?.[0]?.message}
-														<p class="truncate text-sm text-muted-foreground">
-															{chat.chat_messages[0].message}
-														</p>
-													{/if}
-												</div>
-											</div>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						{/if}
-					</div>
-				</div>
-			</Sheet.Content>
-		</Sheet.Root>
-	{/if}
-</div>
-
-<!-- Desktop view - show both chat list and chat view side by side -->
-<div class="hidden h-full md:flex md:gap-6">
-	<!-- Chat List Sidebar -->
-	<div class="flex w-full flex-col rounded-lg border md:w-1/3">
-		<CardHeader class="border-b">
-			<div class="flex items-center justify-between">
-				<CardTitle>Messages</CardTitle>
-				<Button size="sm" variant="outline" onclick={() => (isCreatingChat = !isCreatingChat)}>
-					<PlusIcon class="h-4 w-4" />
-				</Button>
-			</div>
-
-			{#if isCreatingChat}
-				<div class="mt-4 flex gap-2">
-					<Input bind:value={newChatUserEmail} placeholder="Enter user email..." class="flex-1" />
-					<Button
-						onclick={createNewChat}
-						size="sm"
-						disabled={!newChatUserEmail.trim() || isCreatingChat}
-					>
-						Create
+<!-- Unified chat interface -->
+<div class="flex h-full flex-col md:flex-row md:gap-6">
+	<!-- Chat List Sidebar - hidden on mobile when chat is selected -->
+	<div class="flex w-full flex-col rounded-lg border md:w-1/3 {selectedChat && 'hidden md:flex'}">
+		<div class="flex h-full flex-col">
+			<CardHeader class="border-b">
+				<div class="flex items-center justify-between">
+					<CardTitle>Messages</CardTitle>
+					<Button size="sm" variant="outline" onclick={() => (isCreatingChat = !isCreatingChat)}>
+						<PlusIcon class="h-4 w-4" />
 					</Button>
 				</div>
-			{/if}
 
-			<div class="relative mt-4">
-				<SearchIcon
-					class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-				/>
-				<Input bind:value={searchQuery} placeholder="Search conversations..." class="pl-10" />
-			</div>
-		</CardHeader>
-
-		<CardContent class="flex-1 overflow-y-auto p-0">
-			{#if isLoading}
-				<div class="p-4 text-center text-muted-foreground">Loading conversations...</div>
-			{:else if chats.length === 0}
-				<div class="p-8 text-center">
-					<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-						<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
-					</div>
-					<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
-					<p class="mt-2 text-sm text-muted-foreground">
-						Start a conversation by creating a new chat.
-					</p>
-				</div>
-			{:else}
-				<div class="divide-y">
-					{#each chats as chat}
-						<div
-							role="button"
-							tabindex="0"
-							class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
-							chat.id
-								? 'bg-muted'
-								: ''}"
-							onclick={() => selectChat(chat)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									selectChat(chat);
-								}
-							}}
+				{#if isCreatingChat}
+					<div class="mt-4 flex gap-2">
+						<Input bind:value={newChatUsername} placeholder="Enter username..." class="flex-1" />
+						<Button
+							onclick={createNewChat}
+							size="sm"
+							disabled={!newChatUsername.trim() || isCreatingChat}
 						>
-							{#if chat}
-								{@const otherParticipant = getOtherParticipant(chat)}
-								<div class="flex items-center gap-3">
-									<div
-										class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
-									>
-										<UserIcon class="h-5 w-5 text-primary" />
-									</div>
-									<div class="min-w-0 flex-1">
-										<div class="flex items-center justify-between">
-											<h4 class="truncate font-medium">
-												{otherParticipant?.full_name ||
-													otherParticipant?.username ||
-													'Unknown User'}
-											</h4>
-											{#if chat.chat_messages?.[0]?.created_at}
-												<span class="text-xs text-muted-foreground">
-													{formatTime(chat.chat_messages[0].created_at)}
-												</span>
+							Create
+						</Button>
+					</div>
+				{/if}
+
+				<div class="relative mt-4">
+					<SearchIcon
+						class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+					/>
+					<Input bind:value={searchQuery} placeholder="Search conversations..." class="pl-10" />
+				</div>
+			</CardHeader>
+
+			<CardContent class="flex-1 overflow-y-auto p-0">
+				{#if isLoading}
+					<div class="p-4 text-center text-muted-foreground">Loading conversations...</div>
+				{:else if chats.length === 0}
+					<div class="p-8 text-center">
+						<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+							<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
+						</div>
+						<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
+						<p class="mt-2 text-sm text-muted-foreground">
+							Start a conversation by creating a new chat.
+						</p>
+					</div>
+				{:else}
+					<div class="divide-y">
+						{#each chats as chat}
+							<div
+								role="button"
+								tabindex="0"
+								class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
+								chat.id
+									? 'bg-muted'
+									: ''}"
+								onclick={() => selectChat(chat)}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										selectChat(chat);
+									}
+								}}
+							>
+								{#if chat}
+									{@const otherParticipant = getOtherParticipant(chat)}
+									<div class="flex items-center gap-3">
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
+										>
+											<UserIcon class="h-5 w-5 text-primary" />
+										</div>
+										<div class="min-w-0 flex-1">
+											<div class="flex items-center justify-between">
+												<h4 class="truncate font-medium">
+													{otherParticipant?.full_name ||
+														otherParticipant?.username ||
+														'Unknown User'}
+												</h4>
+												{#if chat.chat_messages?.[0]?.created_at}
+													<span class="text-xs text-muted-foreground">
+														{formatTime(chat.chat_messages[0].created_at)}
+													</span>
+												{/if}
+											</div>
+											{#if chat.chat_messages?.[0]?.message}
+												<p class="truncate text-sm text-muted-foreground">
+													{chat.chat_messages[0].message}
+												</p>
 											{/if}
 										</div>
-										{#if chat.chat_messages?.[0]?.message}
-											<p class="truncate text-sm text-muted-foreground">
-												{chat.chat_messages[0].message}
-											</p>
-										{/if}
 									</div>
-								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</CardContent>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</div>
 	</div>
 
-	<!-- Chat Area -->
-	<div class="flex flex-1 flex-col rounded-lg border">
+	<!-- Mobile header when chat is selected -->
+	<div class="flex items-center justify-between border-b p-4 md:hidden {selectedChat ? 'flex' : 'hidden'}">
 		{#if selectedChat}
-			<CardHeader class="border-b">
+			{@const otherParticipant = getOtherParticipant(selectedChat)}
+			<div class="flex items-center gap-3">
+				<Button variant="ghost" size="sm" onclick={() => (selectedChat = null)}>← Back</Button>
+				<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+					<UserIcon class="h-5 w-5 text-primary" />
+				</div>
+				<div>
+					<h3 class="font-medium">
+						{otherParticipant?.full_name || otherParticipant?.username || 'Unknown User'}
+					</h3>
+				</div>
+			</div>
+			<Button variant="ghost" size="sm" onclick={() => (isChatListOpen = true)}>Chats</Button>
+		{/if}
+	</div>
+
+	<!-- Mobile Sheet for chat list -->
+	<Sheet.Root bind:open={isChatListOpen}>
+		<Sheet.Content side="left" class="w-4/5 p-0 md:hidden">
+			<Sheet.Header class="border-b p-4">
+				<Sheet.Title>Messages</Sheet.Title>
+			</Sheet.Header>
+			<!-- Chat list content -->
+			<div class="flex h-[calc(100%-64px)] flex-1 flex-col">
+				<div class="border-b p-4">
+					<Button
+						size="sm"
+						variant="outline"
+						class="w-full"
+						onclick={() => (isCreatingChat = !isCreatingChat)}
+					>
+						<PlusIcon class="mr-2 h-4 w-4" />
+						New Chat
+					</Button>
+
+					{#if isCreatingChat}
+						<div class="mt-4 flex gap-2">
+							<Input
+								bind:value={newChatUsername}
+								placeholder="Enter username..."
+								class="flex-1"
+							/>
+							<Button
+								onclick={createNewChat}
+								size="sm"
+								disabled={!newChatUsername.trim() || isCreatingChat}
+							>
+								Create
+							</Button>
+						</div>
+					{/if}
+
+					<div class="relative mt-4">
+						<SearchIcon
+							class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+						/>
+						<Input
+							bind:value={searchQuery}
+							placeholder="Search conversations..."
+							class="pl-10"
+						/>
+					</div>
+				</div>
+
+				<div class="flex-1 overflow-y-auto">
+					{#if isLoading}
+						<div class="p-4 text-center text-muted-foreground">
+							Loading conversations...
+						</div>
+					{:else if chats.length === 0}
+						<div class="p-8 text-center">
+							<div
+								class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+							>
+								<MessageCircleIcon class="h-6 w-6 text-muted-foreground" />
+							</div>
+							<h3 class="mt-4 text-lg font-medium">No conversations yet</h3>
+							<p class="mt-2 text-sm text-muted-foreground">
+								Start a conversation by creating a new chat.
+							</p>
+						</div>
+					{:else}
+						<div class="divide-y">
+							{#each chats as chat}
+								<div
+									role="button"
+									tabindex="0"
+									class="cursor-pointer p-4 transition-colors hover:bg-muted {selectedChat?.id ===
+									chat.id
+										? 'bg-muted'
+										: ''}"
+									onclick={() => {
+										selectChat(chat);
+										isChatListOpen = false;
+									}}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											selectChat(chat);
+											isChatListOpen = false;
+										}
+									}}
+								>
+									{#if chat}
+										{@const otherParticipant = getOtherParticipant(chat)}
+										<div class="flex items-center gap-3">
+											<div
+												class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
+											>
+												<UserIcon class="h-5 w-5 text-primary" />
+											</div>
+											<div class="min-w-0 flex-1">
+												<div class="flex items-center justify-between">
+													<h4 class="truncate font-medium">
+														{otherParticipant?.full_name ||
+															otherParticipant?.username ||
+															'Unknown User'}
+													</h4>
+													{#if chat.chat_messages?.[0]?.created_at}
+														<span class="text-xs text-muted-foreground">
+															{formatTime(chat.chat_messages[0].created_at)}
+														</span>
+													{/if}
+												</div>
+												{#if chat.chat_messages?.[0]?.message}
+													<p class="truncate text-sm text-muted-foreground">
+														{chat.chat_messages[0].message}
+													</p>
+												{/if}
+											</div>
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+		</Sheet.Content>
+	</Sheet.Root>
+
+	<!-- Chat Area -->
+	<div class="flex flex-1 flex-col rounded-lg border {selectedChat ? 'flex' : 'hidden md:flex'}">
+		{#if selectedChat}
+			<CardHeader class="border-b hidden md:flex">
 				{#if selectedChat}
 					{@const otherParticipant = getOtherParticipant(selectedChat)}
 					<div class="flex items-center gap-3">

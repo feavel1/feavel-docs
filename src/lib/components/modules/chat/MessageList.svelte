@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MessageBlock from './MessageBlock.svelte';
 	import { ScrollArea, Scrollbar } from '$lib/components/ui/scroll-area';
-	import { onMount, afterUpdate } from 'svelte';
+	import { onMount } from 'svelte';
 
 	export let initialMessages: any[];
 	export let currentUserId: string;
@@ -25,11 +25,6 @@
 	onMount(() => {
 		scrollToBottom();
 	});
-
-	// Scroll to bottom when messages change
-	afterUpdate(() => {
-		scrollToBottom();
-	});
 </script>
 
 <div class={$$props.class}>
@@ -38,10 +33,10 @@
 			{#each initialMessages as message}
 				<MessageBlock
 					{message}
-					isCurrentUser={message.sent_from?.id === currentUserId}
-					avatarUrl={message.sent_from?.id === currentUserId
+					isCurrentUser={message.sent_from === currentUserId}
+					avatarUrl={message.sent_from === currentUserId
 						? currentUserAvatar
-						: message.sent_from?.avatar_url}
+						: message.sent_from_avatar_url}
 				/>
 			{/each}
 		</div>
