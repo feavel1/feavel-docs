@@ -1,18 +1,53 @@
+// Chat related utils
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { FileStorage } from '$lib/services/storage';
+import type { Database } from '$lib/types/database.types';
+
+export interface ChatParticipant {
+	user_id: string;
+	users: {
+		full_name: string | null;
+		username: string | null;
+		avatar_file_id: string | null;
+	};
+}
+
+export interface ChatMessage {
+	id: number;
+	message: string | null;
+	created_at: string;
+	sent_from: string | null;
+	conversation_id: string | null;
+	sent_from_avatar_url?: string;
+	users?: {
+		full_name: string | null;
+		username: string | null;
+		avatar_file_id: string | null;
+	} | null;
+}
+
+export interface ChatConversation {
+	id: string;
+	created_at: string;
+	chat_participants: ChatParticipant[];
+	chat_messages: {
+		message: string | null;
+		created_at: string;
+		sent_from: string | null;
+	}[];
+}
 
 /**
- * Start a new conversation with a user by username
+ * Start a new conversation with a user
  * @param supabase Supabase client instance
  * @param currentUserId ID of the current user
  * @param username Username of the user to start conversation with
- * @returns Object with success status and conversation data or error message
+ * @returns Object with success status and conversation ID or error message
  */
 export async function startConversation(
-	supabase: SupabaseClient,
+	supabase: SupabaseClient<Database>,
 	currentUserId: string,
 	username: string
-): Promise<{ success: boolean; data?: any; error?: string }> {
+): Promise<{ success: boolean; conversationId?: string; error?: string }> {
 	try {
 		// First, find the user by username
 		const { data: userData, error: userError } = await supabase
@@ -21,200 +56,196 @@ export async function startConversation(
 			.eq('username', username)
 			.single();
 
-		if (userError) {
-			console.error('Error finding user:', userError);
+		if (userError || !userData) {
 			return { success: false, error: 'User not found' };
 		}
 
-		if (!userData) {
-			return { success: false, error: 'User not found' };
+		// Check if a conversation already exists between these users
+		const { data: existingConversations, error: conversationError } = await supabase
+			.from('chat_participants')
+			.select('conversation_id, user_id')
+			.in('user_id', [currentUserId, userData.id]);
+
+		if (conversationError) {
+			return { success: false, error: 'Failed to check existing conversations' };
 		}
 
-		// Check if conversation already exists between these users
-		// This is a simplified check - in a production app, you'd want more robust logic
+		// Group participants by conversation_id
+		const conversationParticipants: Record<string, string[]> = {};
+		if (existingConversations) {
+			existingConversations.forEach((participant) => {
+				if (!conversationParticipants[participant.conversation_id]) {
+					conversationParticipants[participant.conversation_id] = [];
+				}
+				conversationParticipants[participant.conversation_id].push(participant.user_id);
+			});
+		}
+
+		// Find conversation with exactly these two users
+		const existingConversationId = Object.keys(conversationParticipants).find((conversationId) => {
+			const participants = conversationParticipants[conversationId];
+			return (
+				participants.length === 2 &&
+				participants.includes(currentUserId) &&
+				participants.includes(userData.id)
+			);
+		});
+
+		if (existingConversationId) {
+			return { success: true, conversationId: existingConversationId };
+		}
+
+		// Create a new conversation
+		const { data: conversationData, error: createError } = await supabase
+			.from('chat_conversations')
+			.insert({
+				id: crypto.randomUUID(),
+				created_at: new Date().toISOString()
+			})
+			.select('id')
+			.single();
+
+		if (createError || !conversationData) {
+			return { success: false, error: 'Failed to create conversation' };
+		}
+
+		// Add both users as participants
+		const { error: participantsError } = await supabase.from('chat_participants').insert([
+			{
+				conversation_id: conversationData.id,
+				user_id: currentUserId
+			},
+			{
+				conversation_id: conversationData.id,
+				user_id: userData.id
+			}
+		]);
+
+		if (participantsError) {
+			return { success: false, error: 'Failed to add participants to conversation' };
+		}
+
+		return { success: true, conversationId: conversationData.id };
+	} catch (error: any) {
+		return { success: false, error: error.message || 'An unexpected error occurred' };
+	}
+}
+
+/**
+ * Format time for display
+ * @param dateString Date string to format
+ * @returns Formatted time string (HH:MM)
+ */
+export function formatTime(dateString: string): string {
+	const date = new Date(dateString);
+	return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Get the other participant in a chat conversation
+ * @param chat Chat conversation object
+ * @param currentUserId ID of the current user
+ * @returns The other participant's user data or null
+ */
+export function getOtherParticipant(chat: ChatConversation, currentUserId: string): any {
+	if (!chat?.chat_participants || !currentUserId) return null;
+
+	return chat.chat_participants.find((participant) => participant.user_id !== currentUserId)
+		?.users;
+}
+
+/**
+ * Load all chats for a user
+ * @param supabase Supabase client instance
+ * @param currentUserId ID of the current user
+ * @returns Array of chat conversations or empty array
+ */
+export async function loadUserChats(
+	supabase: SupabaseClient<Database>,
+	currentUserId: string
+): Promise<ChatConversation[]> {
+	try {
+		// First get all conversation IDs where current user is a participant
 		const { data: participantData, error: participantError } = await supabase
 			.from('chat_participants')
 			.select('conversation_id')
 			.eq('user_id', currentUserId);
 
-		if (!participantError && participantData) {
-			// For each conversation the current user is in, check if the target user is also in it
-			for (const participant of participantData) {
-				const { data: otherParticipantData, error: otherError } = await supabase
-					.from('chat_participants')
-					.select('user_id')
-					.eq('conversation_id', participant.conversation_id)
-					.eq('user_id', userData.id);
+		if (participantError) throw participantError;
 
-				if (!otherError && otherParticipantData && otherParticipantData.length > 0) {
-					// Conversation already exists
-					const { data: conversationData, error: convError } = await supabase
-						.from('chat_conversations')
-						.select('*')
-						.eq('id', participant.conversation_id)
-						.single();
+		const conversationIds = participantData.map((p) => p.conversation_id);
 
-					if (!convError && conversationData) {
-						return { success: true, data: conversationData };
-					}
-				}
-			}
+		if (conversationIds.length === 0) {
+			return [];
 		}
 
-		// Create new conversation
-		const { data: conversation, error: convCreateError } = await supabase
+		// Then get the conversation details with participants and last message
+		const { data: chatData, error: chatError } = await supabase
 			.from('chat_conversations')
-			.insert([{}])
-			.select()
-			.single();
+			.select(
+				`
+				id,
+				created_at,
+				chat_participants(
+					user_id,
+					users(full_name, username, avatar_file_id)
+				),
+				chat_messages(
+					message,
+					created_at,
+					sent_from
+				)
+			`
+			)
+			.in('id', conversationIds)
+			.order('created_at', { referencedTable: 'chat_messages', ascending: false })
+			.limit(1, { referencedTable: 'chat_messages' });
 
-		if (convCreateError) {
-			console.error('Error creating conversation:', convCreateError);
-			return { success: false, error: 'Failed to create conversation' };
-		}
+		if (chatError) throw chatError;
 
-		// Add participants
-		const { error: partError } = await supabase.from('chat_participants').insert([
-			{ conversation_id: conversation.id, user_id: currentUserId },
-			{ conversation_id: conversation.id, user_id: userData.id }
-		]);
-
-		if (partError) {
-			console.error('Error adding participants:', partError);
-			return { success: false, error: 'Failed to add participants' };
-		}
-
-		return { success: true, data: conversation };
-	} catch (error: any) {
-		console.error('Error starting conversation:', error.message);
-		return { success: false, error: 'Failed to start conversation' };
-	}
-}
-
-/**
- * Get avatar URL from avatar file ID
- * @param supabase Supabase client instance
- * @param avatarFileId File storage ID for the avatar
- * @returns Avatar URL or null if not found
- */
-export async function getAvatarUrl(
-	supabase: SupabaseClient,
-	avatarFileId: string | null
-): Promise<string | null> {
-	if (!avatarFileId) return null;
-
-	try {
-		const storage = new FileStorage(supabase);
-		const url = await storage.getUrl(avatarFileId);
-		return url || null;
+		return chatData || [];
 	} catch (error) {
-		console.error('Error getting avatar URL:', error);
-		return null;
+		console.error('Error loading chats:', error);
+		return [];
 	}
 }
 
 /**
- * Get user data with avatar URL resolved
+ * Load messages for a specific chat with pagination
  * @param supabase Supabase client instance
- * @param userId User ID
- * @returns User data with resolved avatar URL
+ * @param chatId ID of the chat conversation
+ * @param limit Number of messages to load (default: 50)
+ * @param offset Offset for pagination (default: 0)
+ * @returns Array of chat messages or empty array
  */
-export async function getUserWithAvatar(supabase: SupabaseClient, userId: string): Promise<any> {
-	const { data: user, error } = await supabase
-		.from('users')
-		.select('id, full_name, username, avatar_file_id')
-		.eq('id', userId)
-		.single();
+export async function loadChatMessages(
+	supabase: SupabaseClient<Database>,
+	chatId: string,
+	limit: number = 50,
+	offset: number = 0
+): Promise<ChatMessage[]> {
+	try {
+		const { data: messageData, error } = await supabase
+			.from('chat_messages')
+			.select(
+				`
+				id,
+				message,
+				created_at,
+				sent_from,
+				conversation_id,
+				users:sent_from(full_name, username, avatar_file_id)
+			`
+			)
+			.eq('conversation_id', chatId)
+			.order('created_at', { ascending: true })
+			.range(offset, offset + limit - 1);
 
-	if (error || !user) {
-		return null;
+		if (error) throw error;
+
+		return messageData || [];
+	} catch (error) {
+		console.error('Error loading messages:', error);
+		return [];
 	}
-
-	// Resolve avatar URL if avatar_file_id exists
-	if (user.avatar_file_id) {
-		const avatarUrl = await getAvatarUrl(supabase, user.avatar_file_id);
-		return {
-			...user,
-			avatar_url: avatarUrl
-		};
-	}
-
-	return user;
-}
-
-/**
- * Add avatar URLs to chat participants
- * @param supabase Supabase client instance
- * @param chats Array of chat conversations with participants
- * @returns Chats with resolved avatar URLs for participants
- */
-export async function addAvatarUrlsToChatParticipants(
-	supabase: SupabaseClient,
-	chats: any[]
-): Promise<any[]> {
-	// Create a map of user IDs to avatar URLs to avoid duplicate requests
-	const avatarUrlMap = new Map<string, string | null>();
-
-	// Collect all unique user IDs from chat participants
-	const userIds = Array.from(
-		new Set(
-			chats
-				.flatMap((chat) => chat.chat_participants || [])
-				.map((participant) => participant.users?.id)
-				.filter((id) => id)
-		)
-	);
-
-	// Fetch avatar URLs for all users
-	for (const userId of userIds) {
-		if (!avatarUrlMap.has(userId)) {
-			const user = await getUserWithAvatar(supabase, userId);
-			avatarUrlMap.set(userId, user?.avatar_url || null);
-		}
-	}
-
-	// Add avatar URLs to chat participants
-	return chats.map((chat) => ({
-		...chat,
-		chat_participants: (chat.chat_participants || []).map((participant: any) => ({
-			...participant,
-			users: participant.users
-				? {
-						...participant.users,
-						avatar_url: participant.users.id ? avatarUrlMap.get(participant.users.id) || null : null
-					}
-				: null
-		}))
-	}));
-}
-
-/**
- * Add avatar URLs to messages
- * @param supabase Supabase client instance
- * @param messages Array of messages
- * @returns Messages with resolved avatar URLs
- */
-export async function addAvatarUrlsToMessages(
-	supabase: SupabaseClient,
-	messages: any[]
-): Promise<any[]> {
-	// Create a map of user IDs to avatar URLs to avoid duplicate requests
-	const avatarUrlMap = new Map<string, string | null>();
-
-	// Collect all unique user IDs from messages
-	const userIds = Array.from(new Set(messages.map((msg) => msg.sent_from).filter((id) => id)));
-
-	// Fetch avatar URLs for all users
-	for (const userId of userIds) {
-		if (!avatarUrlMap.has(userId)) {
-			const user = await getUserWithAvatar(supabase, userId);
-			avatarUrlMap.set(userId, user?.avatar_url || null);
-		}
-	}
-
-	// Add avatar URLs to messages
-	return messages.map((msg) => ({
-		...msg,
-		sent_from_avatar_url: msg.sent_from ? avatarUrlMap.get(msg.sent_from) || null : null
-	}));
 }
