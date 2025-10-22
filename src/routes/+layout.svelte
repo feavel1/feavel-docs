@@ -26,7 +26,7 @@
 <ModeWatcher />
 
 <div class="min-h-screen">
-	<header class="fixed top-0 z-50 w-full px-4 pt-2 pb-1 lg:px-14 lg:pt-10">
+	<header class="fixed top-0 z-50 w-full px-4 pb-1 lg:px-14 lg:pt-2">
 		<div class="flex items-center justify-between">
 			<Feavel />
 			<div class="flex items-center gap-2">
