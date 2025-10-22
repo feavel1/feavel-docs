@@ -2,7 +2,7 @@ Effects are functions that run when state updates, and can be used for things li
 
 Generally speaking, you should _not_ update state inside effects, as it will make code more convoluted and will often lead to never-ending update cycles. If you find yourself doing so, see [when not to use `$effect`](#When-not-to-use-$effect) to learn about alternative approaches.
 
-You can create an effect with the `$effect` rune ([demo](/playground/untitled#H4sIAAAAAAAAE31S246bMBD9lZF3pSRSAqTVvrCAVPUP2sdSKY4ZwJJjkD0hSVH-vbINuWxXfQH5zMyZc2ZmZLVUaFn6a2R06ZGlHmBrpvnBvb71fWQHVOSwPbf4GS46TajJspRlVhjZU1HqkhQSWPkHIYdXS5xw-Zas3ueI6FRn7qHFS11_xSRZhIxbFtcDtw7SJb1iXaOg5XIFeQGjzyPRaevYNOGZIJ8qogbpe8CWiy_VzEpTXiQUcvPDkSVrSNZz1UlW1N5eLcqmpdXUvaQ4BmqlhZNUCgxuzFHDqUWNAxrYeUM76AzsnOsdiJbrBp_71lKpn3RRbii-4P3f-IMsRxS-wcDV_bL4PmSdBa2wl7pKnbp8DMgVvJm8ZNskKRkEM_OzyOKQFkgqOYBQ3Nq89Ns0nbIl81vMFN-jKoLMTOr-SOBOJS-Z8f5Y6D1wdcR8dFqvEBdetK-PHwj-z-cH8oHPY54wRJ8Ys7iSQ3Bg3VA9azQbmC9k35kKzYa6PoVtfwbbKVnBixBiGn7Pq0rqJoUtHiCZwAM3jdTPWCVtr_glhVrhecIa3vuksJ_b7TqFs4DPyriSjd5IwoNNQaAmNI-ESfR2p8zimzvN1swdCkvJHPH6-_oX8o1SgcIDAAA=)):
+You can create an effect with the `$effect` rune
 
 ```svelte
 <script>
@@ -280,7 +280,7 @@ In general, `$effect` is best considered something of an escape hatch — useful
 
 If you're using an effect because you want to be able to reassign the derived value (to build an optimistic UI, for example) note that [deriveds can be directly overridden]($derived#Overriding-derived-values) as of Svelte 5.25.
 
-You might be tempted to do something convoluted with effects to link one value to another. The following example shows two inputs for "money spent" and "money left" that are connected to each other. If you update one, the other should update accordingly. Don't use effects for this ([demo](/playground/untitled#H4sIAAAAAAAAE5WRTWrDMBCFryKGLBJoY3fRjWIHeoiu6i6UZBwEY0VE49TB-O6VxrFTSih0qe_Ne_OjHpxpEDS8O7ZMeIAnqC1hAP3RA1990hKI_Fb55v06XJA4sZ0J-IjvT47RcYyBIuzP1vO2chVHHFjxiQ2pUr3k-SZRQlbBx_LIFoEN4zJfzQph_UMQr4hRXmBd456Xy5Uqt6pPKHmkfmzyPAZL2PCnbRpg8qWYu63I7lu4gswOSRYqrPNt3CgeqqzgbNwRK1A76w76YqjFspfcQTWmK3vJHlQm1puSTVSeqdOc_r9GaeCHfUSY26TXry6Br4RSK3C6yMEGT-aqVU3YbUZ2NF6rfP2KzXgbuYzY46czdgyazy0On_FlLH3F-UDXhgIO35UGlA1rAgAA)):
+You might be tempted to do something convoluted with effects to link one value to another. The following example shows two inputs for "money spent" and "money left" that are connected to each other. If you update one, the other should update accordingly. Don't use effects for this
 
 ```svelte
 <script>
@@ -308,7 +308,7 @@ You might be tempted to do something convoluted with effects to link one value t
 </label>
 ```
 
-Instead, use `oninput` callbacks or — better still — [function bindings](bind#Function-bindings) where possible ([demo](/playground/untitled#H4sIAAAAAAAAE5VRvW7CMBB-FcvqECQK6dDFJEgsnfoGTQdDLsjSxVjxhYKivHvPBwFUsXS8774_nwftbQva6I_e78gdvNo6Xzu_j3quG4cQtfkaNJ1DIiWA8atkE8IiHgEpYVsb4Rm-O3gCT2yji7jrXKB15StiOJKiA1lUpXrL81VCEUjFwHTGXiJZgiyf3TYIjSxq6NwR6uyifr0ohMbEZnpHH2rWf7ImS8KZGtK6osl_UqelRIyVL5b3ir5AuwWUtoXzoee6fIWy0p31e6i0XMocLfZQDuI6qtaeykGcR7UU6XWznFAZU9LN_X9B2UyVayk9f3ji0-REugen6U9upDOCcAWcLlS7GNCejWoQTqsLtrfBqHzxDu3DrUTOf0xwIm2o62H85sk6_OHG2jQWI4y_3byXXGMCAAA=)):
+Instead, use `oninput` callbacks or — better still — [function bindings](bind#Function-bindings) where possible
 
 ```svelte
 <script>

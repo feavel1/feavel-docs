@@ -5,6 +5,7 @@
 **Constitution**: v2.0.0 - See `/memory/constitution.md`
 
 ## Execution Flow (main)
+
 ```
 1. Load plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
@@ -31,21 +32,25 @@
 ```
 
 ## Format: `[ID] [P?] Description`
+
 - **[P]**: Can run in parallel (different files, no dependencies)
 - Include exact file paths in descriptions
 
 ## Path Conventions
+
 - **Single project**: `src/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
 ## Phase 3.1: Setup
+
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
 
 ## Phase 3.2: Core Implementation
+
 - [ ] T004 [P] User model in src/models/user.py
 - [ ] T005 [P] UserService CRUD in src/services/user_service.py
 - [ ] T006 [P] CLI --create-user in src/cli/user_commands.py
@@ -55,23 +60,27 @@
 - [ ] T010 Error handling and logging
 
 ## Phase 3.3: Integration
+
 - [ ] T011 Connect UserService to DB
 - [ ] T012 Auth middleware
 - [ ] T013 Request/response logging
 - [ ] T014 CORS and security headers
 
 ## Phase 3.4: Polish
+
 - [ ] T015 Performance optimization (<200ms)
 - [ ] T016 [P] Update docs/api.md
 - [ ] T017 Remove duplication
 - [ ] T018 Run manual-testing.md
 
 ## Dependencies
+
 - T004 blocks T005, T011
 - T012 blocks T014
 - Implementation before polish (T015-T018)
 
 ## Parallel Example
+
 ```
 # Launch T004-T006 together:
 Task: "User model in src/models/user.py"
@@ -80,12 +89,14 @@ Task: "CLI --create-user in src/cli/user_commands.py"
 ```
 
 ## Notes
+
 - [P] tasks = different files, no dependencies
 - Commit after each task
 - Avoid: vague tasks, same file conflicts
 
 ## Task Generation Rules
-*Applied during main() execution*
+
+_Applied during main() execution_
 
 1. **From Contracts**:
    - Each contract file → implementation task [P]
@@ -104,7 +115,8 @@ Task: "CLI --create-user in src/cli/user_commands.py"
    - Dependencies block parallel execution
 
 ## Validation Checklist
-*GATE: Checked by main() before returning*
+
+_GATE: Checked by main() before returning_
 
 - [ ] All entities have model tasks
 - [ ] Parallel tasks truly independent

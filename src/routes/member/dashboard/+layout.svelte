@@ -4,7 +4,7 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen">
+<div class="">
 	<div class="mx-auto max-w-6xl px-4 py-8">
 		<h1 class="mb-6 text-2xl font-bold">User Dashboard</h1>
 

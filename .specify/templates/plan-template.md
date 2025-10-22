@@ -4,6 +4,7 @@
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
+
 ```
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
@@ -26,13 +27,16 @@
 ```
 
 **IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
+
 - Phase 2: /tasks command creates tasks.md
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
+
 [Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
+
 **Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
 **Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 **Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
@@ -43,7 +47,8 @@
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`)
 - Session validation and permission checks MUST be handled at the hook level (`hooks.server.ts`) rather than in individual route files
@@ -56,6 +61,7 @@
 ## Project Structure
 
 ### Documentation (this feature)
+
 ```
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
@@ -67,6 +73,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 ```
 # Option 1: Single project (DEFAULT)
 src/
@@ -101,12 +108,14 @@ ios/ or android/
 **Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
+
 1. **Extract unknowns from Technical Context** above:
    - For each NEEDS CLARIFICATION → research task
    - For each dependency → best practices task
    - For each integration → patterns task
 
 2. **Generate and dispatch research agents**:
+
    ```
    For each unknown in Technical Context:
      Task: "Research {unknown} for {feature context}"
@@ -122,7 +131,8 @@ ios/ or android/
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
 ## Phase 1: Design & Contracts
-*Prerequisites: research.md complete*
+
+_Prerequisites: research.md complete_
 
 1. **Extract entities from feature spec** → `data-model.md`:
    - Entity name, fields, relationships
@@ -143,12 +153,14 @@ ios/ or android/
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/\*, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
-*This section describes what the /tasks command will do - DO NOT execute during /plan*
+
+_This section describes what the /tasks command will do - DO NOT execute during /plan_
 
 **Task Generation Strategy**:
+
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
 - Each contract → implementation task [P]
@@ -156,6 +168,7 @@ ios/ or android/
 - Implementation tasks for each user story
 
 **Ordering Strategy**:
+
 - Dependency order: Models before services before UI
 - Mark [P] for parallel execution (independent files)
 
@@ -164,25 +177,28 @@ ios/ or android/
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
-*These phases are beyond the scope of the /plan command*
+
+_These phases are beyond the scope of the /plan command_
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)
 **Phase 5**: Validation (execute quickstart.md, performance validation)
 
 ## Complexity Tracking
-*Fill ONLY if Constitution Check has violations that must be justified*
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+_Fill ONLY if Constitution Check has violations that must be justified_
 
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
 
 ## Progress Tracking
-*This checklist is updated during execution flow*
+
+_This checklist is updated during execution flow_
 
 **Phase Status**:
+
 - [ ] Phase 0: Research complete (/plan command)
 - [ ] Phase 1: Design complete (/plan command)
 - [ ] Phase 2: Task planning complete (/plan command - describe approach only)
@@ -191,10 +207,12 @@ ios/ or android/
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
+
 - [ ] Initial Constitution Check: PASS
 - [ ] Post-Design Constitution Check: PASS
 - [ ] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.0.0 - See `/memory/constitution.md`*
+
+_Based on Constitution v2.0.0 - See `/memory/constitution.md`_
