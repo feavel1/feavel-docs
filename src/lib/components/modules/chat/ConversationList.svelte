@@ -10,11 +10,11 @@
 	export let onCreateNewConversation: () => void;
 </script>
 
-<div class="flex h-[500px] flex-col">
+<div class="flex h-full flex-col">
 	<div class="flex items-center justify-between border-b p-2">
 		<h2 class="px-2 text-sm font-semibold">Conversations</h2>
 		<Button onclick={onCreateNewConversation} variant="outline" size="sm" class="h-6 px-2 text-xs">
-			New
+			+
 		</Button>
 	</div>
 

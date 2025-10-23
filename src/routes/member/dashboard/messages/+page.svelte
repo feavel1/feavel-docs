@@ -2,7 +2,6 @@
 	import MessageList from '$lib/components/modules/chat/MessageList.svelte';
 	import MessageInput from '$lib/components/modules/chat/MessageInput.svelte';
 	import ConversationList from '$lib/components/modules/chat/ConversationList.svelte';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { onMount } from 'svelte';
 	import type { Tables } from '$lib/types/database.types';
@@ -168,7 +167,7 @@
 	});
 </script>
 
-<div class="flex flex-row items-center justify-between border-b">
+<div class="flex flex-row items-center justify-between border-b p-2">
 	<Button
 		variant="ghost"
 		size="icon"
@@ -184,10 +183,10 @@
 	<div class="text-lg">Messages</div>
 </div>
 
-<div class="flex h-[500px] w-full flex-row">
+<div class="flex h-[500px] flex-row">
 	<!-- Conversation List (toggle visibility on mobile) -->
 	<div
-		class="absolute z-10 w-full border-r bg-background md:relative md:z-auto md:block md:w-1/3 lg:w-1/4 {showConversationList
+		class="absolute right-0 z-10 h-[500px] w-full border-r bg-background md:relative md:block md:w-1/3 lg:w-1/4 {showConversationList
 			? 'block'
 			: 'hidden'}"
 	>

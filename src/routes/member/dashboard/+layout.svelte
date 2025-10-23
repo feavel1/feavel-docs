@@ -9,8 +9,8 @@
 		<h1 class="mb-6 text-2xl font-bold">User Dashboard</h1>
 
 		<nav class="flex h-5 items-center space-x-4 text-sm">
-			<a href="/member/dashboard">Overview</a>
-			<Separator orientation="vertical" />
+			<!-- <a href="/member/dashboard">Overview</a>
+			<Separator orientation="vertical" /> -->
 			<a href="/member/dashboard/posts">Posts</a>
 			<Separator orientation="vertical" />
 			<a href="/member/dashboard/messages">Messages</a>
