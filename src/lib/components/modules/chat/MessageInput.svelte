@@ -73,17 +73,17 @@
 	};
 </script>
 
-<div class="rounded-b-2xl border-t border-border bg-background p-4">
-	<div class="relative flex items-end gap-2">
+<div class="sticky bottom-0 border-t border-border bg-background p-1">
+	<div class="relative flex items-end gap-1">
 		<Textarea
 			bind:value={currentMessage}
 			onkeydown={handleKeyDown}
 			oninput={resizeTextarea}
 			onfocus={resizeTextarea}
-			placeholder="Type your message..."
+			placeholder="Shift + Enter for new line"
 			disabled={isSending}
 			aria-label="Type your message"
-			class="min-h-12 resize-none px-4 py-3 pr-12"
+			class="min-h-8 resize-none px-2 py-1.5 pr-8 text-xs"
 		/>
 
 		<Button
@@ -91,13 +91,14 @@
 			disabled={!currentMessage.trim() || isSending}
 			aria-label="Send message"
 			type="button"
+			variant="ghost"
 			size="icon"
-			class="absolute right-2 bottom-2 h-8 w-8 rounded-full"
+			class="absolute right-1.5 bottom-1.5 h-5 w-5 rounded-full"
 		>
 			{#if isSending}
-				<SendIcon class="h-4 w-4 animate-spin" />
+				<SendIcon class="h-2.5 w-2.5 animate-spin" />
 			{:else}
-				<SendIcon class="h-4 w-4" />
+				<SendIcon class="h-2.5 w-2.5" />
 			{/if}
 		</Button>
 	</div>
