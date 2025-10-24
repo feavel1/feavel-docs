@@ -23,26 +23,71 @@ export type Database = {
 				};
 				Relationships: [];
 			};
-			chat_messages: {
+			chat_groups: {
 				Row: {
 					conversation_id: string | null;
-					created_at: string;
-					id: number;
-					message: string | null;
-					sent_from: string | null;
+					created_at: string | null;
+					created_by: number | null;
+					description: string | null;
+					id: string;
+					is_public: boolean | null;
+					name: string;
 				};
 				Insert: {
 					conversation_id?: string | null;
-					created_at?: string;
-					id?: number;
-					message?: string | null;
-					sent_from?: string | null;
+					created_at?: string | null;
+					created_by?: number | null;
+					description?: string | null;
+					id?: string;
+					is_public?: boolean | null;
+					name: string;
 				};
 				Update: {
 					conversation_id?: string | null;
+					created_at?: string | null;
+					created_by?: number | null;
+					description?: string | null;
+					id?: string;
+					is_public?: boolean | null;
+					name?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'chat_groups_conversation_id_fkey';
+						columns: ['conversation_id'];
+						isOneToOne: false;
+						referencedRelation: 'chat_conversations';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'chat_groups_created_by_fkey';
+						columns: ['created_by'];
+						isOneToOne: false;
+						referencedRelation: 'studios';
+						referencedColumns: ['id'];
+					}
+				];
+			};
+			chat_messages: {
+				Row: {
+					conversation_id: string;
+					created_at: string;
+					id: number;
+					message: string;
+					sent_from: string | null;
+				};
+				Insert: {
+					conversation_id: string;
 					created_at?: string;
 					id?: number;
-					message?: string | null;
+					message: string;
+					sent_from?: string | null;
+				};
+				Update: {
+					conversation_id?: string;
+					created_at?: string;
+					id?: number;
+					message?: string;
 					sent_from?: string | null;
 				};
 				Relationships: [
@@ -54,7 +99,7 @@ export type Database = {
 						referencedColumns: ['id'];
 					},
 					{
-						foreignKeyName: 'message_sent_from_fkey';
+						foreignKeyName: 'chat_messages_sent_from_fkey';
 						columns: ['sent_from'];
 						isOneToOne: false;
 						referencedRelation: 'users';
@@ -743,10 +788,7 @@ export type Database = {
 				Args: { category_names: Json; service_id_param: string };
 				Returns: undefined;
 			};
-			update_views: {
-				Args: { page_id: number };
-				Returns: undefined;
-			};
+			update_views: { Args: { page_id: number }; Returns: undefined };
 		};
 		Enums: {
 			purchase_status:
