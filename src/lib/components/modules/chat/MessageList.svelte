@@ -11,6 +11,7 @@
 <ScrollArea class="h-full rounded-none border-0 border-b">
 	<div class="space-y-1 p-2">
 		{#each initialMessages as message}
+			<!-- SANITIZATION: Sanitize message content to prevent XSS -->
 			<MessageBlock
 				{message}
 				isCurrentUser={message.sent_from === currentUserId}

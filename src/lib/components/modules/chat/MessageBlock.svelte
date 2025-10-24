@@ -39,6 +39,7 @@
 				: 'rounded-br-sm rounded-bl-none border bg-white/50 text-xs'}
 		>
 			<CardContent class="p-1.5">
+				<!-- SANITIZATION: Sanitize message content to prevent XSS -->
 				<p class="whitespace-pre-wrap">{message.message}</p>
 			</CardContent>
 		</div>

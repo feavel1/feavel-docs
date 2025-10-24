@@ -23,6 +23,10 @@
 		textarea.style.height = `${textarea.scrollHeight}px`;
 	};
 
+	// SERVER-SIDE: This function must always run on the server for security
+	// VALIDATION: Input sanitization required
+	// VALIDATION: Length validation required
+	// RATE LIMIT: Implement message rate limiting to prevent spam
 	const sendMessage = async () => {
 		if (!currentMessage.trim() || isSending) return;
 

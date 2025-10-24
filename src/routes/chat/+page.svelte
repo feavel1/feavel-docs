@@ -9,6 +9,7 @@
 	import type { ChatMessage, ChatConversation } from '$lib/utils/chatUtils';
 
 	// Import utility functions
+	// RLS POLICY: These utility functions should respect database RLS policies
 	import {
 		getUserConversations,
 		getConversationMessages,
@@ -36,6 +37,9 @@
 	let currentUserAvatar = $state<string | null>(null);
 	let isMobileConversationOpen = $state(false);
 
+	// VALIDATION: Input sanitization required
+	// VALIDATION: Length validation required
+	// RATE LIMIT: Implement message rate limiting to prevent spam
 	const handleNewMessage = async (event: CustomEvent<any>) => {
 		if (!currentConversationId) return;
 
@@ -65,6 +69,8 @@
 		isMobileConversationOpen = false;
 	};
 
+	// SERVER-SIDE: This function should be moved to server for security
+	// VALIDATION: Participant validation required
 	const createNewConversation = async () => {
 		// Create new conversation using utility function
 		const newConversation = await createConversation(supabase, [currentUserId]);
@@ -82,6 +88,7 @@
 		isMobileConversationOpen = false;
 	};
 
+	// RLS POLICY: Data loading respects RLS policies for user access
 	onMount(async () => {
 		// Load user conversations
 		const userConversations = await getUserConversations(supabase, currentUserId);

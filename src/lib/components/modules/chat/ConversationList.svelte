@@ -3,6 +3,7 @@
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import type { Tables } from '$lib/types/database.types';
 
+	// RLS POLICY: chat_conversations table needs appropriate access controls
 	export let conversations: Tables<'chat_conversations'>[] = [];
 	export let currentConversationId: string | null = null;
 	export let onConversationSelect: (conversationId: string) => void;

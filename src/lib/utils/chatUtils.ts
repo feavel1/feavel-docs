@@ -93,6 +93,11 @@ export const getConversationMessages = async (
 
 /**
  * Send a new message
+ *
+ * SERVER-SIDE: This function must always run on the server for security
+ * VALIDATION: Input sanitization required
+ * VALIDATION: Length validation required
+ * RATE LIMIT: Implement message rate limiting to prevent spam
  */
 export const sendMessage = async (
 	supabase: SupabaseClient,
@@ -115,6 +120,9 @@ export const sendMessage = async (
 
 /**
  * Create a new conversation
+ *
+ * SERVER-SIDE: This function must always run on the server for security
+ * VALIDATION: Participant validation required
  */
 export const createConversation = async (
 	supabase: SupabaseClient,

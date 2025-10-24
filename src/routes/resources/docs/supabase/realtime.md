@@ -10,89 +10,13 @@ sidebar_label: 'Getting Started'
 
 ### 1. Install the client library
 
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
-
 ```bash
 npm install @supabase/supabase-js
 ```
 
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```bash
-flutter pub add supabase_flutter
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-let package = Package(
-    // ...
-    dependencies: [
-        // ...
-        .package(
-            url: "https://github.com/supabase/supabase-swift.git",
-            from: "2.0.0"
-        ),
-    ],
-    targets: [
-        .target(
-            name: "YourTargetName",
-            dependencies: [
-                .product(
-                    name: "Supabase",
-                    package: "supabase-swift"
-                ),
-            ]
-        )
-    ]
-)
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python - PIP">
-
-```bash
-pip install supabase
-```
-
-</TabPanel>
-<TabPanel id="python" label="Python - Conda">
-
-```bash
-conda install -c conda-forge supabase
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
-
 ### 2. Initialize the client
 
 Get your project URL and key.
-<$Partial path="api_settings.mdx" />
-
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
 
 ```ts
 import { createClient } from '@supabase/supabase-js';
@@ -100,67 +24,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient('https://<project>.supabase.co', '<anon_key or sb_publishable_key>');
 ```
 
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```dart
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-void main() async {
-  await Supabase.initialize(
-    url: 'https://<project>.supabase.co',
-    anonKey: '<anon_key or sb_publishable_key>',
-  );
-  runApp(MyApp());
-}
-
-final supabase = Supabase.instance.client;
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-import Supabase
-
-let supabase = SupabaseClient(
-  supabaseURL: URL(string: "https://<project>.supabase.co")!,
-  supabaseKey: "<anon_key or sb_publishable_key>"
-)
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python">
-
-```python
-from supabase import create_client, Client
-
-url: str = "https://<project>.supabase.co"
-key: str = "<anon_key or sb_publishable_key>"
-supabase: Client = create_client(url, key)
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
-
 ### 3. Create your first Channel
 
 Channels are the foundation of Realtime. Think of them as rooms where clients can communicate. Each channel is identified by a topic name and if they are public or private.
-
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
 
 ```ts
 // Create a channel with a descriptive topic name
@@ -168,41 +34,6 @@ const channel = supabase.channel('room:lobby:messages', {
 	config: { private: true } // Recommended for production
 });
 ```
-
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```dart
-// Create a channel with a descriptive topic name
-final channel = supabase.channel('room:lobby:messages');
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-// Create a channel with a descriptive topic name
-let channel = supabase.channel("room:lobby:messages") {
-  $0.isPrivate = true
-}
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python">
-
-```python
-# Create a channel with a descriptive topic name
-channel = supabase.channel('room:lobby:messages', params={config={private= True }})
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
 
 ### 4. Set up authorization
 
@@ -226,15 +57,6 @@ There are three main ways to send messages with Realtime:
 
 Send and receive messages using the Supabase client:
 
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
-
 ```ts
 // Listen for messages
 channel
@@ -255,93 +77,9 @@ channel.send({
 });
 ```
 
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```dart
-// Listen for messages
-channel.onBroadcast(
-  event: 'message_sent',
-  callback: (payload) {
-    print('New message: ${payload['payload']}');
-  },
-).subscribe();
-
-// Send a message
-channel.sendBroadcastMessage(
-  event: 'message_sent',
-  payload: {
-    'text': 'Hello, world!',
-    'user': 'john_doe',
-    'timestamp': DateTime.now().toIso8601String(),
-  },
-);
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-// Listen for messages
-await channel.onBroadcast(event: "message_sent") { message in
-  print("New message: \(message.payload)")
-}
-
-let status = await channel.subscribe()
-
-// Send a message
-await channel.sendBroadcastMessage(
-  event: "message_sent",
-  payload: [
-    "text": "Hello, world!",
-    "user": "john_doe",
-    "timestamp": ISO8601DateFormatter().string(from: Date())
-  ]
-)
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python">
-
-```python
-# Listen for messages
-def message_handler(payload):
-    print(f"New message: {payload['payload']}")
-
-channel.on_broadcast(event="message_sent", callback=message_handler).subscribe()
-
-# Send a message
-channel.send_broadcast_message(
-    event="message_sent",
-    payload={
-        "text": "Hello, world!",
-        "user": "john_doe",
-        "timestamp": datetime.now().isoformat()
-    }
-)
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
-
 #### 5.2 using HTTP/REST API
 
 Send messages via HTTP requests, perfect for server-side applications:
-
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
 
 ```ts
 // Send message via REST API
@@ -364,101 +102,6 @@ const response = await fetch(`https://<project>.supabase.co/rest/v1/rpc/broadcas
 	})
 });
 ```
-
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-// Send message via REST API
-final response = await http.post(
-  Uri.parse('https://<project>.supabase.co/rest/v1/rpc/broadcast'),
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer <your-service-role-key>',
-    'apikey': '<your-service-role-key>',
-  },
-  body: jsonEncode({
-    'topic': 'room:lobby:messages',
-    'event': 'message_sent',
-    'payload': {
-      'text': 'Hello from server!',
-      'user': 'system',
-      'timestamp': DateTime.now().toIso8601String(),
-    },
-    'private': true,
-  }),
-);
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-import Foundation
-
-// Send message via REST API
-let url = URL(string: "https://<project>.supabase.co/rest/v1/rpc/broadcast")!
-var request = URLRequest(url: url)
-request.httpMethod = "POST"
-request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-request.setValue("Bearer <your-service-role-key>", forHTTPHeaderField: "Authorization")
-request.setValue("<your-service-role-key>", forHTTPHeaderField: "apikey")
-
-let payload = [
-  "topic": "room:lobby:messages",
-  "event": "message_sent",
-  "payload": [
-    "text": "Hello from server!",
-    "user": "system",
-    "timestamp": ISO8601DateFormatter().string(from: Date())
-  ],
-  "private": true
-] as [String: Any]
-
-request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-let (data, response) = try await URLSession.shared.data(for: request)
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python">
-
-```python
-import requests
-from datetime import datetime
-
-# Send message via REST API
-response = requests.post(
-    'https://<project>.supabase.co/rest/v1/rpc/broadcast',
-    headers={
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer <your-service-role-key>',
-        'apikey': '<your-service-role-key>'
-    },
-    json={
-        'topic': 'room:lobby:messages',
-        'event': 'message_sent',
-        'payload': {
-            'text': 'Hello from server!',
-            'user': 'system',
-            'timestamp': datetime.now().isoformat()
-        },
-        'private': True
-    }
-)
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
 
 #### 5.3 using database triggers
 
@@ -550,15 +193,6 @@ const channel = supabase.channel('room:123:messages', {
 
 Always unsubscribe when you are done with a channel to ensure you free up resources:
 
-<Tabs
-scrollable
-size="small"
-type="underlined"
-defaultActiveId="ts"
-queryGroup="language"
-
-> <TabPanel id="ts" label="TypeScript">
-
 ```ts
 // React example
 import { useEffect } from 'react';
@@ -571,82 +205,6 @@ useEffect(() => {
 	};
 }, []);
 ```
-
-</TabPanel>
-<$Show if="sdk:dart">
-<TabPanel id="dart" label="Flutter">
-
-```dart
-// Flutter example
-class _MyWidgetState extends State<MyWidget> {
-  RealtimeChannel? _channel;
-
-  @override
-  void initState() {
-    super.initState();
-    _channel = supabase.channel('room:123:messages');
-  }
-
-  @override
-  void dispose() {
-    _channel?.unsubscribe();
-    super.dispose();
-  }
-}
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:swift">
-<TabPanel id="swift" label="Swift">
-
-```swift
-// SwiftUI example
-struct ContentView: View {
-  @State private var channel: RealtimeChannelV2?
-
-  var body: some View {
-    // Your UI here
-    .onAppear {
-      channel = supabase.realtimeV2.channel("room:123:messages")
-    }
-    .onDisappear {
-      Task {
-        await channel?.unsubscribe()
-      }
-    }
-  }
-}
-```
-
-</TabPanel>
-</$Show>
-<$Show if="sdk:python">
-<TabPanel id="python" label="Python">
-
-```python
-# Python example with context manager
-class RealtimeManager:
-    def __init__(self):
-        self.channel = None
-
-    def __enter__(self):
-        self.channel = supabase.channel('room:123:messages')
-        return self.channel
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.channel:
-            self.channel.unsubscribe()
-
-# Usage
-with RealtimeManager() as channel:
-    # Use channel here
-    pass
-```
-
-</TabPanel>
-</$Show>
-</Tabs>
 
 ## Choose the right feature
 
@@ -689,15 +247,5 @@ Now that you understand the basics, dive deeper into each feature:
 - **[Architecture](/docs/guides/realtime/architecture)** - Understand how Realtime works under the hood
 - **[Benchmarks](/docs/guides/realtime/benchmarks)** - Performance characteristics and scaling considerations
 - **[Quotas](/docs/guides/realtime/quotas)** - Usage limits and best practices
-
-### Integration guides
-
-- **[Realtime with Next.js](/docs/guides/realtime/realtime-with-nextjs)** - Build real-time Next.js applications
-- **[User Presence](/docs/guides/realtime/realtime-user-presence)** - Implement user presence features
-- **[Database Changes](/docs/guides/realtime/subscribing-to-database-changes)** - Listen to database changes
-
-### Framework examples
-
-- **[Flutter Integration](/docs/guides/realtime/realtime-listening-flutter)** - Build real-time Flutter applications
 
 Ready to build something amazing? Start with the [Broadcast guide](/docs/guides/realtime/broadcast) to create your first real-time feature!
