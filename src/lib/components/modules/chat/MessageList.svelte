@@ -5,7 +5,7 @@
 	export let initialMessages: any[];
 	export let currentUserId: string;
 	export let currentUserAvatar: string | null = null;
-	export const conversationId: string | null = null;
+	export let conversationId: string | null = null;
 </script>
 
 <ScrollArea class="h-full rounded-none border-0 border-b">

@@ -1,18 +1,22 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import MessageList from '$lib/components/modules/chat/MessageList.svelte';
 	import MessageInput from '$lib/components/modules/chat/MessageInput.svelte';
 	import ConversationList from '$lib/components/modules/chat/ConversationList.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		Sheet,
-		SheetContent,
-		SheetHeader,
-		SheetTitle,
-		SheetTrigger
-	} from '$lib/components/ui/sheet';
-	import { onMount } from 'svelte';
-	import type { Tables } from '$lib/types/database.types';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import MenuIcon from '@lucide/svelte/icons/menu';
+	import type { ChatMessage, ChatConversation } from '$lib/utils/chatUtils';
+
+	// Import utility functions
+	import {
+		getUserConversations,
+		getConversationMessages,
+		sendMessage,
+		createConversation
+		// subscribeToMessages,
+		// subscribeToConversations
+	} from '$lib/utils/chatUtils';
 
 	// Props from parent layout
 	let { data } = $props();
@@ -24,90 +28,76 @@
 	}
 
 	// State management
-	let conversations = $state<Tables<'chat_conversations'>[]>([
-		{
-			id: 'dummy-conversation-1',
-			created_at: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-		},
-		{
-			id: 'dummy-conversation-2',
-			created_at: new Date(Date.now() - 172800000).toISOString() // 2 days ago
-		}
-	]);
+	let conversations = $state<ChatConversation[]>([]);
+	let currentConversationId = $state<string | null>(null);
+	let currentMessages = $state<ChatMessage[]>([]);
 
-	let currentConversationId = $state<string | null>('dummy-conversation-1');
-	let initialMessages = $state([
-		{
-			id: 1,
-			message: 'Hello there! How are you doing today?',
-			created_at: new Date(Date.now() - 3600000).toISOString(),
-			sent_from: 'user2',
-			sent_from_avatar_url: null,
-			sent_from_username: 'John Doe'
-		},
-		{
-			id: 2,
-			message: "I'm doing great! Just working on some new features for our app.",
-			created_at: new Date(Date.now() - 3500000).toISOString(),
-			sent_from: session.user.id,
-			sent_from_avatar_url: null,
-			sent_from_username: 'You'
-		},
-		{
-			id: 3,
-			message: 'That sounds exciting! What kind of features?',
-			created_at: new Date(Date.now() - 3400000).toISOString(),
-			sent_from: 'user2',
-			sent_from_avatar_url: null,
-			sent_from_username: 'John Doe'
-		},
-		{
-			id: 4,
-			message:
-				"I'm working on a responsive chat UI component. It needs to work well on both mobile and desktop.",
-			created_at: new Date(Date.now() - 3300000).toISOString(),
-			sent_from: session.user.id,
-			sent_from_avatar_url: null,
-			sent_from_username: 'You'
-		}
-	]);
-
-	let currentUserId = $state(session.user.id);
+	const currentUserId = session.user.id;
 	let currentUserAvatar = $state<string | null>(null);
 	let isMobileConversationOpen = $state(false);
 
-	const handleNewMessage = (event: CustomEvent<any>) => {
-		const newMessage = event.detail;
-		initialMessages = [
-			...initialMessages,
-			{
-				...newMessage,
-				sent_from_username: 'You'
-			}
-		];
+	const handleNewMessage = async (event: CustomEvent<any>) => {
+		if (!currentConversationId) return;
+
+		// Send message using utility function
+		const newMessageData = {
+			conversation_id: currentConversationId,
+			message: event.detail.message,
+			sent_from: currentUserId
+		};
+
+		const newMessage = await sendMessage(supabase, newMessageData);
+
+		if (newMessage) {
+			// Add message to current messages
+			currentMessages = [...currentMessages, newMessage];
+		}
 	};
 
-	const selectConversation = (conversationId: string) => {
+	const selectConversation = async (conversationId: string) => {
 		currentConversationId = conversationId;
+
+		// Load messages for the selected conversation
+		const messages = await getConversationMessages(supabase, conversationId, currentUserId);
+		currentMessages = messages;
+
 		// Close the sheet on mobile after selecting a conversation
 		isMobileConversationOpen = false;
 	};
 
-	const createNewConversation = () => {
-		const newConversationId = `dummy-conversation-${Date.now()}`;
-		const newConversation = {
-			id: newConversationId,
-			created_at: new Date().toISOString()
-		};
+	const createNewConversation = async () => {
+		// Create new conversation using utility function
+		const newConversation = await createConversation(supabase, [currentUserId]);
 
-		conversations = [newConversation, ...conversations];
-		currentConversationId = newConversationId;
-		initialMessages = [];
+		if (newConversation) {
+			// Add to conversations list
+			conversations = [newConversation, ...conversations];
+			currentConversationId = newConversation.id;
+
+			// Initialize empty message array for new conversation
+			currentMessages = [];
+		}
+
 		// Close the sheet on mobile after creating a new conversation
 		isMobileConversationOpen = false;
 	};
 
-	onMount(() => {
+	onMount(async () => {
+		// Load user conversations
+		const userConversations = await getUserConversations(supabase, currentUserId);
+		conversations = userConversations;
+
+		// If there are conversations, load the first one
+		if (userConversations.length > 0) {
+			currentConversationId = userConversations[0].id;
+			const messages = await getConversationMessages(
+				supabase,
+				userConversations[0].id,
+				currentUserId
+			);
+			currentMessages = messages;
+		}
+
 		// Scroll to bottom of message list
 		const scrollArea = document.querySelector('[data-scroll-area]');
 		if (scrollArea) {
@@ -116,28 +106,33 @@
 	});
 </script>
 
-<div class="mx-auto flex h-[500px] max-w-4xl flex-col">
+<div class="mx-auto flex h-[700px] max-w-4xl flex-col border">
 	<!-- Header with mobile conversation trigger -->
 	<div class="flex flex-row items-center justify-between border-b p-2">
-		<Sheet bind:open={() => isMobileConversationOpen, (v) => (isMobileConversationOpen = v)}>
-			<SheetTrigger class="md:hidden">
+		<div class="text-lg font-bold">Chat</div>
+		<Sheet.Sheet bind:open={() => isMobileConversationOpen, (v) => (isMobileConversationOpen = v)}>
+			<Sheet.SheetTrigger class="md:hidden">
 				<Button variant="ghost" size="icon">
 					<MenuIcon class="h-4 w-4" />
 				</Button>
-			</SheetTrigger>
-			<SheetContent side="left" class="w-64 p-0">
-				<SheetHeader class="border-b p-2">
-					<SheetTitle>Conversations</SheetTitle>
-				</SheetHeader>
+			</Sheet.SheetTrigger>
+			<Sheet.SheetContent side="right" class="w-64">
+				<Sheet.SheetHeader class="border-b">
+					<Sheet.SheetTitle>Conversations</Sheet.SheetTitle>
+					<Sheet.Description>Add new friends to chat!</Sheet.Description>
+				</Sheet.SheetHeader>
 				<ConversationList
 					{conversations}
 					{currentConversationId}
-					onConversationSelect={selectConversation}
-					onCreateNewConversation={createNewConversation}
+					onConversationSelect={(conversationId: string) => {
+						selectConversation(conversationId);
+					}}
+					onCreateNewConversation={() => {
+						createNewConversation();
+					}}
 				/>
-			</SheetContent>
-		</Sheet>
-		<div class="text-lg font-bold">Chat</div>
+			</Sheet.SheetContent>
+		</Sheet.Sheet>
 	</div>
 
 	<div class="flex flex-1 overflow-hidden">
@@ -145,8 +140,12 @@
 			<ConversationList
 				{conversations}
 				{currentConversationId}
-				onConversationSelect={selectConversation}
-				onCreateNewConversation={createNewConversation}
+				onConversationSelect={(conversationId: string) => {
+					selectConversation(conversationId);
+				}}
+				onCreateNewConversation={() => {
+					createNewConversation();
+				}}
 			/>
 		</div>
 
@@ -154,7 +153,7 @@
 		<div class="flex flex-1 flex-col">
 			{#if currentConversationId}
 				<MessageList
-					{initialMessages}
+					initialMessages={currentMessages}
 					{currentUserId}
 					{currentUserAvatar}
 					conversationId={currentConversationId}
@@ -171,7 +170,9 @@
 					<div class="text-center">
 						<h3 class="text-lg font-medium">No conversation selected</h3>
 						<p class="text-gray-500">Select a conversation or create a new one</p>
-						<Button onclick={createNewConversation} class="mt-4">Start New Conversation</Button>
+						<Button onclick={() => createNewConversation()} class="mt-4">
+							Start New Conversation
+						</Button>
 					</div>
 				</div>
 			{/if}

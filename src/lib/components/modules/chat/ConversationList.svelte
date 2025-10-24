@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { CardContent } from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import type { Tables } from '$lib/types/database.types';
 
@@ -11,13 +10,6 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<div class="flex items-center justify-between border-b p-2">
-		<h2 class="px-2 text-sm font-semibold">Conversations</h2>
-		<Button onclick={onCreateNewConversation} variant="outline" size="sm" class="h-6 px-2 text-xs">
-			+
-		</Button>
-	</div>
-
 	<div class="">
 		{#if conversations.length === 0}
 			<div class="p-3 text-center text-xs text-gray-500">
