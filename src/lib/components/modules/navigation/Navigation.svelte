@@ -21,10 +21,10 @@
 			</Group>
 
 			<Group title="COMMUNITY">
-				<A href="/member">Members</A>
+				<A href="/chat">Chat</A>
 				<A href="/studios">Studios</A>
+				<A href="/member">Members</A>
 				<A href="/member/dashboard">Dashboard</A>
-				<A href="/studios/dashboard">Studio Dashboard</A>
 			</Group>
 
 			<Group title="RESOURCES">

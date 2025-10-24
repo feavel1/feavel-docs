@@ -159,7 +159,7 @@
 							<div class="flex items-start space-x-3">
 								<div class="mt-1 h-8 w-8 rounded-full bg-gray-200">
 									<div
-										class="h-full w-full rounded-full bg-gradient-to-br from-indigo-100 to-purple-100"
+										class="h-full w-full rounded-full bg-linear-to-br from-indigo-100 to-purple-100"
 									></div>
 								</div>
 								<div class="flex-1">
@@ -188,7 +188,7 @@
 							<div class="flex items-start space-x-3 border-b pb-4 last:border-0 last:pb-0">
 								<div class="mt-1 h-8 w-8 rounded-full bg-gray-200">
 									<div
-										class="h-full w-full rounded-full bg-gradient-to-br from-indigo-100 to-purple-100"
+										class="h-full w-full rounded-full bg-linear-to-br from-indigo-100 to-purple-100"
 									></div>
 								</div>
 								<div class="flex-1">
