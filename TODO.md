@@ -1,4 +1,4 @@
-# Extended Chat Application Plan with Automatic Studio Group Chats
+# Extended Chat Application Plan with Studio Group Chats
 
 ## Current State Analysis
 

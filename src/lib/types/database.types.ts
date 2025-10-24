@@ -27,7 +27,7 @@ export type Database = {
 				Row: {
 					conversation_id: string | null;
 					created_at: string | null;
-					created_by: number | null;
+					created_by: string;
 					description: string | null;
 					id: string;
 					is_public: boolean | null;
@@ -36,7 +36,7 @@ export type Database = {
 				Insert: {
 					conversation_id?: string | null;
 					created_at?: string | null;
-					created_by?: number | null;
+					created_by: string;
 					description?: string | null;
 					id?: string;
 					is_public?: boolean | null;
@@ -45,7 +45,7 @@ export type Database = {
 				Update: {
 					conversation_id?: string | null;
 					created_at?: string | null;
-					created_by?: number | null;
+					created_by?: string;
 					description?: string | null;
 					id?: string;
 					is_public?: boolean | null;
@@ -63,7 +63,7 @@ export type Database = {
 						foreignKeyName: 'chat_groups_created_by_fkey';
 						columns: ['created_by'];
 						isOneToOne: false;
-						referencedRelation: 'studios';
+						referencedRelation: 'users';
 						referencedColumns: ['id'];
 					}
 				];

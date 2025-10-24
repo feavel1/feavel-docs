@@ -20,8 +20,8 @@ Thumbs.db
 !.env.test
 
 # Ai
-# .claude/
-# .specify/
+.claude/
+.specify/
 .specs/
 
 # Vite
