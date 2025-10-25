@@ -35,16 +35,19 @@ ChatContainer.svelte
 **Purpose**: Main container component that manages chat state and coordinates between sub-components.
 
 **Props**:
+
 - `session` (Session object) - Current user session
 - `userProfile` (UserProfile object) - Current user profile
 
 **State**:
+
 - `conversations` (ChatConversation[]) - List of user's conversations
 - `activeConversation` (ChatConversation) - Currently selected conversation
 - `messages` (ChatMessage[]) - Messages for active conversation
 - `isLoading` (boolean) - Loading state for data fetching
 
 **Functions**:
+
 - `loadConversations()` - Fetch user's conversations
 - `selectConversation(conversationId)` - Set active conversation
 - `sendMessage(messageText)` - Send a new message
@@ -56,12 +59,14 @@ ChatContainer.svelte
 **Purpose**: Displays list of user's conversations with ability to select and create new ones.
 
 **Props**:
+
 - `conversations` (ChatConversation[]) - List of conversations to display
 - `activeConversationId` (string) - ID of currently selected conversation
 - `onSelect` (function) - Callback when conversation is selected
 - `onCreate` (function) - Callback when new conversation is requested
 
 **State**:
+
 - `searchTerm` (string) - Filter term for conversations
 
 ### ChatWindow.svelte
@@ -69,6 +74,7 @@ ChatContainer.svelte
 **Purpose**: Main chat interface for a selected conversation.
 
 **Props**:
+
 - `conversation` (ChatConversation) - Current conversation
 - `messages` (ChatMessage[]) - Messages to display
 - `currentUser` (User) - Current authenticated user
@@ -76,6 +82,7 @@ ChatContainer.svelte
 - `onLoadMore` (function) - Callback to load more messages
 
 **State**:
+
 - `newMessageText` (string) - Text for new message being composed
 - `isSending` (boolean) - Sending state
 
@@ -84,12 +91,14 @@ ChatContainer.svelte
 **Purpose**: Displays messages in a conversation with proper scrolling and loading.
 
 **Props**:
+
 - `messages` (ChatMessage[]) - Messages to display
 - `currentUser` (User) - Current authenticated user
 - `onLoadMore` (function) - Callback to load more messages
 - `isLoadingMore` (boolean) - Loading state for more messages
 
 **State**:
+
 - `scrollTop` (number) - Current scroll position
 - `shouldAutoScroll` (boolean) - Whether to auto-scroll to new messages
 
@@ -98,6 +107,7 @@ ChatContainer.svelte
 **Purpose**: Manages group chat functionality including creation, joining, and member management.
 
 **Props**:
+
 - `group` (ChatGroup) - Current group information
 - `conversation` (ChatConversation) - Associated conversation
 - `currentUser` (User) - Current authenticated user
@@ -163,11 +173,13 @@ ChatContainer.svelte
 ## Styling and Accessibility
 
 ### CSS Classes
+
 - All components should use existing Tailwind classes
 - Follow established design system patterns
 - Maintain consistency with current UI theme
 
 ### Accessibility Features
+
 - Proper ARIA labels for interactive elements
 - Keyboard navigation support
 - Screen reader compatibility
@@ -176,30 +188,36 @@ ChatContainer.svelte
 ## Performance Considerations
 
 ### Virtualization
+
 - MessageList should implement virtual scrolling for large message histories
 - ConversationList should virtualize long lists
 
 ### Memoization
+
 - Components should memoize expensive calculations
 - Use Svelte 5 runes for efficient state management
 
 ### Lazy Loading
+
 - Messages should be paginated and loaded on demand
 - Conversation details loaded only when needed
 
 ## Error Handling
 
 ### Network Errors
+
 - Display appropriate error messages for connection issues
 - Implement retry mechanisms for failed operations
 - Gracefully handle offline scenarios
 
 ### Validation Errors
+
 - Validate message content before sending
 - Display user-friendly validation messages
 - Prevent sending of invalid data
 
 ### Permission Errors
+
 - Handle RLS policy violations gracefully
 - Display appropriate messages for unauthorized actions
 - Redirect or disable actions when permissions are insufficient

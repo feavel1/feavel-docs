@@ -12,13 +12,7 @@
 		onConversationSelect,
 		onCreateNewConversation,
 		onJoinGroup
-	} = $props<{
-		conversations?: (ChatConversation & { chat_groups?: ChatGroup[] })[];
-		currentConversationId?: string | null;
-		onConversationSelect: (conversationId: string) => void;
-		onCreateNewConversation: () => void;
-		onJoinGroup?: (conversationId: string) => void;
-	}>();
+	} = $props();
 
 	// Get group info for a conversation
 	function getGroupInfo(conversation: ChatConversation & { chat_groups?: ChatGroup[] }) {
@@ -44,13 +38,8 @@
 
 <div class="flex h-full flex-col">
 	<div class="p-2">
-		<Button
-			onclick={onCreateNewConversation}
-			variant="outline"
-			size="sm"
-			class="w-full"
-		>
-			<PlusIcon class="h-4 w-4 mr-2" />
+		<Button onclick={onCreateNewConversation} variant="outline" size="sm" class="w-full">
+			<PlusIcon class="mr-2 h-4 w-4" />
 			New Chat
 		</Button>
 	</div>
@@ -78,7 +67,7 @@
 							<Avatar class="h-8 w-8">
 								<AvatarFallback class="text-xs">
 									{isGroup
-										? (group?.name?.slice(0, 2).toUpperCase() || 'GC')
+										? group?.name?.slice(0, 2).toUpperCase() || 'GC'
 										: conversation.id?.slice(0, 2).toUpperCase() || 'C'}
 								</AvatarFallback>
 							</Avatar>
@@ -87,7 +76,9 @@
 									<h3 class="truncate text-sm font-medium">
 										{name}
 										{#if isGroup && group?.is_public}
-											<span class="ml-1 text-[8px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded">Public</span>
+											<span class="ml-1 rounded bg-blue-100 px-1 py-0.5 text-[8px] text-blue-800"
+												>Public</span
+											>
 										{/if}
 									</h3>
 									<span class="text-[10px] text-gray-500">

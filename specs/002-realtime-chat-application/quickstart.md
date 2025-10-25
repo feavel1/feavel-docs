@@ -19,6 +19,7 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 ## Setup Steps
 
 ### 1. Database Setup
+
 1. Ensure the following tables exist in your Supabase database:
    - `chat_conversations`
    - `chat_messages`
@@ -28,11 +29,13 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 3. Apply the chat RLS policies as defined in `src/routes/resources/docs/supabase/chat-rls-policies.sql`
 
 ### 2. Supabase Realtime Configuration
+
 1. Enable Realtime in the Supabase dashboard
 2. Configure the database triggers for message broadcasting
 3. Set up proper authentication and authorization
 
 ### 3. Application Files
+
 1. Update the chat utility functions in `src/lib/utils/chatUtils.ts` to use real Supabase implementations
 2. Update the existing chat UI components in `src/lib/components/modules/chat/` to support real-time functionality
 3. Update the main chat route in `src/routes/chat/+page.svelte` to use real-time subscriptions
@@ -41,6 +44,7 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 ## Testing Steps
 
 ### 1. Private Chat Functionality
+
 1. Log in as User A
 2. Initiate a private conversation with User B using existing UI
 3. Send a message to User B
@@ -48,6 +52,7 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 5. Confirm message history is preserved
 
 ### 2. Group Chat Functionality
+
 1. Create or access an existing studio
 2. Verify that a group chat was automatically created for the studio
 3. Join the group chat as a different user using existing UI
@@ -55,16 +60,19 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 5. Verify all participants receive messages in real-time through existing UI
 
 ### 3. Large Group Support
+
 1. Create a group chat with multiple participants (test up to 100)
 2. Send messages and verify delivery to all participants
 3. Test performance with 50+ participants
 
 ### 4. Offline Message Handling
+
 1. Send messages to a user who is offline
 2. Have the user come online
 3. Verify stored messages are delivered
 
 ### 5. Message Retention
+
 1. Send messages in conversations
 2. Verify messages are accessible for the retention period (1 year)
 3. Confirm messages are deleted after the retention period
@@ -84,6 +92,7 @@ This guide provides the steps to set up and test the Realtime Chat Application f
 ## Troubleshooting
 
 ### Common Issues
+
 1. **Real-time messages not received**
    - Check Supabase Realtime service is enabled
    - Verify user is properly subscribed to channels
@@ -99,6 +108,7 @@ This guide provides the steps to set up and test the Realtime Chat Application f
    - Review database query optimization
 
 ### Validation Commands
+
 ```bash
 # Type checking
 bun run check

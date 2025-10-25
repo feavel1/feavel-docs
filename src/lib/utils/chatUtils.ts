@@ -16,12 +16,14 @@ export const getUserConversations = async (
 ): Promise<ChatConversation[]> => {
 	const { data, error } = await supabase
 		.from('chat_conversations')
-		.select(`
+		.select(
+			`
 			id,
 			created_at,
 			chat_participants(user_id),
 			chat_groups(name, description, is_public)
-		`)
+		`
+		)
 		.eq('chat_participants.user_id', userId)
 		.order('created_at', { ascending: false });
 
@@ -84,7 +86,7 @@ export const getOlderMessages = async (
 		.lt('created_at', beforeTimestamp)
 		.order('created_at', { ascending: false })
 		.limit(limit)
-		.then(result => {
+		.then((result) => {
 			// Reverse the order to show oldest first
 			if (result.data) {
 				result.data.reverse();
@@ -230,14 +232,11 @@ export const subscribeToMessages = async (
 	callback: (message: ChatMessage) => void
 ): Promise<() => void> => {
 	// Create a channel for this conversation
-	const channel = supabase.channel(`chat:conversation:${conversationId}`)
-		.on(
-			'broadcast',
-			{ event: 'new_message' },
-			(payload) => {
-				callback(payload.payload.message as ChatMessage);
-			}
-		)
+	const channel = supabase
+		.channel(`chat:conversation:${conversationId}`)
+		.on('broadcast', { event: 'new_message' }, (payload) => {
+			callback(payload.payload.message as ChatMessage);
+		})
 		.subscribe();
 
 	// Return unsubscribe function
@@ -255,14 +254,11 @@ export const subscribeToConversations = async (
 	callback: (conversation: ChatConversation) => void
 ): Promise<() => void> => {
 	// Create a channel for this user's conversations
-	const channel = supabase.channel(`chat:user:${userId}:conversations`)
-		.on(
-			'broadcast',
-			{ event: 'new_conversation' },
-			(payload) => {
-				callback(payload.payload.conversation as ChatConversation);
-			}
-		)
+	const channel = supabase
+		.channel(`chat:user:${userId}:conversations`)
+		.on('broadcast', { event: 'new_conversation' }, (payload) => {
+			callback(payload.payload.conversation as ChatConversation);
+		})
 		.subscribe();
 
 	// Return unsubscribe function
@@ -356,12 +352,10 @@ export const joinGroupChat = async (
 	conversationId: string,
 	userId: string
 ): Promise<boolean> => {
-	const { error } = await supabase
-		.from('chat_participants')
-		.insert({
-			conversation_id: conversationId,
-			user_id: userId
-		});
+	const { error } = await supabase.from('chat_participants').insert({
+		conversation_id: conversationId,
+		user_id: userId
+	});
 
 	if (error) {
 		console.error('Error joining group chat:', error);
@@ -400,10 +394,12 @@ export const getPublicGroupChats = async (
 ): Promise<(ChatGroup & { conversation: ChatConversation })[]> => {
 	const { data, error } = await supabase
 		.from('chat_groups')
-		.select(`
+		.select(
+			`
 			*,
 			chat_conversations(*)
-		`)
+		`
+		)
 		.eq('is_public', true)
 		.order('created_at', { ascending: false });
 
