@@ -24,7 +24,7 @@ The application MUST follow a modular component structure with UI components in 
 ### III. Session and Supabase Client Management
 
 - Don't update database.types, they are synced from supabase.
-  All database operations MUST use the Supabase client provided by SvelteKit hooks (`event.locals.supabase`). Session validation and permission checks MUST be handled at the hook level (`hooks.server.ts`) rather than in individual route files. Parent-child data flow MUST be implemented through `await parent()` in server files, with inherited data accessed through props in Svelte components. This ensures consistent authentication, optimal performance, and proper data flow throughout the application.
+  All database operations MUST use the Supabase client provided by SvelteKit hooks. Session validation and permission checks MUST be handled at the hook level (`hooks.server.ts`) rather than in individual route files. Parent-child data flow MUST be implemented through `await parent()` in server files, with inherited data accessed through props in Svelte components. This ensures consistent authentication, optimal performance, and proper data flow throughout the application.
 
 ### IV. Performance and Accessibility
 

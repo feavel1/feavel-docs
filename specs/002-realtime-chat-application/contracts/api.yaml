@@ -1,0 +1,239 @@
+openapi: 3.0.0
+info:
+  title: Realtime Chat Application API
+  description: API contracts for the Realtime Chat Application feature
+  version: 1.0.0
+
+paths:
+  /chat/conversations:
+    get:
+      summary: Get user conversations
+      description: Retrieve all conversations for the authenticated user
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatConversation'
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create new conversation
+      description: Create a new conversation with specified participants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participantIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - participantIds
+      responses:
+        '201':
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatConversation'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /chat/conversations/{conversationId}/messages:
+    get:
+      summary: Get conversation messages
+      description: Retrieve messages for a specific conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessage'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not a participant)
+    post:
+      summary: Send message
+      description: Send a new message in a conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 1000
+              required:
+                - message
+      responses:
+        '201':
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not a participant)
+
+  /chat/groups:
+    post:
+      summary: Create group chat
+      description: Create a new group chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 500
+                is_public:
+                  type: boolean
+                participantIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - name
+                - participantIds
+      responses:
+        '201':
+          description: Created group chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatGroupWithConversation'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /chat/groups/{conversationId}/join:
+    post:
+      summary: Join group chat
+      description: Join a public group chat
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully joined group
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (group is not public)
+        '409':
+          description: Conflict (already a member)
+
+components:
+  schemas:
+    ChatConversation:
+      type: object
+      properties:
+        id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - created_at
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: number
+        conversation_id:
+          type: string
+        message:
+          type: string
+        sent_from:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversation_id
+        - message
+        - sent_from
+        - created_at
+
+    ChatGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        conversation_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_by:
+          type: string
+        is_public:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversation_id
+        - name
+        - created_by
+        - is_public
+        - created_at
+
+    ChatGroupWithConversation:
+      type: object
+      properties:
+        conversation:
+          $ref: '#/components/schemas/ChatConversation'
+        group:
+          $ref: '#/components/schemas/ChatGroup'
+      required:
+        - conversation
+        - group
