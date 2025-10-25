@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import type { ChatMessage, ChatConversation } from '$lib/utils/chatUtils';
-	import { sendMessage } from '$lib/utils/chatUtils';
 
 	// Import UI components
 	import ConversationList from './ConversationList.svelte';
@@ -123,19 +122,7 @@
 		console.log('Creating new conversation with participants:', participantIds);
 	}
 
-	// Handle new message
-	async function handleNewMessage(conversationId: string, messageText: string) {
-		// Send message using utility function
-		const newMessageData = {
-			conversation_id: conversationId,
-			message: messageText,
-			sent_from: currentUserId
-		};
-
-		const newMessage = await sendMessage(supabase, newMessageData);
-		return newMessage;
-	}
-
+	
 	// Set up real-time subscriptions
 	function setupMessageSubscription(conversationId: string) {
 		// Clean up existing subscription
@@ -244,7 +231,10 @@
 
 					<MessageInput
 						{supabase}
-						on:messageSent={(e) => handleNewMessage(activeConversation!.id, e.detail.message)}
+						onMessageSent={(message: ChatMessage) => {
+							// Add message to local state for immediate UI update
+							messages = [...messages, message];
+						}}
 						conversationId={activeConversation!.id}
 						{currentUserId}
 					/>

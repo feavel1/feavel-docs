@@ -3,15 +3,18 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 	import Posts from '$lib/components/modules/content/Posts.svelte';
-	import { Settings, Calendar } from '@lucide/svelte';
+	import { Settings, Calendar, MessageCircle } from '@lucide/svelte';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { FileStorage } from '$lib/services/storage';
+	import { createOrGetOneOnOneConversation } from '$lib/utils/chatUtils';
+	import { toast } from 'svelte-sonner';
 
 	const { data: propsData } = $props();
-	const { viewedUserProfile: userProfile, isOwnProfile, supabase, stats } = propsData;
+	const { viewedUserProfile: userProfile, isOwnProfile, supabase, stats, session } = propsData;
 
 	// State for resolved avatar URL
 	let resolvedAvatarUrl = $state('');
+	let isStartingConversation = $state(false);
 
 	$effect(() => {
 		const fetchAvatarUrl = async () => {
@@ -26,6 +29,33 @@
 		};
 		fetchAvatarUrl();
 	});
+
+	// Function to start a conversation with the user
+	async function startConversation() {
+		if (!session || !supabase) {
+			toast.error('You must be logged in to start a conversation');
+			return;
+		}
+
+		if (isOwnProfile) {
+			toast.error('You cannot start a chat with yourself 😹😹😹');
+			return;
+		}
+
+		isStartingConversation = true;
+
+		try {
+			const conversationId = await createOrGetOneOnOneConversation(supabase, userProfile.id);
+
+			// Navigate to the chat interface with the conversation
+			window.location.href = `/chat?conversation=${conversationId}`;
+		} catch (error) {
+			console.error('Error starting conversation:', error);
+			toast.error('Failed to start conversation. Please try again.');
+		} finally {
+			isStartingConversation = false;
+		}
+	}
 </script>
 
 <div class="container mx-auto px-4 py-6">
@@ -68,6 +98,21 @@
 							<p class="mt-1 text-indigo-100">@{userProfile.username}</p>
 						</div>
 						<div class="mt-4 flex flex-wrap justify-center gap-2 sm:mt-0">
+							{#if session}
+								<Button
+									size="sm"
+									variant="secondary"
+									onclick={startConversation}
+									disabled={isStartingConversation}
+								>
+									{#if isStartingConversation}
+										Starting...
+									{:else}
+										<MessageCircle class="mr-2 h-4 w-4" />
+										Message
+									{/if}
+								</Button>
+							{/if}
 							{#if isOwnProfile}
 								<Button
 									size="sm"

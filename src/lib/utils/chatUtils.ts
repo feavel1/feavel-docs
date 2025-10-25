@@ -179,49 +179,32 @@ export const sendMessage = async (
 };
 
 /**
- * Create a new conversation
+ * Create or get an existing 1-on-1 conversation between the current user and another user
+ * This function uses the RPC function defined in the database to ensure only one
+ * 1-on-1 conversation exists between any two users.
  *
- * SERVER-SIDE: This function must always run on the server for security
- * VALIDATION: Participant validation required
+ * @param supabase - Supabase client instance
+ * @param otherUserId - The ID of the other user to create/get conversation with
+ * @returns The conversation ID
  */
-export const createConversation = async (
+export async function createOrGetOneOnOneConversation(
 	supabase: SupabaseClient,
-	participantIds: string[]
-): Promise<ChatConversation> => {
-	// Validate participants
-	if (participantIds.length < 2) {
-		throw new Error('A conversation must have at least 2 participants');
+	otherUserId: string
+): Promise<string> {
+	const { data, error } = await supabase.rpc('create_or_get_oneonone_conversation', {
+		other_user_id: otherUserId
+	});
+
+	if (error) {
+		throw new Error(`Failed to create or get conversation: ${error.message}`);
 	}
 
-	// Create new conversation
-	const { data: newConversation, error: conversationError } = await supabase
-		.from('chat_conversations')
-		.insert({})
-		.select()
-		.single();
-
-	if (conversationError) {
-		console.error('Error creating conversation:', conversationError);
-		throw new Error('Failed to create conversation');
+	if (!data) {
+		throw new Error('Failed to create or get conversation: No conversation ID returned');
 	}
 
-	// Add participants to the conversation
-	const participantData = participantIds.map((userId) => ({
-		conversation_id: newConversation.id,
-		user_id: userId
-	}));
-
-	const { error: participantsError } = await supabase
-		.from('chat_participants')
-		.insert(participantData);
-
-	if (participantsError) {
-		console.error('Error adding participants:', participantsError);
-		throw new Error('Failed to add participants to conversation');
-	}
-
-	return newConversation as ChatConversation;
-};
+	return data;
+}
 
 /**
  * Subscribe to real-time message updates

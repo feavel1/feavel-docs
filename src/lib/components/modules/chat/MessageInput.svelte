@@ -1,18 +1,11 @@
 <!-- $lib/ui/components/chat/MessageInput.svelte -->
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import type { SupabaseClient } from '@supabase/supabase-js';
 	import SendIcon from '@lucide/svelte/icons/send';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Button } from '$lib/components/ui/button';
+	import { sendMessage as sendChatMessage } from '$lib/utils/chatUtils';
 
-	const dispatch = createEventDispatcher();
-
-	let { supabase, conversationId, currentUserId } = $props<{
-		supabase: SupabaseClient;
-		conversationId: string;
-		currentUserId: string;
-	}>();
+	let { supabase, conversationId, currentUserId, onMessageSent } = $props();
 
 	let currentMessage = $state('');
 	let isSending = $state(false);
@@ -23,42 +16,24 @@
 		textarea.style.height = `${textarea.scrollHeight}px`;
 	};
 
-	// SERVER-SIDE: This function must always run on the server for security
-	// VALIDATION: Input sanitization required
-	// VALIDATION: Length validation required
-	// RATE LIMIT: Implement message rate limiting to prevent spam
 	const sendMessage = async () => {
 		if (!currentMessage.trim() || isSending) return;
 
 		isSending = true;
 
 		try {
-			const { data: newMessage, error } = await supabase
-				.from('chat_messages')
-				.insert([
-					{
-						message: currentMessage.trim(),
-						conversation_id: conversationId,
-						sent_from: currentUserId
-					}
-				])
-				.select(
-					`
-          id,
-          message,
-          created_at,
-          sent_from(id, username, avatar_url)
-        `
-				)
-				.single();
-
-			if (error) throw error;
-
-			dispatch('messageSent', {
-				...newMessage,
-				// Add client-side timestamp for immediate UI update
-				created_at: new Date().toISOString()
+			const newMessage = await sendChatMessage(supabase, {
+				message: currentMessage.trim(),
+				conversation_id: conversationId,
+				sent_from: currentUserId
 			});
+
+			if (!newMessage) {
+				throw new Error('Failed to send message');
+			}
+
+			// Call the callback with the new message
+			onMessageSent?.(newMessage);
 
 			currentMessage = '';
 		} catch (error) {
