@@ -15,8 +15,7 @@
 		getUserConversations,
 		getConversationMessages,
 		subscribeToMessages,
-		subscribeToConversations,
-		joinGroupChat
+		subscribeToConversations
 	} from '$lib/utils/chatUtils';
 
 	let { session, supabase } = $props();
@@ -69,22 +68,6 @@
 		}
 	}
 
-	// Join a group chat
-	async function joinGroup(conversationId: string) {
-		try {
-			const success = await joinGroupChat(supabase, conversationId, currentUserId);
-
-			if (success) {
-				// Refresh conversations list
-				await loadConversations();
-
-				// Select the joined conversation
-				await selectConversation(conversationId);
-			}
-		} catch (error) {
-			console.error('Error joining group chat:', error);
-		}
-	}
 
 	// Create new conversation
 	async function createNewConversation(participantIds: string[]) {
@@ -182,7 +165,6 @@
 						currentConversationId={activeConversation?.id}
 						onConversationSelect={selectConversation}
 						onCreateNewConversation={() => createNewConversation([currentUserId])}
-						onJoinGroup={joinGroup}
 					/>
 				</Sheet.SheetContent>
 			</Sheet.Sheet>
@@ -195,7 +177,6 @@
 					currentConversationId={activeConversation?.id}
 					onConversationSelect={selectConversation}
 					onCreateNewConversation={() => createNewConversation([currentUserId])}
-					onJoinGroup={joinGroup}
 				/>
 			</div>
 
