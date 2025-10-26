@@ -10,12 +10,6 @@
 	let currentMessage = $state('');
 	let isSending = $state(false);
 
-	const resizeTextarea = (e: Event) => {
-		const textarea = e.target as HTMLTextAreaElement;
-		textarea.style.height = 'auto';
-		textarea.style.height = `${textarea.scrollHeight}px`;
-	};
-
 	const sendMessage = async () => {
 		if (!currentMessage.trim() || isSending) return;
 
@@ -57,8 +51,6 @@
 		<Textarea
 			bind:value={currentMessage}
 			onkeydown={handleKeyDown}
-			oninput={resizeTextarea}
-			onfocus={resizeTextarea}
 			placeholder="Shift + Enter for new line"
 			disabled={isSending}
 			aria-label="Type your message"

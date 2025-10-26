@@ -14,7 +14,6 @@
 	import {
 		getUserConversations,
 		getConversationMessages,
-		getOlderMessages,
 		subscribeToMessages,
 		subscribeToConversations,
 		joinGroupChat
@@ -29,7 +28,6 @@
 	let isLoading = $state<boolean>(true);
 	let messageSubscription = $state<any>(null);
 	let conversationSubscription = $state<any>(null);
-	let hasMoreMessages = $state<boolean>(true); // Track if there are more messages to load
 	let isMobileConversationOpen = $state(false);
 
 	const currentUserId = session.user.id;
@@ -64,41 +62,10 @@
 	// Load messages for active conversation
 	async function loadMessages(conversationId: string) {
 		try {
-			const conversationMessages = await getConversationMessages(supabase, conversationId, {
-				limit: 50
-			});
+			const conversationMessages = await getConversationMessages(supabase, conversationId);
 			messages = conversationMessages;
-
-			// If we got fewer messages than the limit, there are no more older messages
-			hasMoreMessages = conversationMessages.length >= 50;
 		} catch (error) {
 			console.error('Error loading messages:', error);
-		}
-	}
-
-	// Load older messages for pagination
-	async function loadOlderMessages() {
-		if (!activeConversation || !hasMoreMessages) return;
-
-		try {
-			// Get the oldest message timestamp
-			if (messages.length === 0) return;
-
-			const oldestMessage = messages[0];
-			const olderMessages = await getOlderMessages(
-				supabase,
-				activeConversation.id,
-				oldestMessage.created_at,
-				50
-			);
-
-			// Prepend older messages to the existing messages
-			messages = [...olderMessages, ...messages];
-
-			// If we got fewer messages than the limit, there are no more older messages
-			hasMoreMessages = olderMessages.length >= 50;
-		} catch (error) {
-			console.error('Error loading older messages:', error);
 		}
 	}
 
@@ -235,22 +202,19 @@
 			<!-- Main Chat Area -->
 			<div class="flex flex-1 flex-col">
 				{#if activeConversation?.id}
-					<div class="flex-1 overflow-hidden flex flex-col">
+					<div class="flex flex-1 flex-col overflow-hidden">
 						<MessageList
 							initialMessages={messages}
 							{currentUserId}
-							conversationId={activeConversation.id!}
-							onLoadMore={loadOlderMessages}
-							{hasMoreMessages}
 							class="h-full"
 						/>
 					</div>
 
 					<MessageInput
 						{supabase}
-						onMessageSent={(message: ChatMessage) => {
-							// Add message to local state for immediate UI update
-							messages = [...messages, message];
+						onMessageSent={() => {
+							// Removed immediate UI update to prevent duplicate messages
+							// Real-time subscription in setupMessageSubscription handles UI updates
 						}}
 						conversationId={activeConversation!.id}
 						{currentUserId}
