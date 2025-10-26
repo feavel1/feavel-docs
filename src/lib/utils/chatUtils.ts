@@ -217,10 +217,17 @@ export const subscribeToMessages = async (
 	// Create a channel for this conversation
 	const channel = supabase
 		.channel(`chat:conversation:${conversationId}`)
-		.on('broadcast', { event: 'new_message' }, (payload) => {
-			callback(payload.payload.message as ChatMessage);
+		.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversationId}` }, (payload) => {
+			console.log('Received postgres_changes INSERT message:', payload);
+			// Handle direct postgres changes
+			if (payload.new) {
+				const message = payload.new as ChatMessage;
+				callback(message);
+			}
 		})
-		.subscribe();
+		.subscribe((status) => {
+			console.log('Message subscription status:', status);
+		});
 
 	// Return unsubscribe function
 	return () => {
@@ -237,12 +244,39 @@ export const subscribeToConversations = async (
 	callback: (conversation: ChatConversation) => void
 ): Promise<() => void> => {
 	// Create a channel for this user's conversations
+	// We need to listen for changes to chat_participants table to detect new conversations for this user
 	const channel = supabase
 		.channel(`chat:user:${userId}:conversations`)
-		.on('broadcast', { event: 'new_conversation' }, (payload) => {
-			callback(payload.payload.conversation as ChatConversation);
+		.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_participants', filter: `user_id=eq.${userId}` }, (payload) => {
+			console.log('Received postgres_changes INSERT participant:', payload);
+			// When a new participant is added for this user, we need to fetch the conversation details
+			if (payload.new) {
+				const participant = payload.new as ChatParticipant;
+				// Fetch the conversation details
+				supabase
+					.from('chat_conversations')
+					.select(
+						`
+						id,
+						created_at,
+						chat_participants(user_id),
+						chat_groups(name, description, is_public)
+						`
+					)
+					.eq('id', participant.conversation_id)
+					.single()
+					.then(({ data, error }) => {
+						if (error) {
+							console.error('Error fetching conversation:', error);
+						} else if (data) {
+							callback(data as ChatConversation);
+						}
+					});
+			}
 		})
-		.subscribe();
+		.subscribe((status) => {
+			console.log('Conversation subscription status:', status);
+		});
 
 	// Return unsubscribe function
 	return () => {

@@ -49,11 +49,15 @@
 
 	// Set active conversation
 	async function selectConversation(conversationId: string) {
+		console.log('Selecting conversation:', conversationId);
 		const conversation = conversations.find((c) => c.id === conversationId);
 		if (conversation) {
 			activeConversation = conversation;
+			console.log('Active conversation set:', conversation);
 			await loadMessages(conversationId);
 			setupMessageSubscription(conversationId);
+		} else {
+			console.log('Conversation not found:', conversationId);
 		}
 	}
 
@@ -122,16 +126,18 @@
 		console.log('Creating new conversation with participants:', participantIds);
 	}
 
-	
 	// Set up real-time subscriptions
 	function setupMessageSubscription(conversationId: string) {
+		console.log('Setting up message subscription for conversation:', conversationId);
 		// Clean up existing subscription
 		if (messageSubscription) {
+			console.log('Cleaning up existing message subscription');
 			messageSubscription();
 		}
 
 		// Set up new subscription
 		subscribeToMessages(supabase, conversationId, (message: ChatMessage) => {
+			console.log('Received new message via subscription:', message);
 			messages = [...messages, message];
 		}).then((unsub) => {
 			messageSubscription = unsub;
@@ -139,13 +145,16 @@
 	}
 
 	function setupConversationSubscription() {
+		console.log('Setting up conversation subscription for user:', currentUserId);
 		// Clean up existing subscription
 		if (conversationSubscription) {
+			console.log('Cleaning up existing conversation subscription');
 			conversationSubscription();
 		}
 
 		// Set up new subscription
 		subscribeToConversations(supabase, currentUserId, (conversation: ChatConversation) => {
+			console.log('Received new conversation via subscription:', conversation);
 			conversations = [conversation, ...conversations];
 		}).then((unsub) => {
 			conversationSubscription = unsub;
@@ -154,12 +163,17 @@
 
 	// Initialize component
 	onMount(async () => {
+		console.log('Initializing chat container');
 		await loadConversations();
+		console.log('Loaded conversations:', conversations);
 		setupConversationSubscription();
 
 		// If there are conversations, load the first one
 		if (conversations.length > 0) {
+			console.log('Selecting first conversation:', conversations[0].id);
 			await selectConversation(conversations[0].id);
+		} else {
+			console.log('No conversations found');
 		}
 	});
 
@@ -174,7 +188,7 @@
 	});
 </script>
 
-<div class="mx-auto flex h-[700px] max-w-4xl flex-col border">
+<div class="mx-auto flex h-[600px] max-w-4xl flex-col border">
 	{#if isLoading}
 		<div class="flex h-full items-center justify-center">
 			<p>Loading conversations...</p>
@@ -221,13 +235,16 @@
 			<!-- Main Chat Area -->
 			<div class="flex flex-1 flex-col">
 				{#if activeConversation?.id}
-					<MessageList
-						initialMessages={messages}
-						{currentUserId}
-						conversationId={activeConversation.id!}
-						onLoadMore={loadOlderMessages}
-						{hasMoreMessages}
-					/>
+					<div class="flex-1 overflow-hidden flex flex-col">
+						<MessageList
+							initialMessages={messages}
+							{currentUserId}
+							conversationId={activeConversation.id!}
+							onLoadMore={loadOlderMessages}
+							{hasMoreMessages}
+							class="h-full"
+						/>
+					</div>
 
 					<MessageInput
 						{supabase}

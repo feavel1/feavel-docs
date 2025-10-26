@@ -9,7 +9,8 @@
 		currentUserAvatar = null,
 		conversationId = null,
 		onLoadMore,
-		hasMoreMessages = true
+		hasMoreMessages = true,
+		class: customClass = ''
 	} = $props();
 
 	// State management
@@ -72,7 +73,7 @@
 </script>
 
 <ScrollArea
-	class="h-full rounded-none border-0 border-b"
+	class={`h-full rounded-none border-0 border-b ${customClass}`}
 	bind:ref={scrollAreaRef}
 	data-message-list
 >
