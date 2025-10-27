@@ -37,28 +37,32 @@ export const getUserConversations = async (
 
 /**
  * Get messages for a conversation with pagination support
+ * For initial load, gets the most recent messages
+ * For pagination, gets older messages before a given timestamp
  */
 export const getConversationMessages = async (
 	supabase: SupabaseClient,
 	conversationId: string,
 	options: {
 		limit?: number;
-		before?: string; // ISO timestamp
+		before?: string; // ISO timestamp - gets messages older than this timestamp
 	} = {}
 ): Promise<ChatMessage[]> => {
-	const { limit = 50, before } = options;
+	const { limit = 5, before } = options;
 
 	let query = supabase
 		.from('chat_messages')
 		.select('*')
 		.eq('conversation_id', conversationId)
-		.order('created_at', { ascending: true })
+		.order('created_at', { ascending: false }) // Most recent first
 		.limit(limit);
 
-	// If before timestamp is provided, get messages before that time
+	// If before timestamp is provided, get messages older than that time
 	if (before) {
 		query = query.lt('created_at', before);
 	}
+
+	console.log('Fetching messages with query options:', { conversationId, limit, before });
 
 	const { data, error } = await query;
 
@@ -67,39 +71,8 @@ export const getConversationMessages = async (
 		return [];
 	}
 
-	return data as ChatMessage[];
-};
-
-/**
- * Get older messages for pagination
- */
-export const getOlderMessages = async (
-	supabase: SupabaseClient,
-	conversationId: string,
-	beforeTimestamp: string,
-	limit: number = 50
-): Promise<ChatMessage[]> => {
-	const { data, error } = await supabase
-		.from('chat_messages')
-		.select('*')
-		.eq('conversation_id', conversationId)
-		.lt('created_at', beforeTimestamp)
-		.order('created_at', { ascending: false })
-		.limit(limit)
-		.then((result) => {
-			// Reverse the order to show oldest first
-			if (result.data) {
-				result.data.reverse();
-			}
-			return result;
-		});
-
-	if (error) {
-		console.error('Error fetching older messages:', error);
-		return [];
-	}
-
-	return data as ChatMessage[];
+	// Reverse the order to show oldest first (for proper display)
+	return data.reverse() as ChatMessage[];
 };
 
 // Simple in-memory rate limiting store
@@ -217,14 +190,23 @@ export const subscribeToMessages = async (
 	// Create a channel for this conversation
 	const channel = supabase
 		.channel(`chat:conversation:${conversationId}`)
-		.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversationId}` }, (payload) => {
-			console.log('Received postgres_changes INSERT message:', payload);
-			// Handle direct postgres changes
-			if (payload.new) {
-				const message = payload.new as ChatMessage;
-				callback(message);
+		.on(
+			'postgres_changes',
+			{
+				event: 'INSERT',
+				schema: 'public',
+				table: 'chat_messages',
+				filter: `conversation_id=eq.${conversationId}`
+			},
+			(payload) => {
+				console.log('Received postgres_changes INSERT message:', payload);
+				// Handle direct postgres changes
+				if (payload.new) {
+					const message = payload.new as ChatMessage;
+					callback(message);
+				}
 			}
-		})
+		)
 		.subscribe((status) => {
 			console.log('Message subscription status:', status);
 		});
@@ -247,33 +229,42 @@ export const subscribeToConversations = async (
 	// We need to listen for changes to chat_participants table to detect new conversations for this user
 	const channel = supabase
 		.channel(`chat:user:${userId}:conversations`)
-		.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_participants', filter: `user_id=eq.${userId}` }, (payload) => {
-			console.log('Received postgres_changes INSERT participant:', payload);
-			// When a new participant is added for this user, we need to fetch the conversation details
-			if (payload.new) {
-				const participant = payload.new as ChatParticipant;
-				// Fetch the conversation details
-				supabase
-					.from('chat_conversations')
-					.select(
-						`
+		.on(
+			'postgres_changes',
+			{
+				event: 'INSERT',
+				schema: 'public',
+				table: 'chat_participants',
+				filter: `user_id=eq.${userId}`
+			},
+			(payload) => {
+				console.log('Received postgres_changes INSERT participant:', payload);
+				// When a new participant is added for this user, we need to fetch the conversation details
+				if (payload.new) {
+					const participant = payload.new as ChatParticipant;
+					// Fetch the conversation details
+					supabase
+						.from('chat_conversations')
+						.select(
+							`
 						id,
 						created_at,
 						chat_participants(user_id),
 						chat_groups(name, description, is_public)
 						`
-					)
-					.eq('id', participant.conversation_id)
-					.single()
-					.then(({ data, error }) => {
-						if (error) {
-							console.error('Error fetching conversation:', error);
-						} else if (data) {
-							callback(data as ChatConversation);
-						}
-					});
+						)
+						.eq('id', participant.conversation_id)
+						.single()
+						.then(({ data, error }) => {
+							if (error) {
+								console.error('Error fetching conversation:', error);
+							} else if (data) {
+								callback(data as ChatConversation);
+							}
+						});
+				}
 			}
-		})
+		)
 		.subscribe((status) => {
 			console.log('Conversation subscription status:', status);
 		});

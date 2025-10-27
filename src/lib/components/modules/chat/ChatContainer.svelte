@@ -29,6 +29,11 @@
 	let conversationSubscription = $state<any>(null);
 	let isMobileConversationOpen = $state(false);
 
+	// Pagination state
+	let hasMoreMessages = $state<boolean>(true);
+	let isLoadingMoreMessages = $state<boolean>(false);
+	let initialMessageLimit = $state<number>(10);
+
 	const currentUserId = session.user.id;
 
 	// Load user conversations
@@ -51,21 +56,48 @@
 		if (conversation) {
 			activeConversation = conversation;
 			console.log('Active conversation set:', conversation);
-			await loadMessages(conversationId);
+			// Reset pagination state
+			hasMoreMessages = true;
+			isLoadingMoreMessages = false;
+			await loadMessages(conversationId, 0, initialMessageLimit);
 			setupMessageSubscription(conversationId);
 		} else {
 			console.log('Conversation not found:', conversationId);
 		}
 	}
 
-	// Load messages for active conversation
-	async function loadMessages(conversationId: string) {
+	// Load messages for active conversation (initial load or more messages)
+	async function loadMessages(conversationId: string, offset: number = 0, limit: number = 20) {
 		try {
-			const conversationMessages = await getConversationMessages(supabase, conversationId);
-			messages = conversationMessages;
+			const conversationMessages = await getConversationMessages(supabase, conversationId, {
+				limit,
+				before: offset > 0 ? messages[0]?.created_at : undefined
+			});
+
+			if (offset === 0) {
+				// Initial load
+				messages = conversationMessages;
+				hasMoreMessages = conversationMessages.length === limit;
+			} else {
+				// Loading more (older) messages
+				messages = [...conversationMessages, ...messages];
+				hasMoreMessages = conversationMessages.length === limit;
+			}
 		} catch (error) {
 			console.error('Error loading messages:', error);
+		} finally {
+			isLoadingMoreMessages = false;
 		}
+	}
+
+	// Load more messages for pagination
+	async function loadMoreMessages() {
+		if (!activeConversation || !hasMoreMessages || isLoadingMoreMessages) return;
+
+		isLoadingMoreMessages = true;
+		// For pagination, we pass 1 as the offset to indicate we want to load more messages
+		// The actual logic is handled in loadMessages by using the before timestamp
+		await loadMessages(activeConversation.id, 1, initialMessageLimit);
 	}
 
 	// Create new conversation
@@ -183,7 +215,13 @@
 			<div class="flex flex-1 flex-col">
 				{#if activeConversation?.id}
 					<div class="flex flex-1 flex-col overflow-hidden">
-						<MessageList initialMessages={messages} {currentUserId} />
+						<MessageList
+							initialMessages={messages}
+							{currentUserId}
+							hasMore={hasMoreMessages}
+							isLoadingMore={isLoadingMoreMessages}
+							onLoadMore={loadMoreMessages}
+						/>
 					</div>
 
 					<MessageInput
