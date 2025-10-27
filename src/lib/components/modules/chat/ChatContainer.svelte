@@ -68,7 +68,6 @@
 		}
 	}
 
-
 	// Create new conversation
 	async function createNewConversation(participantIds: string[]) {
 		// This would typically call a utility function to create a conversation
@@ -184,11 +183,7 @@
 			<div class="flex flex-1 flex-col">
 				{#if activeConversation?.id}
 					<div class="flex flex-1 flex-col overflow-hidden">
-						<MessageList
-							initialMessages={messages}
-							{currentUserId}
-							class="h-full"
-						/>
+						<MessageList initialMessages={messages} {currentUserId} />
 					</div>
 
 					<MessageInput
@@ -205,9 +200,7 @@
 						<div class="text-center">
 							<h3 class="text-lg font-medium">No conversation selected</h3>
 							<p class="text-gray-500">Select a conversation or create a new one</p>
-							<Button onclick={() => createNewConversation([currentUserId])} class="mt-4">
-								Start New Conversation
-							</Button>
+							<Button href="/members" class="mt-4">Start New Conversation</Button>
 						</div>
 					</div>
 				{/if}

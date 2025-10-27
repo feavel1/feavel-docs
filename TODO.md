@@ -6,4 +6,6 @@
 
 Sytematic chat improvement:
 
-1. The chat doesn't load at the bottom, or push to bottom when new chat is sent.
+1. Create an infinete scroll that can be reused in application
+2. Fix Chat ui (Avatars, conversation names, user names)
+3. Make join group button for users in studios page.
