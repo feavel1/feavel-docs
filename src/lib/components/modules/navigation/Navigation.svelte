@@ -1,21 +1,20 @@
 <script lang="ts">
 	import A from './NavLink.svelte';
 	import Group from './NavigationGroup.svelte';
-	import { mostUsedTags } from '$lib/stores/mostUsedTags';
-	import { mostUsedCategories } from '$lib/stores/mostUsedCategories';
+	import { getMostUsedTags, getMostUsedCategories } from '$lib/remote/mostUsedItems.remote';
 </script>
 
 <div class="mx-auto h-screen w-screen px-4 font-thin lg:px-14">
 	<div class="absolute bottom-20">
 		<div class="grid-cols-2 gap-x-14 lg:grid">
 			<Group title="POSTS">
-				{#each $mostUsedTags.tags as tag}
+				{#each await getMostUsedTags() as tag}
 					<A href="/posts?tags={tag}">{tag.toLocaleUpperCase()}</A>
 				{/each}
 			</Group>
 
 			<Group title="SERVICES">
-				{#each $mostUsedCategories.categories as category}
+				{#each await getMostUsedCategories() as category}
 					<A href="/services?categories={category}">{category.toLocaleUpperCase()}</A>
 				{/each}
 			</Group>

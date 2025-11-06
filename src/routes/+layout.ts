@@ -40,8 +40,6 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 		supabase,
 		session,
 		user,
-		userProfile: data.userProfile,
-		mostUsedTags: data.mostUsedTags,
-		mostUsedCategories: data.mostUsedCategories
+		userProfile: data.userProfile
 	};
 };
