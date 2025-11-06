@@ -1,4 +1,5 @@
 import { command, query } from '$app/server';
+
 import { z } from 'zod/v4';
 import type { Tables } from '$lib/types/database.types';
 

@@ -4,11 +4,12 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import HamburgerMenu from '$lib/components/modules/navigation/HamburgerMenu.svelte';
 	import Feavel from '$lib/components/modules/layout/Feavel.svelte';
-	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
-	import { updateMostUsedCategories } from '$lib/stores/mostUsedCategories';
 	import LangSwitch from '$lib/components/modules/layout/LangSwitch.svelte';
 	import CloudBackground from '$lib/components/modules/layout/CloudBackground.svelte';
 	import ModeSwitcher from '$lib/components/modules/layout/ModeSwitcher.svelte';
+
+	import { updateMostUsedTags } from '$lib/stores/mostUsedTags';
+	import { updateMostUsedCategories } from '$lib/stores/mostUsedCategories';
 
 	let { children, data } = $props();
 

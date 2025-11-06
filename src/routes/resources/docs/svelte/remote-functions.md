@@ -2,6 +2,26 @@
 
 Type-safe client-server communication. Runs on server but callable from anywhere.
 
+## Key Features
+
+4 functions: query(), form(), command() and prerender();
+
+- **Caching:** Automatic query caching while on page
+- **Type safety:** Arguments and return values validated
+- **Error handling:** `<svelte:boundary>` handles errors
+- **Refresh:** `.refresh()` to re-fetch data
+- **Optimistic updates:** `.withOverride()` for immediate UI updates
+
+## Refreshing queries
+
+Any query can be re-fetched via its refresh method, which retrieves the latest value from the server:
+
+```svelte
+<button onclick={() => getPosts().refresh()}> Check for new posts </button>
+```
+
+Queries are cached while they’re on the page, meaning getPosts() === getPosts(). This means you don’t need a reference like const posts = getPosts() in order to update the query.
+
 ## Configuration
 
 ```js
@@ -116,11 +136,3 @@ export const getPost = query(v.string(), async (slug) => {
 	// slug is automatically validated
 });
 ```
-
-## Key Features
-
-- **Caching:** Automatic query caching while on page
-- **Type safety:** Arguments and return values validated
-- **Error handling:** `<svelte:boundary>` handles errors
-- **Refresh:** `.refresh()` to re-fetch data
-- **Optimistic updates:** `.withOverride()` for immediate UI updates

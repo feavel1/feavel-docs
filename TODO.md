@@ -6,6 +6,5 @@
 
 Sytematic chat improvement:
 
-1. Create an infinete scroll that can be reused in application
-2. Fix Chat ui (Avatars, conversation names, user names)
 3. Make join group button for users in studios page.
+4. Fix Chat ui (Avatars, conversation names, user names)
