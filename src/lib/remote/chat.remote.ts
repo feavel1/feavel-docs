@@ -277,6 +277,32 @@ export const getGroupInfo = query(z.string(), async (conversationId) => {
 });
 
 /**
+ * Create or get an existing 1-on-1 conversation between the current user and another user
+ * This function uses the RPC function defined in the database to ensure only one
+ * 1-on-1 conversation exists between any two users.
+ */
+export const createOrGetOneOnOneConversation = command(z.string(), async (otherUserId) => {
+	try {
+		const { data, error } = await supabase.rpc('create_or_get_oneonone_conversation', {
+			other_user_id: otherUserId
+		});
+
+		if (error) {
+			throw new Error(`Failed to create or get conversation: ${error.message}`);
+		}
+
+		if (!data) {
+			throw new Error('Failed to create or get conversation: No conversation ID returned');
+		}
+
+		return data;
+	} catch (error) {
+		console.error('Unexpected error in createOrGetOneOnOneConversation:', error);
+		throw error;
+	}
+});
+
+/**
  * Get all public group chats with related data
  */
 export const getPublicGroups = query(async () => {

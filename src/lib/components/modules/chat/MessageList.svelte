@@ -2,7 +2,7 @@
 	import { tick } from 'svelte';
 	import MessageBlock from './MessageBlock.svelte';
 	import InfiniteScroll from '../infinite-scroll/InfiniteScroll.svelte';
-	import type { ChatMessage } from '$lib/utils/chatUtils';
+	import type { ChatMessage } from '$lib/remote/chat.remote';
 
 	let {
 		initialMessages = [],

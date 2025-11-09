@@ -1,6 +1,5 @@
 import type { Tables } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updatePostTags, getTags } from './tags';
 import { FileStorage, ImageProcessor } from '$lib/services/storage';
 import { validateUUID } from './validation';
 
@@ -300,16 +299,18 @@ export async function handlePostCoverUpload(
 	}
 }
 
-/**
- * Fetch all available tags
- * @param supabase Supabase client instance
- * @returns Array of tag names
- */
-export async function fetchAllTags(supabase: SupabaseClient): Promise<string[]> {
-	const { data, error } = await getTags(supabase);
-	if (error) {
-		console.error('Error fetching tags:', error);
-		return [];
+async function updatePostTags(supabase: SupabaseClient, postId: number, tagNames: string[]) {
+	console.log(postId, tagNames);
+	try {
+		// Call the database function to update post tags
+		const { error } = await supabase.rpc('update_post_tags', {
+			post_id_param: postId,
+			tag_names: tagNames
+		});
+
+		return { error };
+	} catch (error) {
+		console.error('Error updating post tags:', error);
+		return { error };
 	}
-	return data?.map((tag: any) => tag.tag_name) || [];
 }

@@ -475,7 +475,7 @@
 				</div>
 
 				<MultiSelect
-					items={tags.map((tag) => ({ id: tag, tag_name: tag }))}
+					items={tags}
 					bind:selectedItems={$formValues.tags}
 					itemNameProperty="tag_name"
 					allowNewItems={true}

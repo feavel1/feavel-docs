@@ -169,7 +169,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 ```svelte
 <script lang="ts">
 	import { MultiTagSelect } from '$lib/components/modules';
-	import { getTags } from '$lib/utils/tags';
+	import { getAllTags } from '$lib/remote/tags.remote';
 
 	let { supabase } = $props();
 	let availableTags = $state<string[]>([]);
@@ -180,7 +180,7 @@ export async function addTagsToPost(supabase: SupabaseClient, postId: number, ta
 	});
 
 	async function loadTags() {
-		const { data } = await getTags(supabase);
+		const data = await getAllTags();
 		if (data) {
 			availableTags = data.map((tag) => tag.tag_name);
 		}
@@ -354,15 +354,11 @@ import { VirtualList } from 'svelte-virtual-list';
 ```typescript
 async function loadTags() {
 	try {
-		const { data, error } = await getTags(supabase);
-		if (error) {
-			console.error('Failed to load tags:', error);
-			// Show user-friendly error message
-			return;
-		}
+		const data = await getAllTags();
 		availableTags = data?.map((tag) => tag.tag_name) || [];
 	} catch (error) {
-		console.error('Unexpected error:', error);
+		console.error('Failed to load tags:', error);
+		// Show user-friendly error message
 		// Handle unexpected errors
 	}
 }

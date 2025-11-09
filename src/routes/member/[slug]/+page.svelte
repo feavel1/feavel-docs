@@ -6,7 +6,7 @@
 	import { Settings, Calendar, MessageCircle } from '@lucide/svelte';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { FileStorage } from '$lib/services/storage';
-	import { createOrGetOneOnOneConversation } from '$lib/utils/chatUtils';
+	import { createOrGetOneOnOneConversation } from '$lib/remote/chat.remote';
 	import { toast } from 'svelte-sonner';
 
 	const { data: propsData } = $props();
@@ -45,7 +45,7 @@
 		isStartingConversation = true;
 
 		try {
-			const conversationId = await createOrGetOneOnOneConversation(supabase, userProfile.id);
+			const conversationId = await createOrGetOneOnOneConversation(userProfile.id);
 
 			// Navigate to the chat interface with the conversation
 			window.location.href = `/chat?conversation=${conversationId}`;

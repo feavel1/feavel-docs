@@ -3,28 +3,24 @@
 	import SendIcon from '@lucide/svelte/icons/send';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Button } from '$lib/components/ui/button';
-	import { sendMessage as sendChatMessage } from '$lib/utils/chatUtils';
+	import { sendMessage as sendRemoteMessage } from '$lib/remote/chat.remote';
 
-	let { supabase, conversationId, currentUserId, onMessageSent } = $props();
+	let { conversationId, currentUserId, onMessageSent } = $props();
 
 	let currentMessage = $state('');
 	let isSending = $state(false);
 
-	const sendMessage = async () => {
+	const handleSendMessage = async () => {
 		if (!currentMessage.trim() || isSending) return;
 
 		isSending = true;
 
 		try {
-			const newMessage = await sendChatMessage(supabase, {
+			const newMessage = await sendRemoteMessage({
 				message: currentMessage.trim(),
 				conversation_id: conversationId,
 				sent_from: currentUserId
 			});
-
-			if (!newMessage) {
-				throw new Error('Failed to send message');
-			}
 
 			// Call the callback with the new message
 			onMessageSent?.(newMessage);
@@ -41,7 +37,7 @@
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
-			sendMessage();
+			handleSendMessage();
 		}
 	};
 </script>
@@ -58,7 +54,7 @@
 		/>
 
 		<Button
-			onclick={sendMessage}
+			onclick={handleSendMessage}
 			disabled={!currentMessage.trim() || isSending}
 			aria-label="Send message"
 			type="button"

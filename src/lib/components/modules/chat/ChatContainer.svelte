@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import type { ChatMessage, ChatConversation } from '$lib/utils/chatUtils';
+	import type { ChatMessage, ChatConversation } from '$lib/remote/chat.remote';
 
 	// Import UI components
 	import ConversationList from './ConversationList.svelte';
@@ -10,13 +10,10 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import MenuIcon from '@lucide/svelte/icons/menu';
 
-	// Import utility functions
-	import {
-		getUserConversations,
-		getConversationMessages,
-		subscribeToMessages,
-		subscribeToConversations
-	} from '$lib/utils/chatUtils';
+	// Import remote functions for data fetching
+	import { getUserConversations, getConversationMessages } from '$lib/remote/chat.remote';
+	// Keep subscription functions in utilities for real-time logic
+	import { subscribeToMessages, subscribeToConversations } from '$lib/utils/chatUtils';
 
 	let { session, supabase } = $props();
 
@@ -40,7 +37,7 @@
 	async function loadConversations() {
 		isLoading = true;
 		try {
-			const userConversations = await getUserConversations(supabase, currentUserId);
+			const userConversations = await getUserConversations(currentUserId);
 			conversations = userConversations;
 		} catch (error) {
 			console.error('Error loading conversations:', error);
@@ -69,7 +66,8 @@
 	// Load messages for active conversation (initial load or more messages)
 	async function loadMessages(conversationId: string, offset: number = 0, limit: number = 20) {
 		try {
-			const conversationMessages = await getConversationMessages(supabase, conversationId, {
+			const conversationMessages = await getConversationMessages({
+				conversationId,
 				limit,
 				before: offset > 0 ? messages[0]?.created_at : undefined
 			});
@@ -225,7 +223,6 @@
 					</div>
 
 					<MessageInput
-						{supabase}
 						onMessageSent={() => {
 							// Removed immediate UI update to prevent duplicate messages
 							// Real-time subscription in setupMessageSubscription handles UI updates

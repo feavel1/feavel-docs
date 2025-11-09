@@ -1,7 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { createPost, fetchAllTags } from '$lib/utils/posts';
+import { createPost } from '$lib/utils/posts';
 import { getPost } from '$lib/remote/posts.remote';
+import { getAllTags } from '$lib/remote/tags.remote';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { post_id } = params;
@@ -63,7 +64,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.eq('id', postIdNum);
 	}
 
-	const tags = isOwner ? await fetchAllTags(locals.supabase) : [];
+	const tags = isOwner ? await getAllTags() : [];
 
 	return {
 		post,
