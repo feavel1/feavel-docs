@@ -1,0 +1,719 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Feavel Docs Remote Functions",
+		"version": "1.0.0",
+		"description": "API contracts for Svelte remote functions in Feavel Docs application with Supabase join optimization"
+	},
+	"paths": {
+		"/posts/drafts": {
+			"get": {
+				"summary": "Get user drafts with related data",
+				"operationId": "getDraftsWithJoins",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/PostWithJoins"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/posts/public": {
+			"get": {
+				"summary": "Get public posts with related data",
+				"operationId": "getPublicPostsWithJoins",
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 10
+						}
+					},
+					{
+						"name": "offset",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 0
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/PostWithJoins"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/posts/{postId}": {
+			"get": {
+				"summary": "Get post by ID with all related data",
+				"operationId": "getPostByIdWithJoins",
+				"parameters": [
+					{
+						"name": "postId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with all joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PostWithAllJoins"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/posts/tag/{tagName}": {
+			"get": {
+				"summary": "Get posts by tag with related data",
+				"operationId": "getPostsByTagWithJoins",
+				"parameters": [
+					{
+						"name": "tagName",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/PostWithJoins"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/services/categories": {
+			"get": {
+				"summary": "Get service categories with related data",
+				"operationId": "getServiceCategoriesWithJoins",
+				"responses": {
+					"200": {
+						"description": "Successful response with joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Category"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/services/{serviceId}": {
+			"get": {
+				"summary": "Get service by ID with all related data",
+				"operationId": "getServiceByIdWithJoins",
+				"parameters": [
+					{
+						"name": "serviceId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with all joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ServiceWithJoins"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/services/{serviceId}/access": {
+			"get": {
+				"summary": "Check service access with database optimization",
+				"operationId": "checkServiceAccessOptimized",
+				"parameters": [
+					{
+						"name": "serviceId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "boolean"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/chat/conversations": {
+			"get": {
+				"summary": "Get user conversations with related data",
+				"operationId": "getUserConversationsWithJoins",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response with joined data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/ChatConversationWithJoins"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/chat/messages/{conversationId}": {
+			"get": {
+				"summary": "Get conversation messages with pagination",
+				"operationId": "getConversationMessagesOptimized",
+				"parameters": [
+					{
+						"name": "conversationId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 50
+						}
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/ChatMessage"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/chat/messages": {
+			"post": {
+				"summary": "Send a new message with rate limiting",
+				"operationId": "sendMessageOptimized",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"conversation_id": {
+										"type": "string"
+									},
+									"message": {
+										"type": "string",
+										"maxLength": 1000
+									},
+									"sent_from": {
+										"type": "string"
+									}
+								},
+								"required": ["conversation_id", "message", "sent_from"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ChatMessage"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"Post": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"user_id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string",
+						"nullable": true
+					},
+					"content_v2": {
+						"type": "object"
+					},
+					"cover_file_id": {
+						"type": "string",
+						"nullable": true
+					},
+					"public_visibility": {
+						"type": "boolean"
+					},
+					"post_views": {
+						"type": "integer"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"PostWithJoins": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Post"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"users": {
+								"type": "object",
+								"properties": {
+									"username": {
+										"type": "string",
+										"nullable": true
+									},
+									"avatar_file_id": {
+										"type": "string",
+										"nullable": true
+									}
+								},
+								"nullable": true
+							},
+							"posts_tags_rel": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"posts_tags": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "integer"
+												},
+												"tag_name": {
+													"type": "string"
+												}
+											},
+											"nullable": true
+										}
+									}
+								},
+								"nullable": true
+							}
+						}
+					}
+				]
+			},
+			"PostWithAllJoins": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/PostWithJoins"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"posts_likes": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "integer"
+										},
+										"user_id": {
+											"type": "string"
+										},
+										"created_at": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"users": {
+											"type": "object",
+											"properties": {
+												"username": {
+													"type": "string",
+													"nullable": true
+												},
+												"avatar_file_id": {
+													"type": "string",
+													"nullable": true
+												}
+											},
+											"nullable": true
+										}
+									}
+								},
+								"nullable": true
+							},
+							"posts_comments": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "integer"
+										},
+										"created_at": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"updated_at": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"user_id": {
+											"type": "string"
+										},
+										"parent_id": {
+											"type": "integer",
+											"nullable": true
+										},
+										"content": {
+											"type": "string"
+										},
+										"is_deleted": {
+											"type": "boolean"
+										},
+										"users": {
+											"type": "object",
+											"properties": {
+												"username": {
+													"type": "string",
+													"nullable": true
+												},
+												"full_name": {
+													"type": "string",
+													"nullable": true
+												},
+												"avatar_file_id": {
+													"type": "string",
+													"nullable": true
+												}
+											},
+											"nullable": true
+										}
+									}
+								},
+								"nullable": true
+							}
+						}
+					}
+				]
+			},
+			"Category": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"category_name": {
+						"type": "string"
+					}
+				}
+			},
+			"Service": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"created_by": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"price": {
+						"type": "number"
+					},
+					"type": {
+						"type": "string"
+					},
+					"enabled": {
+						"type": "boolean"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"ServiceWithJoins": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Service"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"studios": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"nullable": true
+									},
+									"description": {
+										"type": "string",
+										"nullable": true
+									},
+									"contact_phone": {
+										"type": "string",
+										"nullable": true
+									}
+								},
+								"nullable": true
+							},
+							"services_category_rel": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"services_category": {
+											"type": "object",
+											"properties": {
+												"category_name": {
+													"type": "string"
+												}
+											},
+											"nullable": true
+										}
+									}
+								},
+								"nullable": true
+							},
+							"service_downloads": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"preview_file_id": {
+											"type": "string",
+											"nullable": true
+										},
+										"product_file_id": {
+											"type": "string",
+											"nullable": true
+										}
+									}
+								},
+								"nullable": true
+							}
+						}
+					}
+				]
+			},
+			"ChatConversation": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"ChatConversationWithJoins": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/ChatConversation"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"chat_participants": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"user_id": {
+											"type": "string"
+										}
+									}
+								},
+								"nullable": true
+							},
+							"chat_groups": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"nullable": true
+									},
+									"description": {
+										"type": "string",
+										"nullable": true
+									},
+									"is_public": {
+										"type": "boolean",
+										"nullable": true
+									}
+								},
+								"nullable": true
+							}
+						}
+					}
+				]
+			},
+			"ChatMessage": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"conversation_id": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"sent_from": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			}
+		}
+	}
+}

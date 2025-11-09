@@ -21,15 +21,17 @@ export interface Service {
 	created_at: string;
 	created_by: number;
 	studios?: {
-		name: string;
-		description: string;
-		contact_phone: number;
+		name: string | null;
+		description: string | null;
+		contact_phone: string | null;
 	} | null;
-	services_category_rel?: {
-		services_category: {
-			category_name: string;
-		};
-	}[];
+	services_category_rel?:
+		| {
+				services_category: {
+					category_name: string;
+				} | null;
+		  }[]
+		| null;
 }
 
 interface ServiceFilters {
@@ -263,7 +265,7 @@ export function getServiceTags(service: Service): string[] {
 	if (!service) return [];
 	return (
 		service.services_category_rel
-			?.map((rel: any) => rel.services_category?.category_name)
+			?.map((rel: any) => rel?.services_category?.category_name)
 			.filter(Boolean) || []
 	);
 }

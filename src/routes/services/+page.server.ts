@@ -1,21 +1,15 @@
 import type { PageServerLoad } from './$types';
+import { getServiceCategories } from '$lib/remote/services.remote';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
-	// Get parent data (including Supabase client)
+export const load: PageServerLoad = async ({ parent }) => {
+	// Get parent data
 	const parentData = await parent();
 
-	// Fetch categories for filtering
-	const { data: categories, error: categoriesError } = await locals.supabase
-		.from('services_category')
-		.select('id, category_name')
-		.order('category_name');
-
-	if (categoriesError) {
-		console.error('Error fetching categories:', categoriesError);
-	}
+	// Fetch categories for filtering using remote function
+	const categories = await getServiceCategories();
 
 	return {
 		...parentData,
-		categories: categories || []
+		categories
 	};
 };

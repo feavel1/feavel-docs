@@ -1,0 +1,167 @@
+import { query, command } from '$app/server';
+import { z } from 'zod/v4';
+import { supabase } from '$lib/server/supabase';
+import type { Post } from '$lib/types/database.types';
+
+/**
+ * Get a post by ID with all related data using Supabase joins
+ * This minimizes JavaScript processing by fetching all data in one query
+ */
+export const getPostByIdWithJoins = query(
+	z.number(),
+	async (postId) => {
+		try {
+			// Single query with complex joins to fetch all related data
+			const { data: post, error } = await supabase
+				.from('posts')
+				.select(`
+					*,
+					users!inner(username, avatar_file_id),
+					posts_tags_rel(
+						posts_tags!inner(id, tag_name)
+					),
+					posts_likes(
+						id,
+						user_id,
+						created_at,
+						users!inner(username, avatar_file_id)
+					),
+					posts_comments(
+						id,
+						created_at,
+						updated_at,
+						user_id,
+						parent_id,
+						content,
+						is_deleted,
+						users!inner(username, avatar_file_id, full_name)
+					)
+				`)
+				.eq('id', postId)
+				.single();
+
+			if (error) {
+				console.error('Database error:', error);
+				return null;
+			}
+
+			// Return the post with all related data - no JavaScript mapping needed
+			return post as Post & {
+				users: { username: string | null; avatar_file_id: string | null } | null;
+				posts_tags_rel: {
+					posts_tags: { id: number; tag_name: string } | null;
+				}[] | null;
+				posts_likes: {
+					id: number;
+					user_id: string;
+					created_at: string;
+					users: { username: string | null; avatar_file_id: string | null } | null;
+				}[] | null;
+				posts_comments: {
+					id: number;
+					created_at: string;
+					updated_at: string;
+					user_id: string;
+					parent_id: number | null;
+					content: string;
+					is_deleted: boolean;
+					users: {
+						username: string | null;
+						full_name: string | null;
+						avatar_file_id: string | null;
+					} | null;
+				}[] | null;
+			};
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return null;
+		}
+	}
+);
+
+/**
+ * Get public posts with related data using Supabase joins
+ * Optimized to fetch all needed data in one query
+ */
+export const getPublicPostsWithJoins = query(
+	z.object({
+		limit: z.number().optional(),
+		offset: z.number().optional()
+	}).optional(),
+	async (options = {}) => {
+		const { limit = 10, offset = 0 } = options;
+
+		try {
+			// Single query with complex joins to fetch all related data
+			const { data: posts, error } = await supabase
+				.from('posts')
+				.select(`
+					*,
+					users!inner(username, avatar_file_id),
+					posts_tags_rel(
+						posts_tags!inner(id, tag_name)
+					)
+				`)
+				.eq('public_visibility', true)
+				.order('created_at', { ascending: false })
+				.range(offset, offset + limit - 1);
+
+			if (error) {
+				console.error('Database error:', error);
+				return [];
+			}
+
+			// Return posts with related data - no JavaScript mapping needed
+			return posts as (Post & {
+				users: { username: string | null; avatar_file_id: string | null } | null;
+				posts_tags_rel: {
+					posts_tags: { id: number; tag_name: string } | null;
+				}[] | null;
+			})[];
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return [];
+		}
+	}
+);
+
+/**
+ * Get drafts for a user with related data using Supabase joins
+ * Optimized to fetch all needed data in one query
+ */
+export const getDraftsWithJoins = query(
+	z.string(),
+	async (userId) => {
+		try {
+			// Single query with complex joins to fetch all related data
+			const { data: drafts, error } = await supabase
+				.from('posts')
+				.select(`
+					*,
+					users!inner(username, avatar_file_id),
+					posts_tags_rel(
+						posts_tags!inner(id, tag_name)
+					)
+				`)
+				.eq('user_id', userId)
+				.eq('public_visibility', false)
+				.order('created_at', { ascending: false });
+
+			if (error) {
+				console.error('Database error:', error);
+				return [];
+			}
+
+			// Return drafts with related data - no JavaScript mapping needed
+			return drafts as (Post & {
+				users: { username: string | null; avatar_file_id: string | null } | null;
+				posts_tags_rel: {
+					posts_tags: { id: number; tag_name: string } | null;
+				}[] | null;
+			})[];
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return [];
+		}
+	}
+);

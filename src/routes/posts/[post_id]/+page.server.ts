@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { fetchAllTags, createPost } from '$lib/utils/posts';
+import { createPost, fetchAllTags } from '$lib/utils/posts';
+import { getPost } from '$lib/remote/posts.remote';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { post_id } = params;
@@ -41,37 +42,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Convert post_id from string to number for database queries
 	const postIdNum = parseInt(post_id, 10);
 
-	const { data: post, error: postError } = await locals.supabase
-		.from('posts')
-		.select(
-			`
-			*,
-			users!inner(username, avatar_file_id),
-			posts_tags_rel(
-				posts_tags!inner(id, tag_name)
-			),
-			posts_likes(
-				id,
-				user_id,
-				created_at,
-				users!inner(username, avatar_file_id)
-			),
-			posts_comments(
-				id,
-				created_at,
-				updated_at,
-				user_id,
-				parent_id,
-				content,
-				is_deleted,
-				users!inner(username, avatar_file_id, full_name)
-			)
-		`
-		)
-		.eq('id', postIdNum)
-		.single();
+	// Use remote function to fetch post with related data
+	const post = await getPost(postIdNum);
 
-	if (postError || !post) {
+	if (!post) {
 		throw error(404, 'Post not found');
 	}
 

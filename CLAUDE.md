@@ -265,3 +265,93 @@ For services with download type, studios can upload two files: preview (public) 
 - Integration examples: `src/routes/studios/dashboard/services/[service_id]/+page.svelte`, `src/routes/services/[service_id]/+page.svelte`
 
 See `.specify/memory/constitution.md` for the complete constitutional document.
+
+## Remote Functions Implementation
+
+This project is currently refactoring to use Svelte's async remote functions to reduce code complexity. Key information for working with remote functions:
+
+### Remote Functions Architecture
+
+The project is refactoring to use Svelte's async remote functions to reduce code complexity by:
+
+1. **Centralizing data fetching** in `src/lib/remote/` directory
+2. **Simplifying server-side loading** files by removing complex queries
+3. **Improving separation** between client and server logic
+
+### Key Remote Function Files
+
+- `src/lib/remote/mostUsedItems.remote.ts` - Existing implementation (reference)
+- `src/lib/remote/posts.remote.ts` - Posts-related functions (to be created)
+- `src/lib/remote/services.remote.ts` - Services-related functions (to be created)
+- `src/lib/remote/tags.remote.ts` - Tags-related functions (to be created)
+- `src/lib/remote/chat.remote.ts` - Chat-related functions (partially implemented)
+
+### Remote Function Patterns
+
+#### Build-time Data Fetching
+
+```typescript
+import { prerender } from '$app/server';
+
+export const getMostUsedTags = prerender(async () => {
+	// Implementation
+});
+```
+
+#### Server-side Data Queries
+
+```typescript
+import { query } from '$app/server';
+import { z } from 'zod/v4';
+
+export const getPostById = query(z.number(), async (postId) => {
+	// Implementation
+});
+```
+
+#### Data Mutations
+
+```typescript
+import { command } from '$app/server';
+import { z } from 'zod/v4';
+
+export const sendMessage = command(
+	z.object({
+		conversation_id: z.string(),
+		message: z.string().max(1000),
+		sent_from: z.string()
+	}),
+	async ({ conversation_id, message, sent_from }) => {
+		// Implementation
+	}
+);
+```
+
+### Implementation Guidelines
+
+#### 1. Posts System Refactoring
+
+- Move complex queries from `src/routes/posts/` to remote functions
+- Simplify `src/lib/utils/posts.ts` by removing data fetching logic
+- Use consistent error handling patterns
+
+#### 2. Services System Refactoring
+
+- Centralize category fetching in remote functions
+- Simplify service data access patterns
+- Consolidate file handling logic
+
+#### 3. Chat System Refactoring
+
+- Implement actual logic in `src/lib/remote/chat.remote.ts`
+- Separate real-time subscription from data fetching
+- Maintain existing API compatibility
+
+### Design Documentation
+
+For detailed design documentation about the remote functions implementation, see:
+
+- `specs/003-simplification-with-remote/research.md` - Research findings
+- `specs/003-simplification-with-remote/data-model.md` - Data models
+- `specs/003-simplification-with-remote/quickstart.md` - Implementation guide
+- `specs/003-simplification-with-remote/contracts/` - API contracts

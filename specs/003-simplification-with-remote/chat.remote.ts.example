@@ -1,0 +1,145 @@
+import { query, command } from '$app/server';
+import { z } from 'zod/v4';
+import { supabase } from '$lib/server/supabase';
+import type { Tables } from '$lib/types/database.types';
+
+// Type exports
+export type ChatConversation = Tables<'chat_conversations'>;
+export type ChatMessage = Tables<'chat_messages'>;
+export type ChatGroup = Tables<'chat_groups'>;
+
+/**
+ * Get all conversations for a user with related data using Supabase joins
+ * This minimizes JavaScript processing by fetching all data in one query
+ */
+export const getUserConversationsWithJoins = query(
+	z.string(),
+	async (userId) => {
+		try {
+			// Single query with complex joins to fetch all related data
+			const { data: conversations, error } = await supabase
+				.from('chat_conversations')
+				.select(`
+					id,
+					created_at,
+					chat_participants(user_id),
+					chat_groups(name, description, is_public)
+				`)
+				.eq('chat_participants.user_id', userId)
+				.order('created_at', { ascending: false });
+
+			if (error) {
+				console.error('Database error:', error);
+				return [];
+			}
+
+			// Return conversations with related data - no JavaScript mapping needed
+			return conversations as (ChatConversation & {
+				chat_participants: { user_id: string }[] | null;
+				chat_groups: {
+					name: string | null;
+					description: string | null;
+					is_public: boolean | null;
+				} | null;
+			})[];
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return [];
+		}
+	}
+);
+
+/**
+ * Get messages for a conversation with pagination support
+ * Optimized to fetch all needed data in one query
+ */
+export const getConversationMessagesOptimized = query(
+	z.object({
+		conversation_id: z.string(),
+		limit: z.number().optional(),
+		before: z.string().optional()
+	}),
+	async ({ conversation_id, limit = 50, before }) => {
+		try {
+			// Build query with complex joins
+			let query = supabase
+				.from('chat_messages')
+				.select('*')
+				.eq('conversation_id', conversation_id)
+				.order('created_at', { ascending: false })
+				.limit(limit);
+
+			// If before timestamp is provided, get messages older than that time
+			if (before) {
+				query = query.lt('created_at', before);
+			}
+
+			const { data: messages, error } = await query;
+
+			if (error) {
+				console.error('Database error:', error);
+				return [];
+			}
+
+			// Return messages in correct order - minimal JavaScript processing
+			return messages.reverse() as ChatMessage[];
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return [];
+		}
+	}
+);
+
+/**
+ * Send a new message with rate limiting
+ * Optimized to minimize database operations
+ */
+export const sendMessageOptimized = command(
+	z.object({
+		conversation_id: z.string(),
+		message: z.string().max(1000),
+		sent_from: z.string()
+	}),
+	async ({ conversation_id, message, sent_from }) => {
+		try {
+			// Check rate limit using database query instead of in-memory store
+			const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+			const { count, error: countError } = await supabase
+				.from('chat_messages')
+				.select('*', { count: 'exact', head: true })
+				.eq('sent_from', sent_from)
+				.gt('created_at', oneMinuteAgo);
+
+			if (countError) {
+				console.error('Rate limit check error:', countError);
+				throw new Error('Failed to check rate limit');
+			}
+
+			// Max 10 messages per minute
+			if (count && count >= 10) {
+				throw new Error('Rate limit exceeded. Please wait before sending more messages.');
+			}
+
+			// Insert message into database
+			const { data: newMessage, error } = await supabase
+				.from('chat_messages')
+				.insert({
+					conversation_id,
+					message,
+					sent_from
+				})
+				.select()
+				.single();
+
+			if (error) {
+				console.error('Database error:', error);
+				return null;
+			}
+
+			return newMessage as ChatMessage;
+		} catch (error) {
+			console.error('Unexpected error:', error);
+			return null;
+		}
+	}
+);

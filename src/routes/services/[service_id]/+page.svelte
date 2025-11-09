@@ -19,7 +19,7 @@
 	);
 
 	// Derived values
-	let tags = $derived(service ? getServiceTags(service) : []);
+	let tags = $derived(service ? getServiceTags(service as any) : []);
 
 	// State for resolved cover URL
 	let coverUrl = $state('');

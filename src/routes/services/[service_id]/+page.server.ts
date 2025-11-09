@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getService, checkServiceAccess } from '$lib/remote/services.remote';
 
-export const load: PageServerLoad = async ({ params, locals, parent }) => {
+export const load: PageServerLoad = async ({ params, parent }) => {
 	const { service_id } = params;
 	const { session } = await parent();
 
@@ -9,26 +10,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		throw error(404, 'Service not found');
 	}
 
-	// Fetch the service with related data including download files
-	const { data: service, error: serviceError } = await locals.supabase
-		.from('services')
-		.select(
-			`*,
-			studios!services_created_by_fkey(name, description, contact_phone),
-			services_category_rel(
-				services_category!inner(category_name)
-			),
-			service_downloads (
-				preview_file_id,
-				product_file_id
-			)
-		`
-		)
-		.eq('id', service_id)
-		.eq('enabled', true)
-		.single();
+	// Fetch the service with related data including download files using remote function
+	const service = await getService(service_id);
 
-	if (serviceError || !service) {
+	if (!service) {
 		throw error(404, 'Service not found');
 	}
 
@@ -42,20 +27,13 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 	}
 
-	// Check if user has purchased the service (for download-type services)
+	// Check if user has purchased the service (for download-type services) using remote function
 	let canAccessProduct: boolean = false;
 	if (service.type === 'download' && session?.user?.id) {
-		const { data: purchase, error: purchaseError } = await locals.supabase
-			.from('digital_order')
-			.select('id')
-			.eq('service_id', service_id)
-			.eq('user_id', session.user.id)
-			.eq('status', 'paid')
-			.maybeSingle();
-
-		if (!purchaseError && purchase) {
-			canAccessProduct = true;
-		}
+		canAccessProduct = await checkServiceAccess({
+			serviceId: service_id,
+			userId: session.user.id
+		});
 	}
 
 	return {

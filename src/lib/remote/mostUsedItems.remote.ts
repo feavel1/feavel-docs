@@ -1,6 +1,11 @@
 import { prerender } from '$app/server';
 import { supabase } from '$lib/server/supabase';
 
+interface TagCount {
+	name: string;
+	count: number;
+}
+
 /**
  * Fetch most used tags for navigation
  * This function runs at build time only
@@ -16,7 +21,7 @@ export const getMostUsedTags = prerender(async () => {
 		return [];
 	}
 
-	const tagCounts = {};
+	const tagCounts: Record<string, TagCount> = {};
 
 	// Count occurrences of each tag
 	data.forEach((item) => {
@@ -33,9 +38,9 @@ export const getMostUsedTags = prerender(async () => {
 
 	// Sort by count and take the top 5
 	return Object.values(tagCounts)
-		.sort((a, b) => b.count - a.count)
+		.sort((a, b) => (b as TagCount).count - (a as TagCount).count)
 		.slice(0, 5)
-		.map((item) => item.name);
+		.map((item) => (item as TagCount).name);
 });
 
 /**
@@ -52,7 +57,7 @@ export const getMostUsedCategories = prerender(async () => {
 		return [];
 	}
 
-	const categoryCounts = {};
+	const categoryCounts: Record<string, TagCount> = {};
 	data.forEach((item) => {
 		// @ts-ignore - Supabase typing issue with nested relationships
 		const categoryName = item.services_category?.category_name;
@@ -66,7 +71,7 @@ export const getMostUsedCategories = prerender(async () => {
 	});
 	// Sort by count and take the top 5
 	return Object.values(categoryCounts)
-		.sort((a, b) => b.count - a.count)
+		.sort((a, b) => (b as TagCount).count - (a as TagCount).count)
 		.slice(0, 5)
-		.map((item) => item.name);
+		.map((item) => (item as TagCount).name);
 });

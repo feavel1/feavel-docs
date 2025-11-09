@@ -77,7 +77,7 @@
 	const { form: formValues, enhance, submitting } = form;
 
 	const canEdit = post.user_id === session?.user?.id;
-	const postUser = post.users.username;
+	const postUser = post.users?.username || 'Unknown User';
 	const postDate = new Date(post.created_at).toLocaleDateString();
 
 	let coverPreview = $state('');

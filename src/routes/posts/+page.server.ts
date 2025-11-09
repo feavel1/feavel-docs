@@ -1,32 +1,14 @@
-import type { Post } from '$lib/utils/posts';
+import type { Post } from '$lib/remote/posts.remote';
 import type { PageServerLoad } from './$types';
+import { getDrafts } from '$lib/remote/posts.remote';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ parent }) => {
 	const { session } = await parent();
 
-	// Fetch drafts for logged-in users
+	// Fetch drafts for logged-in users using remote function
 	let drafts: Post[] = [];
 	if (session) {
-		const { data: userDrafts, error: draftsError } = await locals.supabase
-			.from('posts')
-			.select(
-				`
-				*,
-				users!inner(username, avatar_file_id),
-				posts_tags_rel(
-					posts_tags!inner(id, tag_name)
-				)
-			`
-			)
-			.eq('user_id', session.user.id)
-			.eq('public_visibility', false)
-			.order('created_at', { ascending: false });
-
-		if (draftsError) {
-			console.error('Error fetching drafts:', draftsError);
-		} else {
-			drafts = userDrafts || [];
-		}
+		drafts = await getDrafts(session.user.id);
 	}
 
 	return {
