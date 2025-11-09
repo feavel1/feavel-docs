@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
-import { FileStorage } from '$lib/services/storage';
 
 export interface UserProfile {
 	id: string;
@@ -262,51 +261,5 @@ export async function updateUserProfile(
 		return { success: true };
 	} catch (error: any) {
 		return { success: false, error: error.message || 'Failed to update profile' };
-	}
-}
-
-export function getAvatarUrl(
-	avatarUrlOrId?: string | null,
-	username?: string,
-	supabase?: SupabaseClient
-): string {
-	// If avatar_url is already a direct URL, return it
-	if (avatarUrlOrId && avatarUrlOrId.startsWith('http')) {
-		return avatarUrlOrId;
-	}
-
-	// If we have a supabase client and an avatar file ID, construct the proper storage URL
-	if (supabase && avatarUrlOrId) {
-		// For upgraded codebase, going forward this would be handled differently,
-		// but for backward compatibility we return placeholder and the real URL should be fetched on demand
-		return `/api/avatar/${avatarUrlOrId}`;
-	}
-
-	// If only the file ID is provided without a supabase instance
-	if (avatarUrlOrId) {
-		return `/api/avatar/${avatarUrlOrId}`;
-	}
-
-	// Generate default avatar based on username if available
-	const defaultAvatar = username
-		? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}`
-		: 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
-
-	return defaultAvatar;
-}
-
-/**
- * Asynchronously get the actual URL from avatar_file_id using FileStorage
- */
-export async function getAvatarUrlFromFileId(
-	supabase: SupabaseClient,
-	avatarFileId: string
-): Promise<string | null> {
-	try {
-		const storage = new FileStorage(supabase);
-		return await storage.getUrl(avatarFileId);
-	} catch (error) {
-		console.error('Error getting avatar URL:', error);
-		return null;
 	}
 }
