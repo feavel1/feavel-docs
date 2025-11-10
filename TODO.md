@@ -1,6 +1,3 @@
-Fix service update
-Fix service delete
-
 - 群聊
 - 聊天UI
 - 正在输入

@@ -6,9 +6,34 @@
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 	import SingleSelect from '$lib/components/modules/interactive/SingleSelect.svelte';
 	import PostCard from '$lib/components/modules/cards/PostCard.svelte';
-	import { getPostLikes } from '$lib/utils/posts';
-	import type { Post } from '$lib/utils/posts';
 	import type { SupabaseClient } from '@supabase/supabase-js';
+
+	// Define a type for posts in list views (without content_v2)
+	interface PostListItem {
+		id: number;
+		title: string | null;
+		cover_file_id: string | null;
+		created_at: string;
+		post_views: number;
+		public_visibility: boolean;
+		user_id: string;
+		users?: {
+			username: string | null;
+			avatar_file_id: string | null;
+		} | null;
+		posts_tags_rel?: {
+			posts_tags: {
+				id: number;
+				tag_name: string;
+			} | null;
+		}[] | null;
+		posts_likes?: {
+			id: number;
+		}[] | null;
+		posts_comments?: {
+			id: number;
+		}[] | null;
+	}
 
 	interface Props {
 		supabase: SupabaseClient;
@@ -29,8 +54,8 @@
 	let searchQuery = $state('');
 	let selectedTags = $state<string[]>([]);
 	let sortBy = $state<'newest' | 'popular' | 'liked'>('newest');
-	let allPosts = $state<Post[]>([]);
-	let displayedPosts = $state<Post[]>([]);
+	let allPosts = $state<PostListItem[]>([]);
+	let displayedPosts = $state<PostListItem[]>([]);
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let hasMorePosts = $state(true);
@@ -119,7 +144,13 @@
 				.from('posts')
 				.select(
 					`
-					*,
+					id,
+					title,
+					cover_file_id,
+					created_at,
+					post_views,
+					public_visibility,
+					user_id,
 					users!inner(username, avatar_file_id),
 					posts_tags_rel(
 						posts_tags!inner(id, tag_name)
@@ -172,7 +203,7 @@
 
 		// Filter by tags
 		if (selectedTags.length > 0) {
-			filtered = filtered.filter((post: Post) =>
+			filtered = filtered.filter((post: PostListItem) =>
 				post.posts_tags_rel?.some(
 					(rel) => rel.posts_tags && selectedTags.includes(rel.posts_tags.tag_name)
 				)
@@ -182,7 +213,7 @@
 		// Filter by search query
 		if (searchQuery) {
 			filtered = filtered.filter(
-				(post: Post) =>
+				(post: PostListItem) =>
 					post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 					post.users?.username?.toLowerCase().includes(searchQuery.toLowerCase())
 			);
@@ -194,7 +225,8 @@
 				case 'popular':
 					return (b.post_views || 0) - (a.post_views || 0);
 				case 'liked':
-					return getPostLikes(b) - getPostLikes(a);
+					// For list views, we only have the count of likes, not the full objects
+					return (b.posts_likes?.length || 0) - (a.posts_likes?.length || 0);
 				case 'newest':
 				default:
 					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();

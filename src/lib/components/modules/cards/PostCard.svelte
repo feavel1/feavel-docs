@@ -6,8 +6,35 @@
 	import type { Post } from '$lib/utils/posts';
 	import { FileStorage } from '$lib/services/storage';
 
+	// Define a compatible type for posts in list views
+	interface PostListItem {
+		id: number;
+		title: string | null;
+		cover_file_id: string | null;
+		created_at: string;
+		post_views: number;
+		public_visibility: boolean;
+		user_id: string;
+		users?: {
+			username: string | null;
+			avatar_file_id: string | null;
+		} | null;
+		posts_tags_rel?: {
+			posts_tags: {
+				id: number;
+				tag_name: string;
+			} | null;
+		}[] | null;
+		posts_likes?: {
+			id: number;
+		}[] | null;
+		posts_comments?: {
+			id: number;
+		}[] | null;
+	}
+
 	interface Props {
-		post: Post;
+		post: Post | PostListItem;
 		supabase: any;
 	}
 

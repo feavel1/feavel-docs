@@ -92,7 +92,10 @@
 
 	let coverUrl = $state('');
 
-	// Update coverUrl whenever related values change
+	// Create a derived value for the cover file ID that only changes when relevant
+	let coverFileId = $derived($formValues.cover_file_id || post.cover_file_id);
+
+	// Simple effect that only runs when coverFileId or coverPreview changes
 	$effect(() => {
 		const fetchCoverUrl = async () => {
 			if (coverPreview) {
@@ -100,24 +103,16 @@
 				return;
 			}
 
-			// Check form values first (prefer new cover_file_id)
-			if ($formValues.cover_file_id && supabase) {
+			if (coverFileId && supabase) {
 				const storage = new FileStorage(supabase);
-				const url = await storage.getUrl($formValues.cover_file_id);
-				coverUrl = url || '';
-				return;
-			}
-
-			// Fallback to post cover from initial load
-			if (post.cover_file_id && supabase) {
-				const storage = new FileStorage(supabase);
-				const url = await storage.getUrl(post.cover_file_id);
+				const url = await storage.getUrl(coverFileId);
 				coverUrl = url || '';
 				return;
 			}
 
 			coverUrl = '';
 		};
+
 		fetchCoverUrl();
 	});
 
