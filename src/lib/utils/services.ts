@@ -226,24 +226,13 @@ export async function updateService(
 // Delete a service
 export async function deleteService(
 	supabase: SupabaseClient,
-	studioId: number,
 	serviceId: string
 ): Promise<{ success: boolean; error?: string }> {
 	try {
-		// First check if the service belongs to this studio
-		const { data: service, error: fetchError } = await supabase
-			.from('services')
-			.select('id, created_by')
-			.eq('id', serviceId)
-			.eq('created_by', studioId)
-			.single();
-
-		if (fetchError || !service) {
-			return { success: false, error: 'Service not found or access denied' };
-		}
-
 		// Delete the service
 		const { error } = await supabase.from('services').delete().eq('id', serviceId);
+
+		console.log('DELETING:' + serviceId);
 
 		if (error) {
 			console.error('Error deleting service:', error);

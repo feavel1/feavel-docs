@@ -5,7 +5,7 @@
 		id: z.string().optional(),
 		name: z.string().min(1).max(100),
 		price: z.number().positive(),
-		description: z.string().max(1000).optional(),
+		description: z.string().max(1000),
 		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
 		categories: z.array(z.string().min(1).max(50)).max(10).optional(), // Add categories field
@@ -26,68 +26,33 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 	import * as Select from '$lib/components/ui/select';
-	import {
-		handleServiceCoverUpload,
-		updateService,
-		deleteService,
-		updateServiceCategories
-	} from '$lib/utils/services';
+	import { handleServiceCoverUpload, deleteService } from '$lib/utils/services';
 	import { goto } from '$app/navigation';
 	import { FileStorage } from '$lib/services/storage';
 	import ServiceFileManager from '$lib/components/modules/services/ServiceFileManager.svelte';
 	import MultiSelect from '$lib/components/modules/interactive/MultiSelect.svelte';
 
 	let { data } = $props();
-	const { service, supabase, studio, categories } = data;
+	const { service, supabase, categories, form: formData } = data;
 
-	// Prepare initial form data from service
-	// Ensure highlights is always an array of strings
-	const serviceHighlights = Array.isArray(service?.highlights)
-		? service.highlights
-		: typeof service?.highlights === 'string'
-			? JSON.parse(service.highlights)
-			: [];
-
-	// Handle description which might be Json type from database
-	const serviceDescription = service?.description
-		? typeof service.description === 'string'
-			? service.description
-			: JSON.stringify(service.description)
-		: '';
-
-	// Use the actual service type if it exists, otherwise default to 'video' for new services
-	const serviceType = service?.type || 'video';
-
-	// Extract categories from service data
-	const serviceCategories = service?.services_category_rel
-		? service.services_category_rel.map((rel: any) => rel.services_category.category_name)
-		: [];
-
-	const initialFormData = {
-		id: service?.id,
-		name: service?.name || '',
-		price: service?.price || 0,
-		description: serviceDescription,
-		type: serviceType,
-		highlights: serviceHighlights || [],
-		categories: serviceCategories || [],
-		cover_file_id: service?.cover_file_id || null
-	};
-
-	const form = superForm(initialFormData, {
+	const form = superForm(formData, {
 		validators: zod4Client(serviceSchema),
 		validationMethod: 'oninput',
 		dataType: 'json',
 		resetForm: false,
-		onResult: ({ result }) => {
-			if (result.type === 'failure' && form.errors && Object.keys(form.errors).length) {
+		onResult: () => {
+			// Focus on first error
+			if (form.errors && Object.keys(form.errors).length) {
 				requestAnimationFrame(() => {
 					document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
 				});
 			}
 		},
 		onUpdated({ form }) {
-			if (form.message) toast.success(form.message.text);
+			if (form.message) {
+				// Display the message using a toast library
+				toast.success(form.message.text);
+			}
 		}
 	});
 
@@ -205,71 +170,12 @@
 		$formValues.highlights = $formValues.highlights.filter((_: string, i: number) => i !== index);
 	}
 
-	async function handleSave() {
-		const isValid = await form.validateForm();
-		if (!isValid.valid) {
-			requestAnimationFrame(() => {
-				document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-			});
-			return;
-		}
-
-		try {
-			const serviceData = {
-				name: $formValues.name,
-				price: $formValues.price,
-				description: $formValues.description,
-				type: $formValues.type,
-				highlights: $formValues.highlights,
-				cover_file_id: $formValues.cover_file_id
-			};
-
-			if (service?.id) {
-				// Update existing service
-				const { success, error } = await updateService(
-					supabase,
-					studio.id,
-					service.id,
-					serviceData
-				);
-
-				if (success) {
-					// Update service categories
-					const { error: categoryError } = await updateServiceCategories(
-						supabase,
-						service.id,
-						$formValues.categories || []
-					);
-
-					if (categoryError) {
-						toast.error('Service saved but failed to update categories');
-					} else {
-						saveSuccess = true;
-						toast.success('Service saved successfully!');
-						// Reset success state after 2 seconds
-						setTimeout(() => {
-							saveSuccess = false;
-						}, 2000);
-					}
-				} else {
-					toast.error(error || 'Failed to save service');
-				}
-			} else {
-				// This shouldn't happen as we redirect for new services
-				toast.error('Service ID not found');
-			}
-		} catch (error) {
-			console.error('Error saving service:', error);
-			toast.error('Failed to save service');
-		}
-	}
-
 	async function handleDelete() {
 		if (!confirm('Are you sure you want to delete this service? This action cannot be undone.'))
 			return;
 
 		try {
-			const { success, error } = await deleteService(supabase, studio.id, service.id);
+			const { success, error } = await deleteService(supabase, service.id);
 			if (success) {
 				toast.success('Service deleted successfully!');
 				goto('/studios/dashboard/services');
@@ -499,17 +405,11 @@
 
 		<!-- Actions -->
 		<div class="flex justify-between">
-			{#if $formValues.id}
-				<Button type="button" variant="destructive" onclick={handleDelete} disabled={$submitting}>
-					Delete Service
-				</Button>
-			{:else}
-				<div></div>
-			{/if}
+			<Button variant="destructive" onclick={handleDelete}>Delete Service</Button>
+
 			<div class="flex gap-2">
-				<Button
+				<Form.Button
 					type="submit"
-					onclick={handleSave}
 					disabled={$submitting}
 					variant={saveSuccess ? 'secondary' : 'default'}
 				>
@@ -518,9 +418,9 @@
 					{:else if saveSuccess}
 						Saved!
 					{:else}
-						Save Service
+						Save Service...
 					{/if}
-				</Button>
+				</Form.Button>
 			</div>
 		</div>
 	</form>

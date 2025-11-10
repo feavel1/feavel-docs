@@ -87,13 +87,9 @@
 				</div>
 			</div>
 
-			<div class="flex flex-shrink-0 gap-2">
+			<div class="flex shrink-0 gap-2">
 				{#if canEdit}
-					<Button
-						href="/studios/dashboard/services/{service.id}"
-						variant="outline"
-						class="flex-shrink-0"
-					>
+					<Button href="/studios/dashboard/services/{service.id}" variant="outline">
 						<Edit class="mr-2 h-4 w-4" />
 						Edit
 					</Button>

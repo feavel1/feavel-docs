@@ -81,7 +81,7 @@
 				</div>
 			</div>
 		</CardHeader>
-		<CardContent class="flex-grow">
+		<CardContent class="grow">
 			<div class="mb-4 text-2xl font-bold">{formatPrice(service.price)}</div>
 			{#if tags.length > 0}
 				<div class="mb-3 flex flex-wrap gap-1">

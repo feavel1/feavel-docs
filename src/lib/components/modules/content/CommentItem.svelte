@@ -20,6 +20,7 @@
 	import CommentForm from './CommentForm.svelte';
 	import type { CommentFormData } from '$lib/utils/comments';
 	import { FileStorage } from '$lib/services/storage';
+	import { deleteService } from '$lib/utils/services';
 
 	let {
 		comment,
@@ -63,6 +64,7 @@
 		canReply: !!currentUserId
 	});
 
+
 	async function handleEdit() {
 		if (!editContent.trim() || isSubmitting) return;
 
@@ -76,7 +78,7 @@
 
 	async function handleDelete() {
 		if (isSubmitting) return;
-
+deleteService(locals.supabase, studio.id, service_id)
 		isSubmitting = true;
 		await onDelete(comment.id);
 		isSubmitting = false;
@@ -152,10 +154,10 @@
 								</DropdownMenuItem>
 							{/if}
 							{#if permissions.canDelete}
-								<DropdownMenuItem onclick={handleDelete} class="text-xs text-destructive">
+								<Button onclick={} class="text-xs text-destructive">
 									<Trash2 class="mr-2 h-3 w-3" />
 									Delete
-								</DropdownMenuItem>
+								</Button>
 							{/if}
 						</DropdownMenuContent>
 					</DropdownMenu>
