@@ -8,6 +8,178 @@ export type ChatParticipant = Tables<'chat_participants'>;
 export type ChatGroup = Tables<'chat_groups'>;
 
 /**
+ * Get all conversations for a user
+ */
+export const getUserConversations = async (
+	supabase: SupabaseClient,
+	userId: string
+): Promise<ChatConversation[]> => {
+	const { data, error } = await supabase
+		.from('chat_conversations')
+		.select(
+			`
+			id,
+			created_at,
+			chat_participants(user_id),
+			chat_groups(name, description, is_public)
+		`
+		)
+		.eq('chat_participants.user_id', userId)
+		.order('created_at', { ascending: false });
+
+	if (error) {
+		console.error('Error fetching user conversations:', error);
+		return [];
+	}
+
+	return data as ChatConversation[];
+};
+
+/**
+ * Get messages for a conversation with pagination support
+ * For initial load, gets the most recent messages
+ * For pagination, gets older messages before a given timestamp
+ */
+export const getConversationMessages = async (
+	supabase: SupabaseClient,
+	conversationId: string,
+	options: {
+		limit?: number;
+		before?: string; // ISO timestamp - gets messages older than this timestamp
+	} = {}
+): Promise<ChatMessage[]> => {
+	const { limit = 5, before } = options;
+
+	let query = supabase
+		.from('chat_messages')
+		.select('*')
+		.eq('conversation_id', conversationId)
+		.order('created_at', { ascending: false }) // Most recent first
+		.limit(limit);
+
+	// If before timestamp is provided, get messages older than that time
+	if (before) {
+		query = query.lt('created_at', before);
+	}
+
+	console.log('Fetching messages with query options:', { conversationId, limit, before });
+
+	const { data, error } = await query;
+
+	if (error) {
+		console.error('Error fetching conversation messages:', error);
+		return [];
+	}
+
+	// Reverse the order to show oldest first (for proper display)
+	return data.reverse() as ChatMessage[];
+};
+
+// Simple in-memory rate limiting store
+const messageRateLimitStore = new Map<string, { count: number; lastReset: number }>();
+
+/**
+ * Check if a user has exceeded the rate limit
+ */
+function checkRateLimit(userId: string): boolean {
+	const now = Date.now();
+	const windowMs = 60000; // 1 minute window
+	const maxMessages = 10; // Max 10 messages per minute
+
+	let userLimit = messageRateLimitStore.get(userId);
+
+	// Reset counter if window has passed
+	if (!userLimit || now - userLimit.lastReset > windowMs) {
+		userLimit = { count: 0, lastReset: now };
+		messageRateLimitStore.set(userId, userLimit);
+	}
+
+	// Check if limit exceeded
+	if (userLimit.count >= maxMessages) {
+		return false; // Rate limit exceeded
+	}
+
+	// Increment counter
+	userLimit.count++;
+	messageRateLimitStore.set(userId, userLimit);
+
+	return true; // Within rate limit
+}
+
+/**
+ * Send a new message
+ *
+ * SERVER-SIDE: This function must always run on the server for security
+ * VALIDATION: Input sanitization required
+ * VALIDATION: Length validation required
+ * RATE LIMIT: Implement message rate limiting to prevent spam
+ */
+export const sendMessage = async (
+	supabase: SupabaseClient,
+	data: {
+		conversation_id: string;
+		message: string;
+		sent_from: string;
+	}
+): Promise<ChatMessage | null> => {
+	// Validate message length
+	if (data.message.length > 1000) {
+		throw new Error('Message too long. Maximum 1000 characters allowed.');
+	}
+
+	// Check rate limit
+	if (!checkRateLimit(data.sent_from)) {
+		throw new Error('Rate limit exceeded. Please wait before sending more messages.');
+	}
+
+	// Insert message into database
+	const { data: newMessage, error } = await supabase
+		.from('chat_messages')
+		.insert({
+			conversation_id: data.conversation_id,
+			message: data.message,
+			sent_from: data.sent_from
+		})
+		.select()
+		.single();
+
+	if (error) {
+		console.error('Error sending message:', error);
+		return null;
+	}
+
+	return newMessage as ChatMessage;
+};
+
+/**
+ * Create or get an existing 1-on-1 conversation between the current user and another user
+ * This function uses the RPC function defined in the database to ensure only one
+ * 1-on-1 conversation exists between any two users.
+ *
+ * @param supabase - Supabase client instance
+ * @param otherUserId - The ID of the other user to create/get conversation with
+ * @returns The conversation ID
+ */
+export async function createOrGetOneOnOneConversation(
+	supabase: SupabaseClient,
+	otherUserId: string
+): Promise<string> {
+	const { data, error } = await supabase.rpc('create_or_get_oneonone_conversation', {
+		other_user_id: otherUserId
+	});
+
+	if (error) {
+		throw new Error(`Failed to create or get conversation: ${error.message}`);
+	}
+
+	if (!data) {
+		throw new Error('Failed to create or get conversation: No conversation ID returned');
+	}
+
+	return data;
+}
+
+/**
  * Subscribe to real-time message updates
  */
 export const subscribeToMessages = async (

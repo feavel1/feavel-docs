@@ -8,8 +8,8 @@
 		description: z.string().max(1000),
 		type: z.enum(['video', 'download', 'event', 'subscription']),
 		highlights: z.array(z.string().min(1).max(100)).max(10),
-		categories: z.array(z.string().min(1).max(50)).max(10).optional(), // Add categories field
-		cover_file_id: z.string().max(255).optional()
+		categories: z.array(z.string().min(1).max(50)).max(10).optional().default([]), // Add categories field
+		cover_file_id: z.string().max(255).nullable().optional()
 	});
 
 	export type ServiceSchema = typeof serviceSchema;
